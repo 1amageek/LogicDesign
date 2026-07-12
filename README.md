@@ -63,7 +63,7 @@ The CLI emits deterministic JSON for machine consumption. A successful operation
 swift run logic-design capabilities
 swift run logic-design parse --input Fixtures/positive/simple_counter.sv --top counter --output /tmp/counter.json
 swift run logic-design gate-parse --input Fixtures/positive/simple_gate.v --top top
-swift run logic-design power-intent --input Fixtures/power/sample.upf --top top
+swift run logic-design power-intent --input Fixtures/power/sample.cpf --format cpf --top top --design-digest fixture
 ```
 
 ## Build and test
