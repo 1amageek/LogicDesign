@@ -51,4 +51,16 @@ public struct LogicDesignProvenance: Sendable, Hashable, Codable {
         }
         return true
     }
+
+    public var canonicalMaterial: String {
+        [
+            String(schemaVersion),
+            sourceDesignDigest,
+            inputDesignDigest ?? "",
+            transformationID ?? "",
+            producerID,
+            producerVersion,
+            runID ?? "",
+        ].joined(separator: "|")
+    }
 }

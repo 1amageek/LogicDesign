@@ -10,13 +10,13 @@
 | Public package products | Implemented | Package.swift |
 | Shared Xcircuite request/result contract | Implemented | Public Swift protocols and payloads |
 | Contract build | Passed | swift build |
-| Contract test | Passed | timeout-bounded xcodebuild test; 32 tests in 5 suites |
+| Contract test | Passed | timeout-bounded xcodebuild test; 33 tests in 5 suites |
 | Domain implementation | Complete for native subset | LogicIR, SystemVerilogFrontend, PowerIntent and gate netlist parser |
 | CLI implementation | Complete | `logic-design` parse, validate, gate-parse, power-intent and capabilities |
 | Fixture corpus | Complete for smoke corpus | `Fixtures/manifest.json` records 8 retained cases with SHA-256 and expected native status |
 | Oracle correlation | Not started | No retained comparison evidence |
 | Process qualification | Not started | No PDK-scoped qualification record |
-| Xcircuite stage adapter | Implemented for LogicDesign and verified multi-engine slices | `LogicElaborationFlowStageExecutor` resolves project-root relative includes, while elaboration/power-intent persist canonical artifacts, envelopes and integrity gates; the full Xcircuite regression passes with 505 tests in 54 suites |
+| Xcircuite stage adapter | Implemented for LogicDesign and verified multi-engine slices | `LogicElaborationFlowStageExecutor` resolves project-root relative includes, while elaboration/power-intent persist canonical artifacts, envelopes and integrity gates; the full Xcircuite regression passes with 510 tests in 55 suites |
 | End-to-end flow evidence | Platform-wide regression complete; one full design run remains | LogicDesign, LogicEngine, DFT, PDK, physical-design and signoff adapter tests execute through Xcircuite; one end-to-end multi-engine run with human review and resume remains to be retained as evidence |
 | Release readiness | Blocked | Native subset is smoke-checked; oracle/process qualification and dependent platform test build remain |
 
@@ -29,8 +29,8 @@ The detailed roadmap and exit criteria are maintained in `MILESTONES.md`.
 | 0. Requirements and evidence baseline | Complete | Baseline and responsibility boundaries recorded |
 | 1. Canonical contract and artifact integrity | In progress | Snapshot/request validation and adapter integrity gates are implemented; orchestrated handoff evidence remains |
 | 2. Deterministic HDL and power-intent semantics | In progress | Numeric macro/timescale preprocessing, relative include graph resolution, constant generate-if/else, case and latch retention are implemented; conditional compilation and wider procedural coverage remain |
-| 3. Cross-engine design identity | In progress | Canonical-vs-serialized digest boundary, gate connectivity validation and shared `LogicDesignProvenance` contract are implemented; native producer adoption is covered for LogicEngine, DFT and Xcircuite, while consumer enforcement remains |
-| 4. Xcircuite execution and human-in-the-loop | In progress | Full Xcircuite regression passes with 505 tests in 54 suites; a retained end-to-end multi-engine approval/resume run remains |
+| 3. Cross-engine design identity | In progress | Canonical-vs-serialized digest boundary, gate connectivity validation and shared `LogicDesignProvenance` contract are implemented; producer adoption is covered for LogicEngine, DFT and Xcircuite, while TimingEngine, PhysicalDesignEngine and ReleaseEngine enforce invalid or mismatched lineage; remaining handoff consumers and retained run evidence remain |
+| 4. Xcircuite execution and human-in-the-loop | In progress | Full Xcircuite regression passes with 510 tests in 55 suites; a retained end-to-end multi-engine approval/resume run remains |
 | 5. Qualification and release eligibility | Not started | Retained oracle/process qualification evidence is absent |
 
 ## Function status
@@ -74,7 +74,7 @@ The package goal is complete only when every P0 function has a concrete backend,
 - Full SystemVerilog, UPF and CPF language semantics remain outside the native subset and return blocked diagnostics.
 - No external-tool adapter has been selected or qualified.
 - No process-specific corpus has been retained.
-- Full Xcircuite regression is passing at 505 tests in 54 suites. A retained end-to-end multi-engine approval/resume run, oracle correlation and process qualification remain open.
+- Full Xcircuite regression is passing at 510 tests in 55 suites. A retained end-to-end multi-engine approval/resume run, oracle correlation and process qualification remain open.
 - The LogicEngine lowering slice now consumes the canonical `LogicDesignReference.designDigest` for RTL snapshots while retaining `artifact.sha256` for serialized-byte integrity.
 
 This file must be updated by implementation agents whenever a maturity gate changes. A source file or type name alone is never evidence of implementation or qualification.

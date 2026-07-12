@@ -49,4 +49,24 @@ struct ContractTests {
         #expect(decoded == reference)
         #expect(decoded.provenance?.isValid == true)
     }
+
+    @Test("provenance validation rejects mismatched transformed input")
+    func provenanceValidationRejectsMismatchedInput() {
+        let reference = LogicDesignReference(
+            artifact: XcircuiteFileReference(path: "design.json", kind: .netlist, format: .json),
+            topDesignName: "top",
+            designDigest: "current",
+            provenance: LogicDesignProvenance(
+                sourceDesignDigest: "source",
+                inputDesignDigest: "other",
+                transformationID: "transform",
+                producerID: "producer",
+                producerVersion: "1.0.0"
+            )
+        )
+
+        let issues = LogicDesignProvenanceValidation.issues(for: reference)
+
+        #expect(issues.contains { $0.code == "design_provenance_input_digest_mismatch" })
+    }
 }

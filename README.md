@@ -74,7 +74,7 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The current contract suite passes with 32 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The current Xcircuite integration regression passes with 505 tests in 54 suites, including LogicDesign, LogicEngine, DFT, PDK and physical-design adapter coverage.
+The current contract suite passes with 33 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The current Xcircuite integration regression passes with 510 tests in 55 suites, including LogicDesign, LogicEngine, DFT, PDK, timing, physical-design and release adapter coverage.
 
 ## Qualification boundary
 

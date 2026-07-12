@@ -46,7 +46,7 @@ Exit criteria:
 - Gate connectivity validates drivers, loads, port directions, widths, hierarchy, and stable IDs.
 - Consumers can load canonical artifacts without UI or ad-hoc conversion.
 
-Status: in progress. Gate reverse connectivity and direction validation, the RTL-snapshot-to-lowering digest boundary, and a shared `LogicDesignProvenance` handoff contract are implemented. Native LogicEngine lowering/synthesis, DFTEngine scan/BIST, and Xcircuite elaboration producers now attach lineage; consumer-side enforcement across timing, physical implementation and release approval remains.
+Status: in progress. Gate reverse connectivity and direction validation, the RTL-snapshot-to-lowering digest boundary, and a shared `LogicDesignProvenance` handoff contract are implemented. Native LogicEngine lowering/synthesis, DFTEngine scan/BIST, and Xcircuite elaboration producers attach lineage. TimingEngine signoff analysis, PhysicalDesignEngine execution, and ReleaseEngine signoff now validate supplied lineage and fail closed on invalid or mismatched provenance; remaining handoff consumers and a retained end-to-end review run remain.
 
 ## Milestone 4: Xcircuite execution and human-in-the-loop
 
@@ -56,7 +56,7 @@ Exit criteria:
 - Stage results participate in approval, review, resume, cancellation, and repair-loop flows.
 - Headless integration tests execute against a working dependency graph and assert artifact integrity.
 
-Status: LogicDesign and multi-engine adapter slices are verified by headless Xcircuite tests. The full Xcircuite regression passes with 505 tests in 54 suites, including qualification scope mismatch and approval/resume coverage; a single end-to-end multi-engine design run with human review remains incomplete.
+Status: LogicDesign and multi-engine adapter slices are verified by headless Xcircuite tests. The full Xcircuite regression passes with 510 tests in 55 suites, including qualification scope mismatch, provenance enforcement, and approval/resume coverage; a single end-to-end multi-engine design run with human review remains incomplete.
 
 ## Milestone 5: Qualification and release eligibility
 
