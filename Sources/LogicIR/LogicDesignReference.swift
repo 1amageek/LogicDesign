@@ -6,14 +6,18 @@ public struct LogicDesignReference: Sendable, Hashable, Codable {
     public var topDesignName: String
     /// Canonical digest of the referenced design content; artifact.sha256 protects serialized bytes.
     public var designDigest: String
+    /// Optional lineage for a design produced by a transformation stage.
+    public var provenance: LogicDesignProvenance?
 
     public init(
         artifact: XcircuiteFileReference,
         topDesignName: String,
-        designDigest: String
+        designDigest: String,
+        provenance: LogicDesignProvenance? = nil
     ) {
         self.artifact = artifact
         self.topDesignName = topDesignName
         self.designDigest = designDigest
+        self.provenance = provenance
     }
 }

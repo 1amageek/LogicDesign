@@ -25,4 +25,28 @@ struct ContractTests {
         let decoded = try JSONDecoder().decode(LogicElaborationRequest.self, from: data)
         #expect(decoded == request)
     }
+
+    @Test("design references preserve canonical transformation provenance")
+    func designReferenceProvenanceRoundTrip() throws {
+        let provenance = LogicDesignProvenance(
+            sourceDesignDigest: "source-design",
+            inputDesignDigest: "input-design",
+            transformationID: "native-lowering",
+            producerID: "LogicLowering",
+            producerVersion: "1",
+            runID: "run-provenance"
+        )
+        let reference = LogicDesignReference(
+            artifact: XcircuiteFileReference(path: "design.json", kind: .netlist, format: .json),
+            topDesignName: "top",
+            designDigest: "output-design",
+            provenance: provenance
+        )
+
+        let data = try JSONEncoder().encode(reference)
+        let decoded = try JSONDecoder().decode(LogicDesignReference.self, from: data)
+
+        #expect(decoded == reference)
+        #expect(decoded.provenance?.isValid == true)
+    }
 }

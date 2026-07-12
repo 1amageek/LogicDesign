@@ -33,6 +33,7 @@ flowchart LR
 
 - Stable RTL and gate identities, source locations and source-file SHA-256 provenance.
 - Canonical JSON snapshots with schema validation, deterministic digesting and tamper detection.
+- Transformation-aware `LogicDesignReference` lineage preserves the original canonical digest, immediate input digest, transformation ID, producer version and run ID across engine handoffs.
 - ANSI SystemVerilog modules, parameters, numeric object-like macros, constant expressions, vectors, memories, assignments, supported processes and hierarchy.
 - Project-relative `` `include `` graph resolution through an injected source provider. Malformed, missing and cyclic includes produce typed diagnostics.
 - Constant `generate-for` and `generate-if/else` elaboration, structural gate netlist parsing and connectivity validation.
@@ -73,7 +74,7 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The current contract suite passes with 31 tests in 5 suites. The retained fixture corpus is executed as part of that suite.
+The current contract suite passes with 32 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The current Xcircuite integration regression passes with 505 tests in 54 suites, including LogicDesign, LogicEngine, DFT, PDK and physical-design adapter coverage.
 
 ## Qualification boundary
 

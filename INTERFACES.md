@@ -16,6 +16,8 @@ Requests carry a schema version, run ID and typed artifact references. Payloads 
 
 `LogicDesignReference.designDigest` identifies the canonical design content. `LogicDesignReference.artifact.sha256` and `byteCount` identify and protect the serialized artifact bytes. Snapshot consumers must validate both boundaries: decode and verify the canonical snapshot digest, then verify the referenced artifact bytes before execution.
 
+Transformed handoffs may carry `LogicDesignReference.provenance`. It preserves the original canonical source digest, immediate input digest, stable transformation ID, producer identity/version and run ID. `topDesignName` remains part of the reference so consumers can reject cross-top handoffs.
+
 ## Products
 
 ### LogicIR
