@@ -1,0 +1,70 @@
+{
+  "cases" : [
+    {
+      "expectedStatus" : "completed",
+      "id" : "conditional-generate",
+      "kind" : "systemVerilog",
+      "path" : "positive/conditional_generate.sv",
+      "sha256" : "de95311d4b8689fa8ff552cb152daac2233b1c6cc20b9e5d5f26eddbb1bdc23f",
+      "topDesignName" : "conditional_generate"
+    },
+    {
+      "expectedStatus" : "completed",
+      "id" : "hierarchy",
+      "kind" : "systemVerilog",
+      "path" : "positive/hierarchy.sv",
+      "sha256" : "d7e252f5b17e87091cc68e629ef6c23a1ab80261b97dd84c4bc2b10d6d24efc1",
+      "topDesignName" : "top"
+    },
+    {
+      "expectedStatus" : "completed",
+      "id" : "preprocessor",
+      "kind" : "systemVerilog",
+      "path" : "positive/preprocessor.sv",
+      "sha256" : "8ab6c59e910e7f9d2b31fa313b4f2fc75cf14a180a527ceb9a1203c0339eb1ed",
+      "topDesignName" : "preprocessor"
+    },
+    {
+      "expectedStatus" : "completed",
+      "id" : "simple-counter",
+      "kind" : "systemVerilog",
+      "path" : "positive/simple_counter.sv",
+      "sha256" : "ac7601a1eb292fd595d4bbc120c7ab4e1c40302ec3ce061e99ba045e27b70b60",
+      "topDesignName" : "counter"
+    },
+    {
+      "expectedStatus" : "failed",
+      "id" : "unresolved-signal",
+      "kind" : "systemVerilog",
+      "path" : "negative/unresolved_signal.sv",
+      "sha256" : "c52072c4743ef7f0d74c11382e9823bd1749c178b8cc2fec52b2eff6825820e9",
+      "topDesignName" : "broken"
+    },
+    {
+      "expectedStatus" : "blocked",
+      "id" : "unsupported-generate",
+      "kind" : "systemVerilog",
+      "path" : "negative/unsupported_generate.sv",
+      "sha256" : "a19c16a9521f2cba14ab13f63d1be7534ab5e2c5b0e744e01adddf7c48d1a78d",
+      "topDesignName" : "generated"
+    },
+    {
+      "expectedStatus" : "completed",
+      "id" : "sample-cpf",
+      "kind" : "cpf",
+      "path" : "power/sample.cpf",
+      "sha256" : "63108820db750590f6d70293ac142cbcc4f8590fa0f14527e1def8a0ed1e4194",
+      "topDesignName" : "top"
+    },
+    {
+      "expectedStatus" : "failed",
+      "id" : "sample-upf",
+      "kind" : "upf",
+      "path" : "power/sample.upf",
+      "sha256" : "f7448959dcc6e89c0f8a66da49d9824ad5bd594943b69d75a971480a715847c9",
+      "topDesignName" : "top"
+    }
+  ],
+  "corpusID" : "logic-design-native-smoke",
+  "schemaVersion" : 1
+}

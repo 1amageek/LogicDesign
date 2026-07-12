@@ -1,0 +1,4 @@
+create_power_domain PD_A
+create_nominal_condition nominal_a
+create_isolation_rule iso_a -domain PD_A -clamp_value 0
+create_retention_rule ret_a -domain PD_A -save_signal save -restore_signal restore
