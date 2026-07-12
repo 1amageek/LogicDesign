@@ -12,7 +12,7 @@ let package = Package(
         .executable(name: "logic-design", targets: ["LogicDesignCLI"]),
     ],
     dependencies: [
-        .package(path: "../XcircuitePackage"),
+        .package(url: "https://github.com/1amageek/XcircuitePackage.git", branch: "main"),
     ],
     targets: [
         .target(
