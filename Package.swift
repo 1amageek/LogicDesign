@@ -5,8 +5,11 @@ import Foundation
 let workspaceRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()
     .deletingLastPathComponent()
+let isFullLSIWorkspace = FileManager.default.fileExists(
+    atPath: workspaceRoot.appendingPathComponent("Xcircuite/Package.swift").path
+)
 
-let xcircuitePackageDependency: Package.Dependency = FileManager.default.fileExists(
+let xcircuitePackageDependency: Package.Dependency = isFullLSIWorkspace && FileManager.default.fileExists(
     atPath: workspaceRoot.appendingPathComponent("XcircuitePackage/Package.swift").path
 )
     ? .package(path: "../XcircuitePackage")
