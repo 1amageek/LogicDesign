@@ -1,5 +1,16 @@
 // swift-tools-version: 6.3
 import PackageDescription
+import Foundation
+
+let workspaceRoot = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+
+let xcircuitePackageDependency: Package.Dependency = FileManager.default.fileExists(
+    atPath: workspaceRoot.appendingPathComponent("XcircuitePackage/Package.swift").path
+)
+    ? .package(path: "../XcircuitePackage")
+    : .package(url: "https://github.com/1amageek/XcircuitePackage.git", revision: "55b757efa6c906c30e829c2ca5b67566856dec6b")
 
 let package = Package(
     name: "LogicDesign",
@@ -12,7 +23,7 @@ let package = Package(
         .executable(name: "logic-design", targets: ["LogicDesignCLI"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/1amageek/XcircuitePackage.git", revision: "55b757efa6c906c30e829c2ca5b67566856dec6b"),
+        xcircuitePackageDependency,
     ],
     targets: [
         .target(
