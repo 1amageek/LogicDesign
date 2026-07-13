@@ -56,7 +56,7 @@ Exit criteria:
 - Stage results participate in approval, review, resume, cancellation, and repair-loop flows.
 - Headless integration tests execute against a working dependency graph and assert artifact integrity.
 
-Status: LogicDesign and multi-engine adapter slices are verified by headless Xcircuite tests. The full Xcircuite regression passes with 510 tests in 55 suites, including qualification scope mismatch, provenance enforcement, and approval/resume coverage; a single end-to-end multi-engine design run with human review remains incomplete.
+Status: LogicDesign and multi-engine adapter slices are verified by headless Xcircuite tests. The full Xcircuite regression passes with 520 tests in 55 suites, including qualification scope mismatch, provenance enforcement, and physical-design review packet approval/resume coverage. A single end-to-end multi-engine design run with human review across the complete flow remains incomplete.
 
 ## Milestone 5: Qualification and release eligibility
 
