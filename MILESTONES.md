@@ -56,7 +56,7 @@ Exit criteria:
 - Stage results participate in approval, review, resume, cancellation, and repair-loop flows.
 - Headless integration tests execute against a working dependency graph and assert artifact integrity.
 
-Status: LogicDesign and multi-engine adapter slices are verified by focused headless tests. The retained `EndToEndDesignFlowTests/retainedMultiEngineRunResumesAfterReview` flow defines lowering, logic simulation, STA, physical floorplanning, native DRC/LVS, deterministic mock PEX, immutable review-packet validation, human approval, and same-run resume. A fresh complete dependency-graph rerun is pending; mock PEX is contract evidence rather than physical signoff, and external PEX, oracle and process qualification remain separate gates.
+Status: LogicDesign and multi-engine adapter slices are verified by focused headless tests. The retained `EndToEndDesignFlowTests/retainedMultiEngineRunResumesAfterReview` flow defines lowering, logic simulation, STA, physical floorplanning, native DRC/LVS, deterministic mock PEX, immutable review-packet validation, human approval, and same-run resume. The production PEX factory and unavailable-tool blocked mapping are additionally verified by an isolated headless integration test. A fresh complete dependency-graph rerun is pending because unrelated active DFT test code currently fails to compile; mock PEX is contract evidence rather than physical signoff, and real PEX environment execution, oracle and process qualification remain separate gates.
 
 ## Milestone 5: Qualification and release eligibility
 
@@ -67,7 +67,7 @@ Exit criteria:
 - Process/PDK-scoped qualification records include tool, version, inputs, outputs, metrics, and failures.
 - Tool trust and release gates prevent unqualified results from being treated as signoff.
 
-Status: in progress for the qualification machinery; no external-oracle or foundry/process qualification is claimed. Tool evidence, local corpus/oracle comparison, scope matching, freshness, independence, and release gates exist as typed contracts, while a retained process-scoped evidence record is still required.
+Status: in progress for the qualification machinery; no external-oracle or foundry/process qualification is claimed. Tool evidence, local corpus/oracle comparison, exact scope matching at release-profile eligibility, freshness, independence, and release gates exist as typed contracts, while a retained process-scoped evidence record is still required.
 
 ## Execution policy
 

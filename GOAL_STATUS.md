@@ -16,9 +16,9 @@
 | Fixture corpus | Complete for smoke corpus | `Fixtures/manifest.json` records 8 retained cases with SHA-256 and expected native status |
 | Oracle correlation | Not started | No retained comparison evidence |
 | Process qualification | Not started | No PDK-scoped qualification record |
-| Xcircuite stage adapter | Implemented for LogicDesign and verified focused slices | `LogicElaborationFlowStageExecutor` resolves project-root relative includes, while elaboration/power-intent persist canonical artifacts, envelopes and integrity gates; full shared-worktree regression requires revalidation |
+| Xcircuite stage adapter | Implemented for LogicDesign and verified focused slices | `LogicElaborationFlowStageExecutor` resolves project-root relative includes, while elaboration/power-intent persist canonical artifacts, envelopes and integrity gates; the production PEX bridge now maps typed unavailable-tool failures to blocked stages; full shared-worktree regression requires revalidation |
 | End-to-end flow evidence | Focused evidence retained; current full rerun pending | The retained multi-engine test defines the canonical RTL → simulation → STA → physical review/resume path; the current fixture path is corrected, but a fresh Xcircuite binary has not been accepted as evidence while concurrent dependency builds are active |
-| Release readiness | Blocked | Native subset is smoke-checked; oracle/process qualification and dependent platform test build remain |
+| Release readiness | Blocked | Native subset and production PEX boundary are smoke-checked; independent oracle/PDK process qualification and dependent platform test build remain |
 
 ## Active milestones
 
@@ -74,7 +74,7 @@ The package goal is complete only when every P0 function has a concrete backend,
 - Full SystemVerilog, UPF and CPF language semantics remain outside the native subset and return blocked diagnostics.
 - No external-tool adapter has been selected or qualified.
 - No process-specific corpus has been retained.
-- Full Xcircuite regression is pending current-worktree revalidation because concurrent SwiftPM dependency builds are active and the shared graph has an unresolved DFTEngine `PDKReference` boundary. The retained multi-engine signoff-artifact and approval/resume path remains focused evidence only; production PEX, independent oracle correlation and process qualification remain open.
+- Full Xcircuite regression is pending current-worktree revalidation because the full test target currently fails in unrelated active DFT test code (`pdkDigest` API mismatch and missing `Domain.allCases`). The retained multi-engine signoff-artifact and approval/resume path remains focused evidence only; production PEX environment execution, independent oracle correlation and process qualification remain open.
 - The LogicEngine lowering slice now consumes the canonical `LogicDesignReference.designDigest` for RTL snapshots while retaining `artifact.sha256` for serialized-byte integrity.
 
 This file must be updated by implementation agents whenever a maturity gate changes. A source file or type name alone is never evidence of implementation or qualification.
