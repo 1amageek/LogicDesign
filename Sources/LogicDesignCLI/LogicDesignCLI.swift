@@ -1,4 +1,5 @@
 import Foundation
+import LogicDesign
 import LogicIR
 import PowerIntent
 import SystemVerilogFrontend
@@ -19,6 +20,10 @@ public enum LogicDesignCLI {
                 let result = try await runSystemVerilog(command)
                 try emit(result)
                 return result.status == .completed ? 0 : 2
+            case .correlate:
+                let result = try await runOracleCorrelation(command)
+                try emit(result)
+                return result.matched ? 0 : 2
             case .gateParse:
                 let result = try runGateParse(command)
                 try emit(result)
@@ -55,6 +60,43 @@ public enum LogicDesignCLI {
             try data.write(to: URL(fileURLWithPath: output), options: .atomic)
         }
         return result
+    }
+
+    private static func runOracleCorrelation(_ command: Command) async throws -> LogicDesignOracleCorrelation {
+        let sourceData = try readSourceData(at: command.input)
+        guard let source = String(data: sourceData, encoding: .utf8) else {
+            throw CLIError.readFailed(path: command.input, message: "The input is not valid UTF-8.")
+        }
+        let oracleData = try readSourceData(at: command.oraclePath)
+        let manifest: LogicDesignOracleManifest
+        do {
+            manifest = try JSONDecoder().decode(LogicDesignOracleManifest.self, from: oracleData)
+        } catch {
+            throw CLIError.readFailed(path: command.oraclePath, message: error.localizedDescription)
+        }
+        try LogicDesignOracleCorrelator.validate(manifest)
+        guard let oracleCase = manifest.caseWithID(command.caseID) else {
+            throw LogicDesignOracleCorrelationError.caseNotFound(command.caseID)
+        }
+        let topDesignName = command.topDesign == "top"
+            ? oracleCase.topDesignName
+            : command.topDesign
+        let result = try await LogicElaboratingEngine(
+            clock: { Date(timeIntervalSince1970: 0) }
+        ).execute(LogicElaborationRequest(
+            runID: command.runID,
+            inputs: [],
+            topDesignName: topDesignName,
+            sources: [SystemVerilogSourceUnit(path: command.input, source: source)]
+        ))
+        let sourceSHA256 = XcircuiteHasher().sha256(data: sourceData)
+        return try LogicDesignOracleCorrelator.correlate(
+            manifest: manifest,
+            oracleCase: oracleCase,
+            sourceSHA256: sourceSHA256,
+            topDesignName: topDesignName,
+            result: result
+        )
     }
 
     private static func runPowerIntent(_ command: Command) async throws -> XcircuiteEngineResultEnvelope<PowerIntentParsingPayload> {
@@ -101,6 +143,14 @@ public enum LogicDesignCLI {
         }
     }
 
+    private static func readSourceData(at path: String) throws -> Data {
+        do {
+            return try Data(contentsOf: URL(fileURLWithPath: path))
+        } catch {
+            throw CLIError.readFailed(path: path, message: error.localizedDescription)
+        }
+    }
+
     private static func emit<T: Encodable>(_ value: T) throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -110,9 +160,11 @@ public enum LogicDesignCLI {
     }
 
     private struct Command: Sendable {
-        enum Kind: Sendable { case help, capabilities, parse, validate, gateParse, powerIntent }
+        enum Kind: Sendable { case help, capabilities, parse, validate, correlate, gateParse, powerIntent }
         var kind: Kind
         var input: String = ""
+        var oraclePath: String = ""
+        var caseID: String = ""
         var output: String?
         var topDesign: String = "top"
         var runID: String = "logic-design-cli"
@@ -126,6 +178,7 @@ public enum LogicDesignCLI {
             case "capabilities": kind = .capabilities; return
             case "parse": kind = .parse
             case "validate": kind = .validate
+            case "correlate": kind = .correlate
             case "gate-parse": kind = .gateParse
             case "power-intent": kind = .powerIntent
             default: throw CLIError.unknownCommand(first)
@@ -136,6 +189,8 @@ public enum LogicDesignCLI {
                 guard index + 1 < arguments.count else { throw CLIError.missingValue(argument) }
                 switch argument {
                 case "--input": input = arguments[index + 1]
+                case "--oracle": oraclePath = arguments[index + 1]
+                case "--case": caseID = arguments[index + 1]
                 case "--output": output = arguments[index + 1]
                 case "--top": topDesign = arguments[index + 1]
                 case "--run-id": runID = arguments[index + 1]
@@ -147,8 +202,14 @@ public enum LogicDesignCLI {
                 }
                 index += 2
             }
-            if kind == .parse || kind == .validate || kind == .gateParse || kind == .powerIntent, input.isEmpty {
+            if kind == .parse || kind == .validate || kind == .correlate || kind == .gateParse || kind == .powerIntent, input.isEmpty {
                 throw CLIError.missingValue("--input")
+            }
+            if kind == .correlate, oraclePath.isEmpty {
+                throw CLIError.missingValue("--oracle")
+            }
+            if kind == .correlate, caseID.isEmpty {
+                throw CLIError.missingValue("--case")
             }
             if kind == .powerIntent, designDigest.isEmpty {
                 throw CLIError.missingValue("--design-digest")
@@ -184,6 +245,7 @@ public enum LogicDesignCLI {
             "  capabilities",
             "  parse --input <file> --top <module> [--output <snapshot.json>]",
             "  validate --input <file> --top <module>",
+            "  correlate --input <file> --oracle <manifest.json> --case <case-id> [--top <module>]",
             "  gate-parse --input <file> --top <module>",
             "  power-intent --input <file> --format <upf|cpf> --design-digest <sha256> [--output <intent.json>]"
         ].joined(separator: "\n")

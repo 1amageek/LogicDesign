@@ -16,7 +16,7 @@ The implementation is intentionally explicit about its qualification boundary: u
 | `SystemVerilogFrontend` | Lexing, parsing, parameter evaluation, relative include resolution and canonical RTL elaboration subset |
 | `PowerIntent` | UPF/CPF domain and low-power policy parsing/validation subset |
 | `LogicDesign` | Umbrella API |
-| `logic-design` | Deterministic JSON CLI for parse, validate, gate-parse, power-intent and capability inspection |
+| `logic-design` | Deterministic JSON CLI for parse, validate, gate-parse, power-intent, reference correlation and capability inspection |
 
 ## Design flow
 
@@ -27,6 +27,18 @@ flowchart LR
   Snapshot --> Artifact["Immutable artifact reference"]
   Artifact --> Consumers["Simulation / synthesis / verification / DFT / timing / physical design"]
   Consumers --> Evidence["Structured results and review artifacts"]
+```
+
+Reference correlation is a separate, digest-bound evidence path:
+
+```mermaid
+flowchart LR
+  Source["SystemVerilog fixture"] --> Native["Native elaboration"]
+  Source --> Digest["Input SHA-256"]
+  Oracle["Retained oracle manifest"] --> Correlator["LogicDesignOracleCorrelator"]
+  Native --> Correlator
+  Digest --> Correlator
+  Correlator --> Evidence["Matched / mismatched JSON evidence"]
 ```
 
 ## Native capability
@@ -42,6 +54,8 @@ flowchart LR
 - Constant `generate-for` and `generate-if/else` elaboration, structural gate netlist parsing and connectivity validation.
 - UPF/CPF domain, supply-set, isolation, level-shifter and retention policy modeling within the native subset.
 - Retained positive and negative fixtures in `Fixtures/manifest.json`, including SHA-256 integrity and expected native status.
+- A retained SystemVerilog reference corpus in `Fixtures/oracle/manifest.json`; its 13 cases bind source SHA-256, expected status, completed snapshot digests and negative diagnostic codes.
+- Typed `LogicDesignOracleManifest`, `LogicDesignOracleCorrelator` and `LogicDesignOracleCorrelation` APIs for Agent/CI-readable comparison evidence.
 
 ## Contract
 
@@ -66,6 +80,7 @@ The CLI emits deterministic JSON for machine consumption. A successful operation
 ```bash
 swift run logic-design capabilities
 swift run logic-design parse --input Fixtures/positive/simple_counter.sv --top counter --output /tmp/counter.json
+swift run logic-design correlate --input Fixtures/positive/simple_counter.sv --oracle Fixtures/oracle/manifest.json --case simple-counter
 swift run logic-design gate-parse --input Fixtures/positive/simple_gate.v --top top
 swift run logic-design power-intent --input Fixtures/power/sample.cpf --format cpf --top top --design-digest fixture
 ```
@@ -77,11 +92,11 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The current contract suite passes with 44 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The retained manifest contains 15 cases, including wildcard-sensitivity, explicit sensitivity-list, and asynchronous-reset event retention, parameterized hierarchy success, conditional compilation success and unresolved/unterminated blocking. The current serial Xcircuite regression passes 547 tests in 58 suites; focused LogicDesign/LogicEngine/runtime lanes remain passing and this integration gate remains separate from process qualification. Parallel shared-workspace runs are not signoff evidence.
+The current LogicDesign contract suite passes with 46 tests in 5 suites. The retained fixture corpus contains 15 native cases, and the separate reference manifest correlates all 13 SystemVerilog cases, including completed snapshot digests and typed negative diagnostics. This evidence is local reference correlation, not external-tool or process qualification. Parallel shared-workspace runs are not signoff evidence.
 
 ## Qualification boundary
 
-The native implementation is smoke-checked and deterministic. Hierarchy flattening is implemented for connected identifier-based ports with instance parameter overrides, symbolic range resolution and contextual constant generate expansion; bidirectional ports, non-identifier outputs and unresolved parameter contexts return typed blocked diagnostics. The Xcircuite production PEX boundary now exposes real-backend selection and fail-closed unavailable-tool mapping, but full SystemVerilog, UPF and CPF language coverage, external-tool correlation, PDK/process qualification, release approval and human approval/resume orchestration remain separate platform gates. See `CAPABILITIES.md`, `MILESTONES.md` and `GOAL_STATUS.md` for the current evidence and remaining gaps.
+The native implementation is smoke-checked and deterministic. Hierarchy flattening is implemented for connected identifier-based ports with instance parameter overrides, symbolic range resolution and contextual constant generate expansion; bidirectional ports, non-identifier outputs and unresolved parameter contexts return typed blocked diagnostics. The retained reference oracle is now correlated through a digest-bound typed API and CLI. Full SystemVerilog, UPF and CPF language coverage, external-tool correlation, PDK/process qualification, release approval and human approval/resume orchestration remain separate platform gates. See `CAPABILITIES.md`, `MILESTONES.md` and `GOAL_STATUS.md` for the current evidence and remaining gaps.
 
 See `DESIGN.md`, `INTERFACES.md` and `IMPLEMENTATION_PLAN.md` before implementing a backend.
 
@@ -89,4 +104,4 @@ See `CAPABILITIES.md` for the qualification boundary and explicit blocked semant
 
 ## Current integration evidence
 
-Production PEX selection and blocked unavailable-tool behavior are exposed through Xcircuite's typed stage adapter. Release-profile eligibility requires exact process qualification scope, while real PDK/process qualification and external oracle evidence remain explicit release gates.
+The retained LogicDesign reference correlation is available to Xcircuite/Agent callers as structured JSON input evidence. Xcircuite's independent external-oracle execution contract is separately focused-tested, while real external-tool correlation, PDK/process qualification and release-profile eligibility remain explicit gates.

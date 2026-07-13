@@ -15,6 +15,7 @@ The package currently provides a deterministic, in-process subset for:
 - UPF/CPF power domains, supply sets, domain supply association, isolation, level shifters, retention and retained directives;
 - typed request/result envelopes with failed, blocked and cancelled execution states;
 - request contract validation for schema version, run identity, top design and artifact integrity metadata;
+- retained reference-oracle correlation for the 13-case SystemVerilog corpus, including source digest binding, canonical snapshot digests and structured mismatch evidence;
 - a deterministic JSON CLI (`logic-design`).
 
 ## Explicit limitations
@@ -23,4 +24,4 @@ The native frontend blocks unsupported semantics rather than treating them as ve
 
 ## Evidence boundary
 
-The fixtures in `Fixtures/` and the contract/parser tests are smoke corpus evidence only. Xcircuite remains responsible for resolving project-relative artifact references, verifying digests, persisting returned artifacts, applying qualification policy, human approval and resume handling.
+The fixtures in `Fixtures/manifest.json` are native smoke corpus evidence, while `Fixtures/oracle/manifest.json` is a retained local reference-correlation artifact. The latter verifies deterministic implementation behavior against independently retained expected outputs; it does not establish external-tool agreement, PDK scope, foundry approval or release signoff. Xcircuite remains responsible for resolving project-relative artifact references, verifying digests, persisting returned artifacts, applying qualification policy, human approval and resume handling.

@@ -67,7 +67,7 @@ Exit criteria:
 - Process/PDK-scoped qualification records include tool, version, inputs, outputs, metrics, and failures.
 - Tool trust and release gates prevent unqualified results from being treated as signoff.
 
-Status: in progress for the qualification machinery; no external-oracle or foundry/process qualification is claimed. Tool evidence, local corpus/oracle comparison, exact scope matching at release-profile eligibility, freshness, independence, and release gates exist as typed contracts, while a retained process-scoped evidence record is still required.
+Status: in progress for the qualification machinery. The retained LogicDesign reference manifest correlates 13 SystemVerilog cases by source digest, expected status, completed snapshot digest and negative diagnostic codes. Tool evidence, exact scope matching at release-profile eligibility, freshness, independence, and release gates exist as typed contracts; external-tool correlation and a retained process-scoped evidence record are still required.
 
 ## Execution policy
 

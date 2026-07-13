@@ -1,0 +1,125 @@
+{
+  "cases" : [
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "43015837acbb1f62d9dbaffc02c935d21fdc42c065c80993b61470cf5858da6c",
+      "expectedStatus" : "completed",
+      "id" : "always-star",
+      "sourcePath" : "positive/always_star.sv",
+      "sourceSHA256" : "af99b954a6812c1d56cbd73bf3acd697a897e6813a33ce5389a5704392df8c9c",
+      "topDesignName" : "always_star"
+    },
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "27e3cbdc0e3199426e32fcbefe421aa884bc15e4c025bef790b1930631dbd326",
+      "expectedStatus" : "completed",
+      "id" : "always-sensitivity-list",
+      "sourcePath" : "positive/always_sensitivity_list.sv",
+      "sourceSHA256" : "e0e71a72d1cfb741c73dfd428d1eb4ed0d78c5f47a9a8bf11db04336c9ba6948",
+      "topDesignName" : "always_sensitivity_list"
+    },
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "63a54f9f6e1c94be3244d0bc39937f12b0735368021756dc9a0475b9f39cf9b3",
+      "expectedStatus" : "completed",
+      "id" : "async-reset",
+      "sourcePath" : "positive/async_reset.sv",
+      "sourceSHA256" : "30f389b7fd3a95ca669ac99ceb54e61742f26f200e8cf03dd94ebddcf35f7812",
+      "topDesignName" : "async_reset"
+    },
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "20dfc669ace2e58a2a5a5c1a5a008fb7c03992d6cc09d434a63ebf42433c235b",
+      "expectedStatus" : "completed",
+      "id" : "conditional-generate",
+      "sourcePath" : "positive/conditional_generate.sv",
+      "sourceSHA256" : "de95311d4b8689fa8ff552cb152daac2233b1c6cc20b9e5d5f26eddbb1bdc23f",
+      "topDesignName" : "conditional_generate"
+    },
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "e8168e33e1cbc6de322ddd5cb8f1e9f6a15f338f61083a0aaf8ba003586c2b1e",
+      "expectedStatus" : "completed",
+      "id" : "conditional-compilation",
+      "sourcePath" : "positive/conditional_compilation.sv",
+      "sourceSHA256" : "5d3f81d9a4368b82e6fa660ec7c0a7d3b6cb02e32c12c5e8844ae6e8d8eeafd8",
+      "topDesignName" : "conditional_compilation"
+    },
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "f079bd49977b3200fc6972dc4045f6a33c20b3061ecac54b35840adb657dd727",
+      "expectedStatus" : "completed",
+      "id" : "hierarchy",
+      "sourcePath" : "positive/hierarchy.sv",
+      "sourceSHA256" : "d7e252f5b17e87091cc68e629ef6c23a1ab80261b97dd84c4bc2b10d6d24efc1",
+      "topDesignName" : "top"
+    },
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "7d4e110ddd744fd425ba65f80490f6bbf8a0b90b1ad1e4fe676f501b71c522c8",
+      "expectedStatus" : "completed",
+      "id" : "parameterized-hierarchy",
+      "sourcePath" : "positive/parameterized_hierarchy.sv",
+      "sourceSHA256" : "3dc4b1f9345f19b569eee0d0ca54c03c27c70b7710077d39af9cd2bb3a800be9",
+      "topDesignName" : "parameterized_top"
+    },
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "c6e826576c525808ed5c4976c6087e5e867a44e670aec4e43c5ee25fb78391c7",
+      "expectedStatus" : "completed",
+      "id" : "preprocessor",
+      "sourcePath" : "positive/preprocessor.sv",
+      "sourceSHA256" : "8ab6c59e910e7f9d2b31fa313b4f2fc75cf14a180a527ceb9a1203c0339eb1ed",
+      "topDesignName" : "preprocessor"
+    },
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "4a81f3a4307ebb4b6532e9c86699b7cfaf4882331c1aef2b42ddc3c587bb09c9",
+      "expectedStatus" : "completed",
+      "id" : "simple-counter",
+      "sourcePath" : "positive/simple_counter.sv",
+      "sourceSHA256" : "ac7601a1eb292fd595d4bbc120c7ab4e1c40302ec3ce061e99ba045e27b70b60",
+      "topDesignName" : "counter"
+    },
+    {
+      "expectedDiagnosticCodes" : ["LOGIC_REFERENCE_UNRESOLVED"],
+      "expectedSnapshotDigest" : null,
+      "expectedStatus" : "failed",
+      "id" : "unresolved-signal",
+      "sourcePath" : "negative/unresolved_signal.sv",
+      "sourceSHA256" : "c52072c4743ef7f0d74c11382e9823bd1749c178b8cc2fec52b2eff6825820e9",
+      "topDesignName" : "broken"
+    },
+    {
+      "expectedDiagnosticCodes" : ["LOGIC_HIERARCHY_PARAMETER_UNRESOLVED"],
+      "expectedSnapshotDigest" : null,
+      "expectedStatus" : "blocked",
+      "id" : "unknown-hierarchy-parameter",
+      "sourcePath" : "negative/unknown_hierarchy_parameter.sv",
+      "sourceSHA256" : "42be80cb24e276c8715441197cc47098b232fc719108f362b3581ba418716dc5",
+      "topDesignName" : "unknown_parameter_top"
+    },
+    {
+      "expectedDiagnosticCodes" : ["SV_CONDITIONAL_UNTERMINATED"],
+      "expectedSnapshotDigest" : null,
+      "expectedStatus" : "blocked",
+      "id" : "unterminated-conditional",
+      "sourcePath" : "negative/unterminated_conditional.sv",
+      "sourceSHA256" : "9b9fe133e45a4049237404dc904a0b2fbae3b6328c60e08dc00fb2657d1afa46",
+      "topDesignName" : "unterminated_conditional"
+    },
+    {
+      "expectedDiagnosticCodes" : ["SV_UNSUPPORTED_GENERATE"],
+      "expectedSnapshotDigest" : null,
+      "expectedStatus" : "blocked",
+      "id" : "unsupported-generate",
+      "sourcePath" : "negative/unsupported_generate.sv",
+      "sourceSHA256" : "a19c16a9521f2cba14ab13f63d1be7534ab5e2c5b0e744e01adddf7c48d1a78d",
+      "topDesignName" : "generated"
+    }
+  ],
+  "corpusID" : "logic-design-native-reference-v1",
+  "oracleID" : "logic-design-retained-reference",
+  "oracleVersion" : "1",
+  "schemaVersion" : 1
+}

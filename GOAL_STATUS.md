@@ -10,15 +10,15 @@
 | Public package products | Implemented | Package.swift |
 | Shared Xcircuite request/result contract | Implemented | Public Swift protocols and payloads |
 | Contract build | Passed | swift build |
-| Contract test | Passed | timeout-bounded `swift test`; 44 tests in 5 suites |
+| Contract test | Passed | timeout-bounded `xcodebuild test`; 46 tests in 5 suites |
 | Domain implementation | Complete for native subset | LogicIR, SystemVerilogFrontend, PowerIntent and gate netlist parser |
-| CLI implementation | Complete | `logic-design` parse, validate, gate-parse, power-intent and capabilities |
+| CLI implementation | Complete | `logic-design` parse, validate, correlate, gate-parse, power-intent and capabilities |
 | Fixture corpus | Complete for smoke corpus | `Fixtures/manifest.json` records 15 retained cases with SHA-256 and expected native status, including wildcard-sensitivity, explicit sensitivity-list and asynchronous-reset events, parameterized hierarchy, conditional compilation and typed blocked cases |
-| Oracle correlation | Not started | No retained comparison evidence |
+| Oracle correlation | Complete for retained local reference corpus | `Fixtures/oracle/manifest.json` correlates 13 SystemVerilog cases by source SHA-256, status, completed snapshot digest and typed negative diagnostic codes; this is not external-tool qualification |
 | Process qualification | Not started | No PDK-scoped qualification record |
-| Xcircuite stage adapter | Implemented and focused-verified; full gate pending | `LogicElaborationFlowStageExecutor` resolves project-root relative includes, while elaboration/power-intent persist canonical artifacts, envelopes and integrity gates; current serial Xcircuite regression passes 547 tests in 58 suites |
+| Xcircuite stage adapter | Implemented and focused-verified; full gate pending | `LogicElaborationFlowStageExecutor` resolves project-root relative includes, while elaboration/power-intent persist canonical artifacts, envelopes and integrity gates; the independent RTL oracle stage correlation suite passes 6/6 |
 | End-to-end flow evidence | Serial integration evidence retained; qualification pending | The retained multi-engine test defines the canonical RTL → simulation → STA → physical review/resume path; current serial full regression passes 547 tests in 58 suites, while process qualification and release evidence remain open |
-| Release readiness | Blocked | Native subset and production PEX boundary are smoke-checked; independent oracle/PDK process qualification and dependent platform test build remain |
+| Release readiness | Blocked | Native subset and local reference correlation are smoke-checked; external-tool correlation, PDK/process qualification and dependent platform release evidence remain |
 
 ## Active milestones
 
@@ -31,7 +31,7 @@ The detailed roadmap and exit criteria are maintained in `MILESTONES.md`.
 | 2. Deterministic HDL and power-intent semantics | In progress | Numeric macro/timescale preprocessing, object-like conditional compilation, relative include graph resolution, contextual constant generate, parameterized hierarchy, connected hierarchy flattening, explicit combinational sensitivity lists and source-ordered clock/asynchronous-reset events are implemented; function-like/expression preprocessing and wider procedural coverage remain |
 | 3. Cross-engine design identity | In progress | Canonical-vs-serialized digest boundary, gate connectivity validation and shared `LogicDesignProvenance` contract are implemented; producer adoption is covered for LogicEngine, DFT and Xcircuite, while TimingEngine, PhysicalDesignEngine and ReleaseEngine enforce invalid or mismatched lineage; remaining handoff consumers and full signoff-chain evidence remain |
 | 4. Xcircuite execution and human-in-the-loop | In progress | Focused stage adapters, production PEX blocked/readiness mapping, and the retained flow contract exist; current serial full regression passes 547 tests in 58 suites; external oracle and complete platform signoff remain |
-| 5. Qualification and release eligibility | In progress for gate implementation | Local corpus/oracle and process-scope gates are typed and fail closed, including exact scope checks at release-profile eligibility; no retained independent LogicDesign oracle correlation or PDK/foundry process qualification is claimed |
+| 5. Qualification and release eligibility | In progress for gate implementation | Retained LogicDesign reference correlation and process-scope gates are typed and fail closed, including exact scope checks at release-profile eligibility; external-tool and PDK/foundry process qualification are not claimed |
 
 ## Function status
 
@@ -74,7 +74,7 @@ The package goal is complete only when every P0 function has a concrete backend,
 - Full SystemVerilog, UPF and CPF language semantics remain outside the native subset and return blocked diagnostics.
 - No external-tool adapter has been selected or qualified.
 - No process-specific corpus has been retained.
-- The current serial Xcircuite full regression passes 547 tests in 58 suites. Focused LogicDesign integration remains passing; production PEX environment execution, independent oracle correlation and process qualification remain open. Parallel shared-workspace runs are not signoff evidence.
+- LogicDesign's retained reference oracle correlation is passing for 13 SystemVerilog cases, and Xcircuite's independent RTL oracle stage suite is passing 6/6. External-tool correlation, production PEX environment execution and process qualification remain open. Parallel shared-workspace runs are not signoff evidence.
 - The LogicEngine lowering slice now consumes the canonical `LogicDesignReference.designDigest` for RTL snapshots while retaining `artifact.sha256` for serialized-byte integrity.
 
 This file must be updated by implementation agents whenever a maturity gate changes. A source file or type name alone is never evidence of implementation or qualification.

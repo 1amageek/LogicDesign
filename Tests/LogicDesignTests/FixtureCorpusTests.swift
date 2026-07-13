@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import LogicDesign
 import LogicIR
 import PowerIntent
 import SystemVerilogFrontend
@@ -73,6 +74,69 @@ struct FixtureCorpusTests {
             let data = try Data(contentsOf: url)
             #expect(hasher.sha256(data: data) == entry.sha256)
         }
+    }
+
+    @Test("retained reference oracle correlates every SystemVerilog fixture")
+    func retainedReferenceOracleCorrelatesSystemVerilogFixtures() async throws {
+        let manifest = try readOracleManifest()
+        try LogicDesignOracleCorrelator.validate(manifest)
+        #expect(manifest.corpusID == "logic-design-native-reference-v1")
+        #expect(manifest.cases.count == 13)
+
+        let root = workspaceRoot()
+        let hasher = XcircuiteHasher()
+        for oracleCase in manifest.cases {
+            let sourceURL = root.appending(path: "Fixtures").appending(path: oracleCase.sourcePath)
+            let sourceData = try Data(contentsOf: sourceURL)
+            let source = try #require(String(data: sourceData, encoding: .utf8))
+            let result = try await LogicElaboratingEngine(
+                clock: { Date(timeIntervalSince1970: 0) }
+            ).execute(LogicElaborationRequest(
+                runID: "oracle-" + oracleCase.id,
+                inputs: [],
+                topDesignName: oracleCase.topDesignName,
+                sources: [SystemVerilogSourceUnit(
+                    path: "Fixtures/" + oracleCase.sourcePath,
+                    source: source
+                )]
+            ))
+            let correlation = try LogicDesignOracleCorrelator.correlate(
+                manifest: manifest,
+                oracleCase: oracleCase,
+                sourceSHA256: hasher.sha256(data: sourceData),
+                topDesignName: oracleCase.topDesignName,
+                result: result
+            )
+            #expect(correlation.matched, "Reference oracle mismatch for \(oracleCase.id): \(correlation.mismatches)")
+        }
+    }
+
+    @Test("reference oracle reports a structured snapshot mismatch")
+    func referenceOracleReportsSnapshotMismatch() async throws {
+        let manifest = try readOracleManifest()
+        let originalCase = try #require(manifest.caseWithID("simple-counter"))
+        let sourceData = try Data(contentsOf: workspaceRoot().appending(path: "Fixtures/" + originalCase.sourcePath))
+        let source = try #require(String(data: sourceData, encoding: .utf8))
+        let result = try await LogicElaboratingEngine(
+            clock: { Date(timeIntervalSince1970: 0) }
+        ).execute(LogicElaborationRequest(
+            runID: "oracle-mismatch",
+            inputs: [],
+            topDesignName: originalCase.topDesignName,
+            sources: [SystemVerilogSourceUnit(path: "Fixtures/" + originalCase.sourcePath, source: source)]
+        ))
+        var mismatchedCase = originalCase
+        mismatchedCase.expectedSnapshotDigest = String(repeating: "0", count: 64)
+        let correlation = try LogicDesignOracleCorrelator.correlate(
+            manifest: manifest,
+            oracleCase: mismatchedCase,
+            sourceSHA256: XcircuiteHasher().sha256(data: sourceData),
+            topDesignName: originalCase.topDesignName,
+            result: result
+        )
+
+        #expect(!correlation.matched)
+        #expect(correlation.mismatches.contains { $0.field == "snapshotDigest" })
     }
 
     @Test("positive SystemVerilog fixture elaborates")
@@ -168,6 +232,11 @@ struct FixtureCorpusTests {
     private func readManifest() throws -> FixtureCorpusManifest {
         let data = try Data(contentsOf: workspaceRoot().appending(path: "Fixtures/manifest.json"))
         return try JSONDecoder().decode(FixtureCorpusManifest.self, from: data)
+    }
+
+    private func readOracleManifest() throws -> LogicDesignOracleManifest {
+        let data = try Data(contentsOf: workspaceRoot().appending(path: "Fixtures/oracle/manifest.json"))
+        return try JSONDecoder().decode(LogicDesignOracleManifest.self, from: data)
     }
 
     private func workspaceRoot() -> URL {
