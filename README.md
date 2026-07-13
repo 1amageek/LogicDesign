@@ -77,7 +77,7 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The current contract suite passes with 42 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The retained manifest contains 12 cases, including parameterized hierarchy success, conditional compilation success and unresolved/unterminated blocking. The current serial Xcircuite regression passes 534 tests in 58 suites; a parallel run in the shared workspace is not signoff evidence because concurrent SwiftPM processes can interfere. This integration gate remains separate from process qualification.
+The current contract suite passes with 43 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The retained manifest contains 13 cases, including parameterized hierarchy success, asynchronous-reset event retention, conditional compilation success and unresolved/unterminated blocking. The current serial Xcircuite regression passes 545 tests in 58 suites; focused LogicDesign/LogicEngine/runtime lanes remain passing and this integration gate remains separate from process qualification. Parallel shared-workspace runs are not signoff evidence.
 
 ## Qualification boundary
 
