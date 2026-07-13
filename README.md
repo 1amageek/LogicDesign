@@ -77,7 +77,7 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The current contract suite passes with 44 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The retained manifest contains 14 cases, including wildcard-sensitivity and asynchronous-reset event retention, parameterized hierarchy success, conditional compilation success and unresolved/unterminated blocking. The current serial Xcircuite regression passes 545 tests in 58 suites; focused LogicDesign/LogicEngine/runtime lanes remain passing and this integration gate remains separate from process qualification. Parallel shared-workspace runs are not signoff evidence.
+The current contract suite passes with 44 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The retained manifest contains 15 cases, including wildcard-sensitivity, explicit sensitivity-list, and asynchronous-reset event retention, parameterized hierarchy success, conditional compilation success and unresolved/unterminated blocking. The current serial Xcircuite regression passes 547 tests in 58 suites; focused LogicDesign/LogicEngine/runtime lanes remain passing and this integration gate remains separate from process qualification. Parallel shared-workspace runs are not signoff evidence.
 
 ## Qualification boundary
 

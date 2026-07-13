@@ -10,6 +10,14 @@
     },
     {
       "expectedStatus" : "completed",
+      "id" : "always-sensitivity-list",
+      "kind" : "systemVerilog",
+      "path" : "positive/always_sensitivity_list.sv",
+      "sha256" : "e0e71a72d1cfb741c73dfd428d1eb4ed0d78c5f47a9a8bf11db04336c9ba6948",
+      "topDesignName" : "always_sensitivity_list"
+    },
+    {
+      "expectedStatus" : "completed",
       "id" : "async-reset",
       "kind" : "systemVerilog",
       "path" : "positive/async_reset.sv",
