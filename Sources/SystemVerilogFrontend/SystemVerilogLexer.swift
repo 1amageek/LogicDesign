@@ -149,7 +149,7 @@ public struct SystemVerilogLexer: SystemVerilogLexing {
                 continue
             }
 
-            let multiCharacterOperators = ["===", "!==", "<<<", ">>>", "&&&", "<=", ">=", "==", "!=", "&&", "||", "<<", ">>", "=>", ":=", "++", "--", "**", "->"]
+            let multiCharacterOperators = ["===", "!==", "<<<", ">>>", "&&&", "<=", ">=", "==", "!=", "&&", "||", "<<", ">>", "=>", ":=", "++", "--", "+=", "-=", "**", "->"]
             var matchedOperator: String?
             for length in stride(from: 3, through: 2, by: -1) {
                 let candidate = String(characters[index..<min(index + length, characters.count)])

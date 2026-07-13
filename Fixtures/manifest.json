@@ -73,6 +73,38 @@
       "topDesignName" : "counter"
     },
     {
+      "expectedStatus" : "completed",
+      "id" : "macro-expansion",
+      "kind" : "systemVerilog",
+      "path" : "positive/macro_expansion.sv",
+      "sha256" : "155907ab1e446e10ae11d7fc30a40f85a36fad1db54781cf791ccbff69c9fba9",
+      "topDesignName" : "macro_expansion"
+    },
+    {
+      "expectedStatus" : "completed",
+      "id" : "generate-else-if",
+      "kind" : "systemVerilog",
+      "path" : "positive/generate_else_if.sv",
+      "sha256" : "ed346cd2d83049bc22419ee242d1f32c9d5f9a153b128a61f47a53dd415f3f73",
+      "topDesignName" : "generate_else_if"
+    },
+    {
+      "expectedStatus" : "completed",
+      "id" : "hierarchy-expression-connections",
+      "kind" : "systemVerilog",
+      "path" : "positive/hierarchy_expression_connections.sv",
+      "sha256" : "feb0add3bc82ddc71273dd57a7711af43abe4db8e1c8848e00441efc42d5802e",
+      "topDesignName" : "expression_top"
+    },
+    {
+      "expectedStatus" : "completed",
+      "id" : "parameterized-memory",
+      "kind" : "systemVerilog",
+      "path" : "positive/parameterized_memory.sv",
+      "sha256" : "e04c537c84e4348e91b52a55a0bbd99b284ea71b29a473b11990460d20dc9bcd",
+      "topDesignName" : "memory_top"
+    },
+    {
       "expectedStatus" : "failed",
       "id" : "unresolved-signal",
       "kind" : "systemVerilog",
@@ -110,6 +142,14 @@
       "kind" : "cpf",
       "path" : "power/sample.cpf",
       "sha256" : "63108820db750590f6d70293ac142cbcc4f8590fa0f14527e1def8a0ed1e4194",
+      "topDesignName" : "top"
+    },
+    {
+      "expectedStatus" : "completed",
+      "id" : "structured-cpf",
+      "kind" : "cpf",
+      "path" : "power/structured.cpf",
+      "sha256" : "8a0b5ac4cbf504590709d920e2958505e43aa9c26622234ebf8cb661105c04cf",
       "topDesignName" : "top"
     },
     {

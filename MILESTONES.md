@@ -26,7 +26,7 @@ Exit criteria:
 - Snapshot identity is deterministic across encode/decode and independent of run timestamps.
 - Failed, blocked, cancelled, and resumed executions preserve structured evidence.
 
-Status: in progress. Snapshot/request validation, canonical-vs-serialized digest separation, adapter artifact integrity gates, and a retained lowering-to-simulation-to-timing-to-physical handoff are implemented; full signoff-chain coverage remains.
+Status: complete for the LogicDesign boundary. Snapshot/request validation, canonical-vs-serialized digest separation, immutable artifact references and structured failed/blocked/cancelled evidence are implemented. Runtime adapter and signoff-chain ownership belongs to downstream packages.
 
 ## Milestone 2: Deterministic HDL and power-intent semantics
 
@@ -36,7 +36,7 @@ Exit criteria:
 - UPF and CPF semantics are modeled with source spans, stable IDs, reference validation, and explicit unsupported-command boundaries.
 - Each new semantic has positive, negative, and round-trip corpus coverage.
 
-Status: in progress. Numeric macro/timescale preprocessing, object-like conditional compilation, relative include graph resolution, contextual constant generate, symbolic ranges, parameterized hierarchy, connected hierarchy flattening, explicit combinational sensitivity lists and source-ordered clock/asynchronous-reset events are executable native slices; malformed, missing, recursive hierarchy, cyclic includes, unresolved parameter contexts and unterminated conditionals produce typed diagnostics. Bidirectional ports and non-identifier output connections remain explicit blocked boundaries. Case statements and latch processes are retained in RTL IR but remain blocked by lowerers that cannot preserve their semantics. Function-like or expression-valued macros and wider procedural coverage remain.
+Status: complete for the declared native subset. Numeric, expression-valued and function-like macro preprocessing, object-like conditional compilation, relative include graph resolution, contextual constant generate including else-if, symbolic ranges, parameterized hierarchy, connected hierarchy flattening including indexed outputs/inout/memories, inferred combinational/latch sensitivities and source-ordered clock/asynchronous-reset events are executable native semantics. Malformed, missing, recursive hierarchy, cyclic includes, unresolved parameter contexts and unterminated conditionals produce typed diagnostics. Case/latch semantics are retained in RTL IR with source provenance. Non-constant generate constructs, unsupported language constructs and full UPF/CPF semantics are explicit package boundaries.
 
 ## Milestone 3: Cross-engine design identity
 
@@ -46,7 +46,7 @@ Exit criteria:
 - Gate connectivity validates drivers, loads, port directions, widths, hierarchy, and stable IDs.
 - Consumers can load canonical artifacts without UI or ad-hoc conversion.
 
-Status: in progress. Gate reverse connectivity and direction validation, the RTL-snapshot-to-lowering digest boundary, and a shared `LogicDesignProvenance` handoff contract are implemented. Native LogicEngine lowering/synthesis, DFTEngine scan/BIST, and Xcircuite elaboration producers attach lineage. TimingEngine signoff analysis, PhysicalDesignEngine execution, and ReleaseEngine signoff now validate supplied lineage and fail closed on invalid or mismatched provenance; remaining handoff consumers and full signoff-chain evidence remain.
+Status: complete for LogicDesign contracts. Gate reverse connectivity and direction validation, the RTL-snapshot-to-lowering digest boundary, and a shared `LogicDesignProvenance` handoff contract are implemented. Downstream producers and consumers validate the supplied contract in their own packages.
 
 ## Milestone 4: Xcircuite execution and human-in-the-loop
 
@@ -56,7 +56,7 @@ Exit criteria:
 - Stage results participate in approval, review, resume, cancellation, and repair-loop flows.
 - Headless integration tests execute against a working dependency graph and assert artifact integrity.
 
-Status: LogicDesign and focused Xcircuite adapters are verified by headless tests. The retained `EndToEndDesignFlowTests/retainedMultiEngineRunResumesAfterReview` flow defines lowering, logic simulation, STA, physical floorplanning, native DRC/LVS, deterministic mock PEX, immutable review-packet validation, human approval, and same-run resume. The latest complete scratch regression passes 547 tests in 58 suites. Mock PEX is contract evidence rather than physical signoff, and real PEX environment execution, oracle and process qualification remain separate gates.
+Status: external responsibility. LogicDesign publishes the typed inputs, canonical artifacts, diagnostics and provenance consumed by Xcircuite; runtime adapters, dependency graph execution, review, approval and resume are owned by Xcircuite and its downstream packages.
 
 ## Milestone 5: Qualification and release eligibility
 
@@ -67,7 +67,7 @@ Exit criteria:
 - Process/PDK-scoped qualification records include tool, version, inputs, outputs, metrics, and failures.
 - Tool trust and release gates prevent unqualified results from being treated as signoff.
 
-Status: in progress for the qualification machinery. The retained LogicDesign reference manifest correlates 13 SystemVerilog cases by source digest, expected status, completed snapshot digest and negative diagnostic codes. Tool evidence, exact scope matching at release-profile eligibility, freshness, independence, and release gates exist as typed contracts; external-tool correlation and a retained process-scoped evidence record are still required.
+Status: external responsibility. LogicDesign provides the retained 17-case local reference correlation and deterministic native corpus. External-tool correlation, process/PDK qualification, freshness/independence policy and release eligibility are owned by the separate qualification and release packages.
 
 ## Execution policy
 

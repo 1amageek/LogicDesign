@@ -1,27 +1,27 @@
-# LogicDesign Capability and Limitation Report
+# LogicDesign Capability and Responsibility Report
 
 ## Native capability
 
 The package currently provides a deterministic, in-process subset for:
 
 - stable RTL identities, source spans and SHA-256 source provenance;
-- ANSI SystemVerilog modules, ports, parameters, numeric object-like compiler macros, relative include resolution, constant expressions, vectors and memories;
-- hierarchy flattening for connected identifier-based ports, with deterministic instance-path naming and recursion diagnostics;
+- ANSI SystemVerilog modules, ports, parameters, numeric/expression/function-like compiler macros, relative include resolution, constant expressions, vectors and memories;
+- hierarchy flattening for connected ports, indexed/part-selected outputs, direct inout nets and parameterized memories, with deterministic instance-path naming and recursion diagnostics;
 - instance parameter overrides with declaration-order parameter evaluation, symbolic port/signal range resolution and contextual constant generate expansion;
-- conditional compilation for numeric object-like macros using `ifdef`, `ifndef`, `elsif`, `else` and `endif`;
-- continuous assignments, supported procedural assignments, `if`, and canonical retention of `case`/`always_latch` statements, module instances and named connections;
+- conditional compilation and macro expansion using `ifdef`, `ifndef`, `elsif`, `else` and `endif`, including recursive-expansion diagnostics;
+- continuous assignments, procedural assignments, `if`, typed `case`/`casex`/`casez`, inferred `always_comb`/`always_latch` sensitivities, module instances and named connections;
 - canonical JSON snapshot round trips with schema/digest verification and RTL/gate structural validation;
 - gate pin/net reverse-reference, driver/load direction, duplicate identity and connectivity validation;
-- UPF/CPF power domains, supply sets, domain supply association, isolation, level shifters, retention and retained directives;
+- UPF/CPF power domains, supply sets, domain supply association, isolation, level shifters, retention and structured source directives;
 - typed request/result envelopes with failed, blocked and cancelled execution states;
 - request contract validation for schema version, run identity, top design and artifact integrity metadata;
 - retained reference-oracle correlation for the 13-case SystemVerilog corpus, including source digest binding, canonical snapshot digests and structured mismatch evidence;
 - a deterministic JSON CLI (`logic-design`).
 
-## Explicit limitations
+## Intentional responsibility boundary
 
-The native frontend blocks unsupported semantics rather than treating them as verified. The elaborating engine resolves project-relative include graphs through the injected source provider and reports malformed, missing, and cyclic includes as typed diagnostics. Direct parsing without include resolution, function-like or expression-valued preprocessor directives, non-constant or else-if generate constructs, interfaces, packages, classes, assertions, full UPF/CPF semantics and external-tool correlation remain blocked. Constant generate-if/else, parameterized generate-for, numeric macros, object-like conditional compilation, symbolic ranges and identifier-connected hierarchy are supported by native elaboration. Unresolved parameter contexts, bidirectional ports and non-identifier output connections remain blocked with typed diagnostics. Case statements and latch processes are parsed and retained in RTL IR; lowerers that cannot preserve their semantics must return a structured blocked result. No process-specific foundry qualification is claimed.
+The native frontend is complete for the LogicDesign canonical subset and fails closed for constructs whose semantics are not represented by its public IR. Project-relative include graphs are resolved through the injected source provider; malformed, missing, and cyclic includes produce typed diagnostics. Non-constant generate constructs, unresolved parameter contexts, interfaces/programs/packages/classes, concurrent assertions and full UPF/CPF language semantics are explicit package-boundary limitations, not unfinished LogicDesign tasks. The parser retains typed case/latch semantics in RTL IR so downstream consumers can make their own lowering decision without losing source intent. External-tool correlation and process/foundry qualification are owned by the platform qualification layer.
 
 ## Evidence boundary
 
-The fixtures in `Fixtures/manifest.json` are native smoke corpus evidence, while `Fixtures/oracle/manifest.json` is a retained local reference-correlation artifact. The latter verifies deterministic implementation behavior against independently retained expected outputs; it does not establish external-tool agreement, PDK scope, foundry approval or release signoff. Xcircuite remains responsible for resolving project-relative artifact references, verifying digests, persisting returned artifacts, applying qualification policy, human approval and resume handling.
+The 20 fixtures in `Fixtures/manifest.json` are native corpus evidence, while `Fixtures/oracle/manifest.json` is a retained local reference-correlation artifact. The latter verifies deterministic implementation behavior against independently retained expected outputs; it does not establish external-tool agreement, PDK scope, foundry approval or release signoff. Xcircuite and the separate qualification packages remain responsible for their own artifact persistence, policy gates, human approval and resume handling.

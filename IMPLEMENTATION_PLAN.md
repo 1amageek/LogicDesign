@@ -10,9 +10,9 @@
 ## Delivered native implementation slice
 
 - Stable RTL/gate identity, source spans, source SHA-256 provenance and canonical snapshot codec.
-- SystemVerilog lexer/parser for ANSI modules, parameters, constant expressions, vectors, memories, assignments, supported procedural control, hierarchy and constant generate-for elaboration.
+- SystemVerilog lexer/parser for ANSI modules, parameters, numeric/expression/function-like macros, constant expressions, vectors, memories, assignments, procedural control, hierarchy and constant generate elaboration.
 - Structural gate netlist parser for mapped cells, pins and nets.
-- UPF/CPF parser and validator for domains, supply sets, isolation, level shifting, retention and retained directives.
+- UPF/CPF parser and validator for domains, supply sets, isolation, level shifting, retention and structured source directives.
 - Deterministic CLI, positive/negative fixtures, structured blocked diagnostics and JSON round-trip tests.
 - Xcircuite-side headless stage executors for elaboration and power intent.
 
@@ -27,4 +27,4 @@
 
 ## Qualification boundary
 
-The native subset is smoke-checked only. Full-language coverage, external-oracle correlation and foundry/process qualification remain separate gates and are represented as blocked capability evidence rather than inferred from parser success.
+The declared native subset is complete and smoke-tested. Full-language coverage outside the canonical IR, external-oracle correlation and foundry/process qualification are explicit responsibility boundaries and are never inferred from parser success.

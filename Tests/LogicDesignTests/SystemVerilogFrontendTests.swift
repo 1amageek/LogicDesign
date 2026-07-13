@@ -33,6 +33,28 @@ struct SystemVerilogFrontendTests {
         #expect(result.design?.modules.first?.ports.first?.range?.width == 4)
     }
 
+    @Test("expression-valued and function-like macros expand in RTL expressions")
+    func expandsExpressionAndFunctionMacros() {
+        let source = SystemVerilogSourceUnit(
+            path: "macro-expansion.sv",
+            source: """
+            module top #(parameter BASE = 2) (output logic y);
+                `define OFFSET (BASE + 1)
+                `define ADD(a, b) ((a) + (b))
+                wire [`OFFSET-1:0] data;
+                assign data = 3'b101;
+                assign y = `ADD(data[0], 1'b0);
+            endmodule
+            """
+        )
+        let result = SystemVerilogParser().parse([source], topDesignName: "top")
+
+        #expect(result.unsupportedSemantics == false)
+        #expect(result.diagnostics.isEmpty)
+        #expect(result.design?.modules.first?.signals.first?.range?.width == 3)
+        #expect(result.design?.modules.first?.assignments.count == 2)
+    }
+
     @Test("conditional compilation selects the active macro branch")
     func selectsConditionalCompilationBranch() {
         let source = SystemVerilogSourceUnit(
@@ -182,6 +204,19 @@ struct SystemVerilogFrontendTests {
         #expect(process.events.map(\.edge) == [.positive, .negative])
     }
 
+    @Test("always_comb derives deterministic read sensitivity")
+    func infersAlwaysCombSensitivity() {
+        let source = SystemVerilogSourceUnit(
+            path: "always-comb.sv",
+            source: "module top(input logic a, input logic b, output logic y); always_comb begin y = a & b; end endmodule"
+        )
+        let result = SystemVerilogParser().parse([source], topDesignName: "top")
+
+        #expect(result.diagnostics.isEmpty)
+        #expect(result.design?.modules.first?.processes.first?.sensitivity == ["a", "b"])
+        #expect(result.design?.modules.first?.processes.first?.events.map(\.signal) == ["a", "b"])
+    }
+
     @Test("decodes legacy RTL process artifacts without event metadata")
     func decodesLegacyProcessArtifact() throws {
         let data = Data(
@@ -279,6 +314,34 @@ struct SystemVerilogFrontendTests {
         #expect(result.design?.modules.first?.generateBlocks.first?.limit == 2)
     }
 
+    @Test("generate-for supports inclusive bounds and descending steps")
+    func parsesInclusiveGenerateBounds() {
+        let source = SystemVerilogSourceUnit(
+            path: "generate-bounds.sv",
+            source: """
+            module top(input logic a, output logic y);
+                generate
+                    for (genvar i = 0; i <= 2; i++) begin : up
+                        assign y = a;
+                    end
+                    for (genvar j = 2; j >= 0; j--) begin : down
+                        assign y = a;
+                    end
+                endgenerate
+            endmodule
+            """
+        )
+        let result = SystemVerilogParser().parse([source], topDesignName: "top")
+
+        #expect(result.unsupportedSemantics == false)
+        #expect(result.diagnostics.isEmpty)
+        #expect(result.design?.modules.first?.generateBlocks.map(\.limit) == [3, -1])
+        #expect(result.design?.modules.first?.generateBlocks.map(\.step) == [1, -1])
+        if let design = result.design {
+            #expect(RTLGenerateElaborator().elaborate(design).modules.first?.assignments.count == 6)
+        }
+    }
+
     @Test("constant generate-if selects one branch during elaboration")
     func parsesGenerateIf() {
         let source = SystemVerilogSourceUnit(
@@ -303,6 +366,42 @@ struct SystemVerilogFrontendTests {
             let elaborated = RTLGenerateElaborator().elaborate(design)
             #expect(elaborated.modules.first?.generateBlocks.isEmpty == true)
             #expect(elaborated.modules.first?.assignments.count == 1)
+        }
+    }
+
+    @Test("constant generate else-if chains retain mutually exclusive branches")
+    func parsesGenerateElseIfChain() {
+        let source = SystemVerilogSourceUnit(
+            path: "generate-else-if.sv",
+            source: """
+            module top #(parameter SELECT = 1) (output logic y);
+                generate
+                    if (SELECT == 0) begin : zero
+                        assign y = 1'b0;
+                    end else if (SELECT == 1) begin : one
+                        assign y = 1'b1;
+                    end else begin : other
+                        assign y = 1'b0;
+                    end
+                endgenerate
+            endmodule
+            """
+        )
+        let result = SystemVerilogParser().parse([source], topDesignName: "top")
+
+        #expect(result.unsupportedSemantics == false)
+        #expect(result.diagnostics.isEmpty)
+        #expect(result.design?.modules.first?.generateBlocks.count == 3)
+        if let module = result.design?.modules.first {
+            let elaborated = RTLGenerateElaborator().elaborate(module, parameterValues: ["SELECT": 1])
+            #expect(elaborated.assignments.count == 1)
+            if case .integer(let value, _, _) = elaborated.assignments.first?.value {
+                #expect(value == 1)
+            } else {
+                Issue.record("Expected the selected generate branch assignment")
+            }
+        } else {
+            Issue.record("Expected a parsed module")
         }
     }
 }

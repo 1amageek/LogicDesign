@@ -63,7 +63,7 @@ struct FixtureCorpusTests {
         let manifest = try readManifest()
         #expect(manifest.schemaVersion == 1)
         #expect(manifest.corpusID == "logic-design-native-smoke")
-        #expect(manifest.cases.count == 15)
+        #expect(manifest.cases.count == 20)
         #expect(Set(manifest.cases.map(\.id)).count == manifest.cases.count)
         #expect(Set(manifest.cases.map(\.path)).count == manifest.cases.count)
 
@@ -81,7 +81,7 @@ struct FixtureCorpusTests {
         let manifest = try readOracleManifest()
         try LogicDesignOracleCorrelator.validate(manifest)
         #expect(manifest.corpusID == "logic-design-native-reference-v1")
-        #expect(manifest.cases.count == 13)
+        #expect(manifest.cases.count == 17)
 
         let root = workspaceRoot()
         let hasher = XcircuiteHasher()

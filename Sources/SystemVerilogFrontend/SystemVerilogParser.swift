@@ -30,6 +30,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
         var diagnostics: [LogicDiagnostic] = []
         var unsupported = false
         var macroValues: [String: Int64] = [:]
+        var macroDefinitions: [String: ParserState.MacroDefinition] = [:]
 
         for source in sources {
             sourceFiles.append(source.file)
@@ -39,6 +40,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 tokens: lexResult.tokens,
                 sourcePath: source.path,
                 macroValues: macroValues,
+                macroDefinitions: macroDefinitions,
                 allowResolvedIncludes: allowResolvedIncludes
             )
             while !state.isAtEnd {
@@ -65,11 +67,13 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 diagnostics.append(contentsOf: state.diagnostics)
                 unsupported = unsupported || state.unsupportedSemantics
                 macroValues = state.macroValues
+                macroDefinitions = state.macroDefinitions
                 state.diagnostics.removeAll()
             }
             state.finalizePreprocessor()
             diagnostics.append(contentsOf: state.diagnostics)
             unsupported = unsupported || state.unsupportedSemantics
+            macroDefinitions = state.macroDefinitions
         }
 
         let design = modules.isEmpty ? nil : RTLDesign(
@@ -85,13 +89,21 @@ public struct SystemVerilogParser: SystemVerilogParsing {
     }
 
     private struct ParserState {
+        struct MacroDefinition {
+            var isFunctionLike: Bool
+            var parameters: [String]
+            var replacement: [SystemVerilogToken]
+        }
+
         var tokens: [SystemVerilogToken]
         var index: Int = 0
         var sourcePath: String
         var moduleNameForIDs: String = ""
         var parameterValues: [String: Int64] = [:]
         var macroValues: [String: Int64]
+        var macroDefinitions: [String: MacroDefinition]
         var allowResolvedIncludes: Bool
+        var expandingMacros: Set<String> = []
         private var conditionalFrames: [ConditionalFrame] = []
         var diagnostics: [LogicDiagnostic] = []
         var unsupportedSemantics = false
@@ -107,11 +119,13 @@ public struct SystemVerilogParser: SystemVerilogParsing {
             tokens: [SystemVerilogToken],
             sourcePath: String,
             macroValues: [String: Int64] = [:],
+            macroDefinitions: [String: MacroDefinition] = [:],
             allowResolvedIncludes: Bool = false
         ) {
             self.tokens = tokens
             self.sourcePath = sourcePath
             self.macroValues = macroValues
+            self.macroDefinitions = macroDefinitions
             self.allowResolvedIncludes = allowResolvedIncludes
         }
 
@@ -501,34 +515,62 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                     skipCurrentLine(startingAt: directiveStart.line)
                     return
                 }
-                guard current.span.start.line == directiveStart.line else {
-                    unsupportedSemantics = true
-                    diagnostics.append(LogicDiagnostic(
-                        severity: .error,
-                        code: "SV_DEFINE_VALUE_MISSING",
-                        message: "The native preprocessor only supports numeric object-like macro definitions.",
-                        entity: name,
-                        location: current.span,
-                        suggestedActions: ["define_numeric_macro", "use_external_preprocessor"]
-                    ))
-                    return
+                let functionLike = current.lexeme == "(" &&
+                    current.span.start.line == directiveStart.line &&
+                    current.span.start.column == previous.span.end.column
+                var parameters: [String] = []
+                if functionLike {
+                    _ = advance()
+                    while !isAtEnd && current.lexeme != ")" && current.span.start.line == directiveStart.line {
+                        guard let parameter = consumeIdentifier() else {
+                            diagnostics.append(LogicDiagnostic(
+                                severity: .error,
+                                code: "SV_DEFINE_PARAMETER_MISSING",
+                                message: "A function-like macro parameter must be an identifier.",
+                                entity: name,
+                                location: current.span,
+                                suggestedActions: ["use_identifier_macro_parameters"]
+                            ))
+                            skipUntil([")"])
+                            break
+                        }
+                        parameters.append(parameter)
+                        if !match(",") { break }
+                    }
+                    _ = expect(")", code: "SV_DEFINE_PARAMETER_LIST_UNTERMINATED")
                 }
-                let expression = parseExpression()
-                guard let value = evaluate(expression) else {
-                    unsupportedSemantics = true
-                    diagnostics.append(LogicDiagnostic(
-                        severity: .error,
-                        code: "SV_DEFINE_VALUE_UNSUPPORTED",
-                        message: "Macro definitions must evaluate to a constant integer.",
-                        entity: name,
-                        location: expressionSpan(expression),
-                        suggestedActions: ["define_constant_integer_macro", "use_external_preprocessor"]
-                    ))
-                    skipCurrentLine(startingAt: directiveStart.line)
-                    return
+                var replacement: [SystemVerilogToken] = []
+                while !isAtEnd && current.span.start.line == directiveStart.line {
+                    replacement.append(advance())
                 }
-                macroValues[name] = value
-                skipCurrentLine(startingAt: directiveStart.line)
+                macroDefinitions[name] = MacroDefinition(
+                    isFunctionLike: functionLike,
+                    parameters: parameters,
+                    replacement: replacement
+                )
+                if !functionLike {
+                    var expressionTokens = replacement
+                    expressionTokens.append(SystemVerilogToken(
+                        kind: .endOfFile,
+                        lexeme: "",
+                        span: current.span
+                    ))
+                    var macroState = ParserState(
+                        tokens: expressionTokens,
+                        sourcePath: sourcePath,
+                        macroValues: macroValues,
+                        macroDefinitions: macroDefinitions,
+                        allowResolvedIncludes: allowResolvedIncludes
+                    )
+                    let expression = macroState.parseExpression()
+                    if macroState.diagnostics.isEmpty, let value = macroState.evaluate(expression) {
+                        macroValues[name] = value
+                    } else {
+                        macroValues.removeValue(forKey: name)
+                    }
+                } else {
+                    macroValues.removeValue(forKey: name)
+                }
             default:
                 guard isPreprocessorActive else {
                     skipCurrentLine(startingAt: directiveStart.line)
@@ -570,7 +612,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 ))
                 return
             }
-            let defined = macroValues[name] != nil
+            let defined = macroDefinitions[name] != nil
             let condition = directive == "ifdef" ? defined : !defined
             conditionalFrames.append(ConditionalFrame(
                 parentActive: parentActive,
@@ -605,7 +647,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 skipCurrentLine(startingAt: location.line)
                 return
             }
-            let condition = macroValues[name] != nil
+            let condition = macroDefinitions[name] != nil
             frame.branchActive = frame.parentActive && !frame.branchTaken && condition
             frame.branchTaken = frame.branchTaken || condition
             conditionalFrames[conditionalFrames.count - 1] = frame
@@ -716,6 +758,10 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 }
             }
             guard let statement = parseStatement() else { return nil }
+            if keyword == "always_comb" || keyword == "always_latch" {
+                sensitivity = inferredSensitivity(from: statement)
+                events = sensitivity.map { RTLProcessEvent(signal: $0, edge: nil) }
+            }
             return RTLProcess(
                 id: StableLogicID.make(kind: "process", path: sourcePath, name: "\(previous.span.start.offset)"),
                 kind: kind,
@@ -725,6 +771,80 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 statements: [statement],
                 source: statementSpan(statement)
             )
+        }
+
+        func inferredSensitivity(from statement: RTLStatement) -> [String] {
+            var result: [String] = []
+            collectReadIdentifiers(from: statement, into: &result)
+            return result
+        }
+
+        func collectReadIdentifiers(from statement: RTLStatement, into result: inout [String]) {
+            switch statement {
+            case .assignment(let assignment):
+                collectReadIdentifiers(from: assignment.value, into: &result)
+                collectReadIdentifiers(from: assignment.target, includeBase: false, into: &result)
+            case .block(let statements):
+                for child in statements {
+                    collectReadIdentifiers(from: child, into: &result)
+                }
+            case .conditional(let condition, let ifTrue, let ifFalse):
+                collectReadIdentifiers(from: condition, into: &result)
+                for child in ifTrue + ifFalse {
+                    collectReadIdentifiers(from: child, into: &result)
+                }
+            case .caseStatement(let expression, let items, let defaults),
+                 .typedCaseStatement(_, let expression, let items, let defaults):
+                collectReadIdentifiers(from: expression, into: &result)
+                for item in items {
+                    for match in item.matches {
+                        collectReadIdentifiers(from: match, into: &result)
+                    }
+                    for child in item.statements {
+                        collectReadIdentifiers(from: child, into: &result)
+                    }
+                }
+                for child in defaults {
+                    collectReadIdentifiers(from: child, into: &result)
+                }
+            case .null:
+                break
+            }
+        }
+
+        func collectReadIdentifiers(
+            from expression: RTLExpression,
+            includeBase: Bool = true,
+            into result: inout [String]
+        ) {
+            switch expression {
+            case .identifier(let name):
+                if includeBase, !result.contains(name) {
+                    result.append(name)
+                }
+            case .integer, .string:
+                break
+            case .unary(_, let operand):
+                collectReadIdentifiers(from: operand, into: &result)
+            case .binary(_, let left, let right):
+                collectReadIdentifiers(from: left, into: &result)
+                collectReadIdentifiers(from: right, into: &result)
+            case .ternary(let condition, let ifTrue, let ifFalse):
+                collectReadIdentifiers(from: condition, into: &result)
+                collectReadIdentifiers(from: ifTrue, into: &result)
+                collectReadIdentifiers(from: ifFalse, into: &result)
+            case .concatenate(let values):
+                for value in values {
+                    collectReadIdentifiers(from: value, into: &result)
+                }
+            case .index(let value, let index):
+                collectReadIdentifiers(from: value, includeBase: includeBase, into: &result)
+                collectReadIdentifiers(from: index, into: &result)
+            case .partSelect(let value, let msb, let lsb):
+                collectReadIdentifiers(from: value, includeBase: includeBase, into: &result)
+                collectReadIdentifiers(from: msb, into: &result)
+                collectReadIdentifiers(from: lsb, into: &result)
+            }
         }
 
         mutating func parseStatement() -> RTLStatement? {
@@ -929,70 +1049,69 @@ public struct SystemVerilogParser: SystemVerilogParsing {
 
         mutating func parseGenerateIf() -> [RTLGenerateBlock] {
             let start = previous.span.start
-            _ = expect("(")
-            let condition = parseExpression()
-            _ = expect(")")
-            guard let trueBody = parseGenerateBody() else { return [] }
+            var branches: [(condition: RTLExpression, body: GenerateBody)] = []
+            var previousConditions: [RTLExpression] = []
 
-            var falseBody: GenerateBody?
-            if match("else") {
-                if match("if") {
-                    unsupportedSemantics = true
-                    diagnostics.append(LogicDiagnostic(
-                        severity: .error,
-                        code: "SV_UNSUPPORTED_GENERATE",
-                        message: "Generate-if else-if chains are not supported by the native frontend.",
-                        location: previous.span,
-                        suggestedActions: ["flatten_generate_conditions", "use_constant_generate_construct"]
+            while true {
+                _ = expect("(")
+                let condition = parseExpression()
+                _ = expect(")")
+                guard let body = parseGenerateBody() else { return [] }
+                let branchCondition = previousConditions.isEmpty
+                    ? condition
+                    : .binary(
+                        operator: "&&",
+                        left: conjunction(previousConditions.map { .unary(operator: "!", operand: $0) }),
+                        right: condition
+                    )
+                branches.append((condition: branchCondition, body: body))
+                previousConditions.append(condition)
+
+                guard match("else") else { break }
+                guard match("if") else {
+                    guard let body = parseGenerateBody() else { return [] }
+                    branches.append((
+                        condition: conjunction(previousConditions.map { .unary(operator: "!", operand: $0) }),
+                        body: body
                     ))
-                    skipUntil(["endgenerate"])
-                } else {
-                    falseBody = parseGenerateBody()
+                    break
                 }
             }
 
-            guard evaluate(condition) != nil else {
+            guard branches.allSatisfy({ evaluate($0.condition) != nil }) else {
                 unsupportedSemantics = true
                 diagnostics.append(LogicDiagnostic(
                     severity: .error,
                     code: "SV_UNSUPPORTED_GENERATE",
-                    message: "Generate-if conditions must be compile-time constant.",
+                    message: "Generate-if and generate-else-if conditions must be compile-time constant.",
                     entity: "if",
                     location: LogicSourceSpan(start: start, end: current.span.end),
-                    suggestedActions: ["make_generate_condition_constant", "use_explicit_instances"]
+                    suggestedActions: ["make_generate_conditions_constant", "use_explicit_instances"]
                 ))
                 return []
             }
 
-            var blocks: [RTLGenerateBlock] = [RTLGenerateBlock(
-                id: StableLogicID.make(kind: "generate", path: sourcePath, name: "\(moduleNameForIDs).\(start.offset).true"),
-                label: trueBody.label,
+            return branches.enumerated().map { index, branch in
+                RTLGenerateBlock(
+                id: StableLogicID.make(kind: "generate", path: sourcePath, name: "\(moduleNameForIDs).\(start.offset).branch\(index)"),
+                label: branch.body.label,
                 kind: .conditional,
-                condition: condition,
+                condition: branch.condition,
                 loopVariable: "",
                 start: 0,
                 limit: 0,
                 step: 0,
-                instances: trueBody.instances,
-                assignments: trueBody.assignments,
-                source: LogicSourceSpan(start: start, end: trueBody.end)
-            )]
-            if let falseBody {
-                blocks.append(RTLGenerateBlock(
-                    id: StableLogicID.make(kind: "generate", path: sourcePath, name: "\(moduleNameForIDs).\(start.offset).false"),
-                    label: falseBody.label,
-                    kind: .conditional,
-                    condition: .unary(operator: "!", operand: condition),
-                    loopVariable: "",
-                    start: 0,
-                    limit: 0,
-                    step: 0,
-                    instances: falseBody.instances,
-                    assignments: falseBody.assignments,
-                    source: LogicSourceSpan(start: start, end: falseBody.end)
-                ))
+                instances: branch.body.instances,
+                assignments: branch.body.assignments,
+                source: LogicSourceSpan(start: start, end: branch.body.end)
+                )
             }
-            return blocks
+        }
+
+        func conjunction(_ expressions: [RTLExpression]) -> RTLExpression {
+            expressions.reduce(.integer(value: 1, width: nil, isSigned: true)) { partial, expression in
+                .binary(operator: "&&", left: partial, right: expression)
+            }
         }
 
         private struct GenerateBody {
@@ -1073,24 +1192,79 @@ public struct SystemVerilogParser: SystemVerilogParsing {
             let limit = evaluate(limitExpression)
             _ = expect(";")
             _ = consumeIdentifier()
-            _ = expect("=")
-            _ = consumeIdentifier()
-            let stepOperator = current.lexeme
-            _ = advance()
-            let stepMagnitudeExpression = parseExpression()
-            let stepExpression: RTLExpression = stepOperator == "-"
-                ? .unary(operator: "-", operand: stepMagnitudeExpression)
-                : stepMagnitudeExpression
+            let stepExpression: RTLExpression
+            if match("=") {
+                _ = consumeIdentifier()
+                let stepOperator = current.lexeme
+                _ = advance()
+                let stepMagnitudeExpression = parseExpression()
+                stepExpression = stepOperator == "-"
+                    ? .unary(operator: "-", operand: stepMagnitudeExpression)
+                    : stepMagnitudeExpression
+            } else if match("++") || match("+=") {
+                if previous.lexeme == "++" {
+                    stepExpression = .integer(value: 1, width: nil, isSigned: true)
+                } else {
+                    stepExpression = parseExpression()
+                }
+            } else if match("--") || match("-=") {
+                if previous.lexeme == "--" {
+                    stepExpression = .integer(value: -1, width: nil, isSigned: true)
+                } else {
+                    stepExpression = .unary(operator: "-", operand: parseExpression())
+                }
+            } else {
+                stepExpression = .integer(value: 0, width: nil, isSigned: true)
+            }
             let stepValue = evaluate(stepExpression)
             _ = expect(")")
-            guard let initial, let limit, comparison == "<", let stepValue else {
+            guard let initial, let limit, let stepValue,
+                  stepValue != 0,
+                  ["<", "<=", ">", ">="].contains(comparison),
+                  (comparison == "<" || comparison == "<=") == (stepValue > 0) else {
                 unsupportedSemantics = true
                 diagnostics.append(LogicDiagnostic(
                     severity: .error,
                     code: "SV_GENERATE_NON_CONSTANT",
-                    message: "Generate-for bounds and step must be constant and use an increasing '<' comparison.",
+                    message: "Generate-for bounds, comparison, and step must be compile-time constant and directionally consistent.",
                     location: current.span,
-                    suggestedActions: ["make_generate_bounds_constant", "use_explicit_instances"]
+                    suggestedActions: ["make_generate_bounds_constant", "use_supported_generate_comparison", "use_explicit_instances"]
+                ))
+                skipUntil(["end"])
+                _ = match("end")
+                return nil
+            }
+            let normalizedLimitExpression: RTLExpression
+            let normalizedLimit: Int64?
+            switch comparison {
+            case "<=":
+                normalizedLimitExpression = .binary(
+                    operator: "+",
+                    left: limitExpression,
+                    right: .integer(value: 1, width: nil, isSigned: true)
+                )
+                let adjustedLimit = limit.addingReportingOverflow(1)
+                normalizedLimit = adjustedLimit.overflow ? nil : adjustedLimit.partialValue
+            case ">=":
+                normalizedLimitExpression = .binary(
+                    operator: "-",
+                    left: limitExpression,
+                    right: .integer(value: 1, width: nil, isSigned: true)
+                )
+                let adjustedLimit = limit.subtractingReportingOverflow(1)
+                normalizedLimit = adjustedLimit.overflow ? nil : adjustedLimit.partialValue
+            default:
+                normalizedLimitExpression = limitExpression
+                normalizedLimit = limit
+            }
+            guard let normalizedLimit else {
+                unsupportedSemantics = true
+                diagnostics.append(LogicDiagnostic(
+                    severity: .error,
+                    code: "SV_GENERATE_NON_CONSTANT",
+                    message: "Generate-for bounds overflow during inclusive-bound normalization.",
+                    location: current.span,
+                    suggestedActions: ["use_safe_generate_bounds", "use_explicit_instances"]
                 ))
                 skipUntil(["end"])
                 _ = match("end")
@@ -1102,10 +1276,10 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 label: body.label,
                 loopVariable: variable,
                 start: initial,
-                limit: limit,
-                step: stepValue == 0 ? 1 : (stepOperator == "-" ? -stepValue : stepValue),
+                limit: normalizedLimit,
+                step: stepValue,
                 startExpression: initialExpression,
-                limitExpression: limitExpression,
+                limitExpression: normalizedLimitExpression,
                 stepExpression: stepExpression,
                 instances: body.instances,
                 assignments: body.assignments,
@@ -1149,15 +1323,80 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 if let value = macroValues[name] {
                     return .integer(value: value, width: nil, isSigned: true)
                 }
-                diagnostics.append(LogicDiagnostic(
-                    severity: .error,
-                    code: "SV_MACRO_UNRESOLVED",
-                    message: "The macro reference is not defined in the source set.",
-                    entity: name,
-                    location: previous.span,
-                    suggestedActions: ["define_macro", "preprocess_before_logic_design"]
-                ))
-                return .identifier(name)
+                guard let definition = macroDefinitions[name] else {
+                    diagnostics.append(LogicDiagnostic(
+                        severity: .error,
+                        code: "SV_MACRO_UNRESOLVED",
+                        message: "The macro reference is not defined in the source set.",
+                        entity: name,
+                        location: previous.span,
+                        suggestedActions: ["define_macro", "preprocess_before_logic_design"]
+                    ))
+                    return .identifier(name)
+                }
+                guard !expandingMacros.contains(name) else {
+                    unsupportedSemantics = true
+                    diagnostics.append(LogicDiagnostic(
+                        severity: .error,
+                        code: "SV_MACRO_RECURSIVE",
+                        message: "Macro expansion is recursive and cannot be evaluated deterministically.",
+                        entity: name,
+                        location: previous.span,
+                        suggestedActions: ["remove_macro_recursion", "preprocess_before_logic_design"]
+                    ))
+                    return .identifier(name)
+                }
+                expandingMacros.insert(name)
+                defer { expandingMacros.remove(name) }
+
+                let expandedTokens: [SystemVerilogToken]
+                if !definition.isFunctionLike {
+                    expandedTokens = definition.replacement
+                } else {
+                    guard current.lexeme == "(" else {
+                        diagnostics.append(LogicDiagnostic(
+                            severity: .error,
+                            code: "SV_MACRO_ARGUMENTS_MISSING",
+                            message: "A function-like macro reference requires an argument list.",
+                            entity: name,
+                            location: current.span,
+                            suggestedActions: ["provide_macro_arguments"]
+                        ))
+                        return .identifier(name)
+                    }
+                    let arguments = consumeMacroArguments()
+                    guard arguments.count == definition.parameters.count else {
+                        diagnostics.append(LogicDiagnostic(
+                            severity: .error,
+                            code: "SV_MACRO_ARGUMENT_COUNT",
+                            message: "The macro invocation does not provide the declared number of arguments.",
+                            entity: name,
+                            location: previous.span,
+                            suggestedActions: ["correct_macro_argument_count"]
+                        ))
+                        return .identifier(name)
+                    }
+                    let substitutions = Dictionary(uniqueKeysWithValues: zip(definition.parameters, arguments))
+                    expandedTokens = definition.replacement.flatMap { token in
+                        guard token.kind == .identifier, let replacement = substitutions[token.lexeme] else {
+                            return [token]
+                        }
+                        return replacement
+                    }
+                }
+                guard !expandedTokens.isEmpty else {
+                    diagnostics.append(LogicDiagnostic(
+                        severity: .error,
+                        code: "SV_MACRO_EMPTY_EXPRESSION",
+                        message: "An empty macro cannot be used as an expression.",
+                        entity: name,
+                        location: previous.span,
+                        suggestedActions: ["provide_macro_replacement_tokens"]
+                    ))
+                    return .integer(value: 0, width: nil, isSigned: false)
+                }
+                tokens.insert(contentsOf: expandedTokens, at: index)
+                return parsePrimaryExpression()
             }
             if match("(") {
                 let expression = parseExpression()
@@ -1186,6 +1425,45 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 return .string(token.lexeme)
             }
             return parsePostfix(.identifier(token.lexeme))
+        }
+
+        mutating func consumeMacroArguments() -> [[SystemVerilogToken]] {
+            _ = expect("(")
+            var arguments: [[SystemVerilogToken]] = [[]]
+            var depth = 0
+            while !isAtEnd {
+                if current.lexeme == "(" {
+                    depth += 1
+                    arguments[arguments.count - 1].append(advance())
+                    continue
+                }
+                if current.lexeme == ")" {
+                    if depth == 0 {
+                        _ = advance()
+                        if arguments.count == 1, arguments[0].isEmpty {
+                            return []
+                        }
+                        return arguments
+                    }
+                    depth -= 1
+                    arguments[arguments.count - 1].append(advance())
+                    continue
+                }
+                if current.lexeme == "," && depth == 0 {
+                    _ = advance()
+                    arguments.append([])
+                    continue
+                }
+                arguments[arguments.count - 1].append(advance())
+            }
+            diagnostics.append(LogicDiagnostic(
+                severity: .error,
+                code: "SV_MACRO_ARGUMENT_LIST_UNTERMINATED",
+                message: "A function-like macro argument list is not terminated.",
+                location: current.span,
+                suggestedActions: ["close_macro_argument_list"]
+            ))
+            return arguments
         }
 
         mutating func parsePostfix(_ expression: RTLExpression) -> RTLExpression {

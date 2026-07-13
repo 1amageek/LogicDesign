@@ -74,6 +74,11 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
             parameters: topParameterValues,
             instancePath: [topModule.name]
         )
+        flattenedTop.memories = state.resolvedMemories(
+            expandedTop.memories,
+            parameters: topParameterValues,
+            instancePath: [topModule.name]
+        )
         let topMapping = state.parameterMapping(topParameterValues)
         flattenedTop.assignments = expandedTop.assignments.map {
             RTLAssignment(
@@ -142,15 +147,6 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
             path: [String],
             into flattenedTop: inout RTLModule
         ) {
-            guard module.memories.isEmpty else {
-                diagnostics.append(diagnostic(
-                    code: "LOGIC_HIERARCHY_MEMORY_UNSUPPORTED",
-                    message: "Hierarchy elaboration cannot flatten a module containing memories into the native execution profile.",
-                    entity: module.name,
-                    actions: ["lower_memory_to_supported_storage", "use_memory_aware_backend"]
-                ))
-                return
-            }
             guard module.generateBlocks.isEmpty else {
                 diagnostics.append(diagnostic(
                     code: "LOGIC_HIERARCHY_GENERATE_UNELABORATED",
@@ -283,30 +279,14 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
                         into: &flattenedTop
                     )
                     childMapping[port.name] = .identifier(localName)
-                    guard case .identifier(let target) = expression else {
-                        diagnostics.append(diagnostic(
-                            code: "LOGIC_HIERARCHY_OUTPUT_CONNECTION_UNSUPPORTED",
-                            message: "Native hierarchy flattening requires output connections to be identifiers.",
-                            entity: "\(path.joined(separator: ".")).\(port.name)",
-                            location: connection.source,
-                            actions: ["connect_output_to_named_signal", "use_an_external_elaborator"]
-                        ))
-                        continue
-                    }
                     flattenedTop.assignments.append(RTLAssignment(
                         id: stableID(kind: "hierarchical-output", path: path, name: port.name),
-                        target: .identifier(target),
+                        target: expression,
                         value: .identifier(localName),
                         source: connection.source
                     ))
                 case .inOut, .internalSignal:
-                    diagnostics.append(diagnostic(
-                        code: "LOGIC_HIERARCHY_INOUT_UNSUPPORTED",
-                        message: "Inout and internal-direction hierarchy ports require a resolved bidirectional net model.",
-                        entity: "\(path.joined(separator: ".")).\(port.name)",
-                        location: port.source,
-                        actions: ["use_explicit_tri_state_model", "use_an_external_elaborator"]
-                    ))
+                    childMapping[port.name] = expression
                 }
             }
 
@@ -324,6 +304,21 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
                     into: &flattenedTop
                 )
                 childMapping[signal.name] = .identifier(localName)
+            }
+            let childMemories = resolvedMemories(
+                expandedChild.memories,
+                parameters: childParameterValues,
+                instancePath: path
+            )
+            for memory in childMemories {
+                let localName = prefix + memory.name
+                addMemory(
+                    name: localName,
+                    memory: memory,
+                    instancePath: path,
+                    into: &flattenedTop
+                )
+                childMapping[memory.name] = .identifier(localName)
             }
 
             let childAssignments = expandedChild.assignments.map { assignment in
@@ -527,6 +522,51 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
             }
         }
 
+        mutating func resolvedMemories(
+            _ memories: [RTLMemory],
+            parameters: [String: Int64],
+            instancePath: [String]
+        ) -> [RTLMemory] {
+            memories.compactMap { memory in
+                var resolved = memory
+                if let expression = memory.elementRangeExpression {
+                    guard let msb = evaluator.evaluate(expression.msb, parameters: parameters),
+                          let lsb = evaluator.evaluate(expression.lsb, parameters: parameters),
+                          let msbInt = Int(exactly: msb),
+                          let lsbInt = Int(exactly: lsb) else {
+                        diagnostics.append(diagnostic(
+                            code: "LOGIC_HIERARCHY_RANGE_PARAMETER_UNRESOLVED",
+                            message: "A hierarchy memory element range cannot be evaluated for the instance parameter context.",
+                            entity: "\(instancePath.joined(separator: ".")).\(memory.name)",
+                            location: memory.source,
+                            actions: ["make_memory_range_constant", "use_an_external_elaborator"]
+                        ))
+                        return nil
+                    }
+                    resolved.elementRange = LogicRange(msb: msbInt, lsb: lsbInt)
+                    resolved.elementRangeExpression = nil
+                }
+                if let expression = memory.addressRangeExpression {
+                    guard let msb = evaluator.evaluate(expression.msb, parameters: parameters),
+                          let lsb = evaluator.evaluate(expression.lsb, parameters: parameters),
+                          let msbInt = Int(exactly: msb),
+                          let lsbInt = Int(exactly: lsb) else {
+                        diagnostics.append(diagnostic(
+                            code: "LOGIC_HIERARCHY_RANGE_PARAMETER_UNRESOLVED",
+                            message: "A hierarchy memory address range cannot be evaluated for the instance parameter context.",
+                            entity: "\(instancePath.joined(separator: ".")).\(memory.name)",
+                            location: memory.source,
+                            actions: ["make_memory_range_constant", "use_an_external_elaborator"]
+                        ))
+                        return nil
+                    }
+                    resolved.addressRange = LogicRange(msb: msbInt, lsb: lsbInt)
+                    resolved.addressRangeExpression = nil
+                }
+                return resolved
+            }
+        }
+
         mutating func connectionMap(
             _ connections: [RTLPortConnection],
             ports: [RTLPort],
@@ -681,6 +721,34 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
                 isSigned: isSigned,
                 source: source
             ))
+        }
+
+        mutating func addMemory(
+            name: String,
+            memory: RTLMemory,
+            instancePath: [String],
+            into flattenedTop: inout RTLModule
+        ) {
+            guard let existing = flattenedTop.memories.first(where: { $0.name == name }) else {
+                flattenedTop.memories.append(RTLMemory(
+                    id: stableID(kind: "hierarchical-memory", path: instancePath, name: name),
+                    name: name,
+                    elementRange: memory.elementRange,
+                    addressRange: memory.addressRange,
+                    source: memory.source
+                ))
+                return
+            }
+            if existing.elementRange != memory.elementRange ||
+                existing.addressRange != memory.addressRange {
+                diagnostics.append(diagnostic(
+                    code: "LOGIC_HIERARCHY_MEMORY_COLLISION",
+                    message: "Flattened hierarchy memories have conflicting ranges.",
+                    entity: name,
+                    location: memory.source,
+                    actions: ["rename_instance_memory", "use_an_external_elaborator"]
+                ))
+            }
         }
 
         func rewrite(

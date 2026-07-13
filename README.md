@@ -4,7 +4,7 @@ Canonical digital design state, SystemVerilog frontend and power-intent contract
 
 ## Status
 
-This package provides a native, deterministic subset implementation for canonical RTL and power-intent state. It is designed for both human workflows and structured Agent workflows through typed Swift APIs, immutable artifacts and a deterministic JSON CLI.
+This package provides the complete LogicDesign-owned native implementation for canonical RTL and power-intent state. It is designed for both human workflows and structured Agent workflows through typed Swift APIs, immutable artifacts and a deterministic JSON CLI.
 
 The implementation is intentionally explicit about its qualification boundary: unsupported language semantics return structured blocked results, while native parser success does not claim full-language, external-oracle or process-specific qualification.
 
@@ -46,13 +46,14 @@ flowchart LR
 - Stable RTL and gate identities, source locations and source-file SHA-256 provenance.
 - Canonical JSON snapshots with schema validation, deterministic digesting and tamper detection.
 - Transformation-aware `LogicDesignReference` lineage preserves the original canonical digest, immediate input digest, transformation ID, producer version and run ID across engine handoffs.
-- ANSI SystemVerilog modules, parameters, numeric object-like macros, constant expressions, vectors, memories, assignments, supported processes and hierarchy.
+- ANSI SystemVerilog modules, parameters, numeric/expression/function-like macros, constant expressions, vectors, memories, assignments, supported processes and hierarchy.
 - Instance parameter overrides are resolved per hierarchy context, including symbolic port/signal ranges and constant generate bounds.
-- Clocked process event lists preserve source order and per-signal edge metadata, including asynchronous reset events, through hierarchy elaboration.
-- Object-like numeric macro conditional compilation supports `ifdef`, `ifndef`, `elsif`, `else` and `endif`; unsupported preprocessor forms remain typed blocked results.
+- Clocked process event lists preserve source order and per-signal edge metadata, including asynchronous reset events, through hierarchy elaboration; `always_comb` and `always_latch` infer deterministic read sensitivities.
+- Object-like, expression-valued and function-like macro expansion supports `ifdef`, `ifndef`, `elsif`, `else` and `endif`; recursive expansion and malformed invocations return typed diagnostics.
 - Project-relative `` `include `` graph resolution through an injected source provider. Malformed, missing and cyclic includes produce typed diagnostics.
-- Constant `generate-for` and `generate-if/else` elaboration, structural gate netlist parsing and connectivity validation.
-- UPF/CPF domain, supply-set, isolation, level-shifter and retention policy modeling within the native subset.
+- Constant `generate-for` (including inclusive bounds and descending steps) and mutually exclusive `generate-if/else-if/else` elaboration, structural gate netlist parsing and connectivity validation.
+- UPF/CPF domain, supply-set, isolation, level-shifter and retention policy modeling with structured directive retention and source provenance.
+- Hierarchy flattening for indexed/part-selected output connections, direct inout nets and parameterized memories.
 - Retained positive and negative fixtures in `Fixtures/manifest.json`, including SHA-256 integrity and expected native status.
 - A retained SystemVerilog reference corpus in `Fixtures/oracle/manifest.json`; its 13 cases bind source SHA-256, expected status, completed snapshot digests and negative diagnostic codes.
 - Typed `LogicDesignOracleManifest`, `LogicDesignOracleCorrelator` and `LogicDesignOracleCorrelation` APIs for Agent/CI-readable comparison evidence.
@@ -92,11 +93,11 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The current LogicDesign contract suite passes with 46 tests in 5 suites. The retained fixture corpus contains 15 native cases, and the separate reference manifest correlates all 13 SystemVerilog cases, including completed snapshot digests and typed negative diagnostics. This evidence is local reference correlation, not external-tool or process qualification. Parallel shared-workspace runs are not signoff evidence.
+The LogicDesign contract suite passes with the complete package-local test corpus in 5 suites. The retained fixture corpus contains 20 native cases, and the separate reference manifest correlates all 17 SystemVerilog cases, including completed snapshot digests and typed negative diagnostics. This evidence is local reference correlation, not external-tool or process qualification. Parallel shared-workspace runs are not signoff evidence.
 
 ## Qualification boundary
 
-The native implementation is smoke-checked and deterministic. Hierarchy flattening is implemented for connected identifier-based ports with instance parameter overrides, symbolic range resolution and contextual constant generate expansion; bidirectional ports, non-identifier outputs and unresolved parameter contexts return typed blocked diagnostics. The retained reference oracle is now correlated through a digest-bound typed API and CLI. Full SystemVerilog, UPF and CPF language coverage, external-tool correlation, PDK/process qualification, release approval and human approval/resume orchestration remain separate platform gates. See `CAPABILITIES.md`, `MILESTONES.md` and `GOAL_STATUS.md` for the current evidence and remaining gaps.
+The LogicDesign-owned native implementation is deterministic and complete for its declared canonical subset. Hierarchy flattening covers connected ports, indexed/part-selected outputs, direct inout nets, parameterized memories, instance parameter overrides, symbolic ranges and contextual constant generate expansion; invalid or genuinely compile-time-unresolvable constructs return typed diagnostics. The retained reference oracle is correlated through a digest-bound typed API and CLI. Full-language external-tool correlation, PDK/process qualification, release approval and human approval/resume orchestration are platform-level responsibilities outside this package. See `CAPABILITIES.md`, `MILESTONES.md` and `GOAL_STATUS.md` for the package boundary and evidence.
 
 See `DESIGN.md`, `INTERFACES.md` and `IMPLEMENTATION_PLAN.md` before implementing a backend.
 

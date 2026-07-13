@@ -23,6 +23,7 @@ public struct PowerIntentParser: Sendable {
         var levelShifters: [PowerIntentLevelShifter] = []
         var retentions: [PowerIntentRetention] = []
         var directives: [String] = []
+        var structuredDirectives: [PowerIntentDirective] = []
         var diagnostics: [LogicDiagnostic] = []
         var unsupported = false
 
@@ -39,6 +40,14 @@ public struct PowerIntentParser: Sendable {
                 offset += text.count + 1
                 guard let command = tokens.first else { continue }
                 let options = parseOptions(Array(tokens.dropFirst()))
+                let arguments = positionalArguments(tokens)
+                structuredDirectives.append(PowerIntentDirective(
+                    id: StableLogicID.make(kind: "power-directive", path: source.path, name: "\(offset)-\(command)"),
+                    command: command,
+                    arguments: arguments,
+                    options: options,
+                    source: span
+                ))
                 switch command {
                 case "create_supply_set":
                     let name = firstValue(after: command, tokens: tokens) ?? options["-supply_set"]
@@ -143,6 +152,7 @@ public struct PowerIntentParser: Sendable {
             levelShifters: unique(levelShifters, key: { $0.name }),
             retentionPolicies: unique(retentions, key: { $0.name }),
             directives: directives,
+            structuredDirectives: unique(structuredDirectives, key: { $0.id }),
             sourceFiles: sources.map(\.file)
         )
         return PowerIntentParseResult(design: design, diagnostics: diagnostics, unsupportedSemantics: unsupported)
@@ -187,18 +197,35 @@ public struct PowerIntentParser: Sendable {
         while index < tokens.count {
             let token = tokens[index]
             if token.hasPrefix("-") {
-                if index + 1 < tokens.count, !tokens[index + 1].hasPrefix("-") {
-                    options[token] = tokens[index + 1]
-                    index += 2
-                } else {
-                    options[token] = "true"
+                index += 1
+                var values: [String] = []
+                while index < tokens.count, !tokens[index].hasPrefix("-") {
+                    values.append(tokens[index])
                     index += 1
                 }
+                options[token] = values.isEmpty ? "true" : values.joined(separator: " ")
             } else {
                 index += 1
             }
         }
         return options
+    }
+
+    private func positionalArguments(_ tokens: [String]) -> [String] {
+        var arguments: [String] = []
+        var index = 1
+        while index < tokens.count {
+            if tokens[index].hasPrefix("-") {
+                index += 1
+                while index < tokens.count, !tokens[index].hasPrefix("-") {
+                    index += 1
+                }
+            } else {
+                arguments.append(tokens[index])
+                index += 1
+            }
+        }
+        return arguments
     }
 
     private func firstValue(after command: String, tokens: [String]) -> String? {

@@ -82,6 +82,42 @@
       "topDesignName" : "counter"
     },
     {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "06a04b8f58dcd0fa160e71f0a97f2f11cfaf7e3b77e4003ca889bd0f86bb4e6f",
+      "expectedStatus" : "completed",
+      "id" : "macro-expansion",
+      "sourcePath" : "positive/macro_expansion.sv",
+      "sourceSHA256" : "155907ab1e446e10ae11d7fc30a40f85a36fad1db54781cf791ccbff69c9fba9",
+      "topDesignName" : "macro_expansion"
+    },
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "3d38999daaaafa0c125599e17e5412f7a6e471540eb3f18f14374671b5847782",
+      "expectedStatus" : "completed",
+      "id" : "generate-else-if",
+      "sourcePath" : "positive/generate_else_if.sv",
+      "sourceSHA256" : "ed346cd2d83049bc22419ee242d1f32c9d5f9a153b128a61f47a53dd415f3f73",
+      "topDesignName" : "generate_else_if"
+    },
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "e4328b2390ad79db9f5401836e348c1fc8d44b9e41f3ac263161a5770fb7d5f8",
+      "expectedStatus" : "completed",
+      "id" : "hierarchy-expression-connections",
+      "sourcePath" : "positive/hierarchy_expression_connections.sv",
+      "sourceSHA256" : "feb0add3bc82ddc71273dd57a7711af43abe4db8e1c8848e00441efc42d5802e",
+      "topDesignName" : "expression_top"
+    },
+    {
+      "expectedDiagnosticCodes" : [],
+      "expectedSnapshotDigest" : "485f0fc7b80d37eb28598293d8d4e86995b978877a889348346b9b754aecb9cc",
+      "expectedStatus" : "completed",
+      "id" : "parameterized-memory",
+      "sourcePath" : "positive/parameterized_memory.sv",
+      "sourceSHA256" : "e04c537c84e4348e91b52a55a0bbd99b284ea71b29a473b11990460d20dc9bcd",
+      "topDesignName" : "memory_top"
+    },
+    {
       "expectedDiagnosticCodes" : ["LOGIC_REFERENCE_UNRESOLVED"],
       "expectedSnapshotDigest" : null,
       "expectedStatus" : "failed",

@@ -204,6 +204,82 @@ struct EngineTests {
         }.count == 3)
     }
 
+    @Test("hierarchy flattening supports indexed output connections and inout nets")
+    func hierarchySupportsIndexedOutputsAndInout() async throws {
+        let source = SystemVerilogSourceUnit(
+            path: "indexed-output.sv",
+            source: """
+            module leaf(input logic a, output logic y, inout wire io);
+                assign y = a;
+                assign io = a;
+            endmodule
+            module top(input logic a, output logic [1:0] y, inout wire io);
+                leaf u_leaf(.a(a), .y(y[0]), .io(io));
+            endmodule
+            """
+        )
+        let result = try await LogicElaboratingEngine(
+            clock: { Date(timeIntervalSince1970: 0) }
+        ).execute(LogicElaborationRequest(
+            runID: "run-indexed-output",
+            inputs: [],
+            topDesignName: "top",
+            sources: [source]
+        ))
+
+        #expect(result.status == .completed)
+        #expect(result.diagnostics.isEmpty)
+        #expect(result.payload.snapshot?.rtl.modules.first?.assignments.contains {
+            if case .index(let value, _) = $0.target,
+               case .identifier(let name) = value {
+                return name == "y"
+            }
+            return false
+        } == true)
+        #expect(result.payload.snapshot?.rtl.modules.first?.assignments.contains {
+            if case .identifier(let name) = $0.target { return name == "io" }
+            return false
+        } == true)
+    }
+
+    @Test("hierarchy flattening resolves parameterized memories")
+    func hierarchySupportsParameterizedMemories() async throws {
+        let source = SystemVerilogSourceUnit(
+            path: "memory-hierarchy.sv",
+            source: """
+            module leaf #(parameter WIDTH = 2, parameter DEPTH = 4) (
+                input logic [1:0] address,
+                output logic [WIDTH-1:0] value
+            );
+                logic [WIDTH-1:0] memory [0:DEPTH-1];
+                assign value = memory[address];
+            endmodule
+            module top(input logic [1:0] address, output logic [1:0] value);
+                leaf #(.WIDTH(2), .DEPTH(8)) u_leaf(.address(address), .value(value));
+            endmodule
+            """
+        )
+        let result = try await LogicElaboratingEngine(
+            clock: { Date(timeIntervalSince1970: 0) }
+        ).execute(LogicElaborationRequest(
+            runID: "run-memory-hierarchy",
+            inputs: [],
+            topDesignName: "top",
+            sources: [source]
+        ))
+
+        #expect(result.status == .completed)
+        let module = result.payload.snapshot?.rtl.modules.first
+        #expect(module?.memories.first(where: { $0.name == "u_leaf__memory" })?.addressRange == LogicRange(msb: 0, lsb: 7))
+        #expect(module?.assignments.contains {
+            if case .index(let value, _) = $0.value,
+               case .identifier(let name) = value {
+                return name == "u_leaf__memory"
+            }
+            return false
+        } == true)
+    }
+
     @Test("unknown hierarchy parameter overrides are blocked with a typed diagnostic")
     func unknownHierarchyParameterOverrideIsBlocked() async throws {
         let source = SystemVerilogSourceUnit(
@@ -324,7 +400,7 @@ struct EngineTests {
         let source = PowerIntentSourceUnit(
             path: "power.upf",
             source: """
-            create_supply_set SS_A
+            create_supply_set SS_A -supply_net {VDD_A VSS_A}
             create_power_domain PD_A -elements {top} -supply_set SS_A
             set_domain_supply_net PD_A VDD_A
             set_isolation iso_a -domain PD_A -clamp_value 0 -isolation_signal iso
@@ -346,7 +422,15 @@ struct EngineTests {
         let result = try await PowerIntentParsingEngine(clock: { Date(timeIntervalSince1970: 0) }).execute(request)
         #expect(result.status == .completed)
         #expect(result.payload.domainCount == 1)
+        #expect(result.payload.intent?.supplySets.first?.supplyNets == ["VDD_A", "VSS_A"])
+        #expect(result.payload.intent?.structuredDirectives.first?.arguments == ["SS_A"])
         #expect(result.payload.intent?.isolationPolicies.count == 1)
         #expect(result.payload.intent?.retentionPolicies.count == 1)
+        #expect(result.payload.intent?.structuredDirectives.count == 5)
+        if let intent = result.payload.intent {
+            let data = try JSONEncoder().encode(intent)
+            let decoded = try JSONDecoder().decode(PowerIntentDesign.self, from: data)
+            #expect(decoded == intent)
+        }
     }
 }
