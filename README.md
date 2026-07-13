@@ -83,3 +83,7 @@ The native implementation is smoke-checked and deterministic. Hierarchy flatteni
 See `DESIGN.md`, `INTERFACES.md` and `IMPLEMENTATION_PLAN.md` before implementing a backend.
 
 See `CAPABILITIES.md` for the qualification boundary and explicit blocked semantics.
+
+## Current integration evidence
+
+Production PEX selection and blocked unavailable-tool behavior are exposed through Xcircuite's typed stage adapter. Release-profile eligibility requires exact process qualification scope, while real PDK/process qualification and external oracle evidence remain explicit release gates.
