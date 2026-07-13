@@ -1,0 +1,5 @@
+create_supply_set SS_A -supply_net {VDD_A VSS_A}
+create_power_domain PD_A -elements {top} -supply_set SS_A
+set_domain_supply_net PD_A VDD_A
+create_isolation_rule iso_a -domain PD_A -clamp_value 0 -isolation_signal iso_en
+create_retention_rule ret_a -domain PD_A -save_signal save -restore_signal restore
