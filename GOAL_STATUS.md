@@ -10,7 +10,7 @@
 | Public package products | Implemented | Package.swift |
 | Shared Xcircuite request/result contract | Implemented | Public Swift protocols and payloads |
 | Contract build | Passed | swift build |
-| Contract test | Passed | timeout-bounded `swift test`; 36 tests in 5 suites |
+| Contract test | Passed | timeout-bounded `swift test`; 40 tests in 5 suites |
 | Domain implementation | Complete for native subset | LogicIR, SystemVerilogFrontend, PowerIntent and gate netlist parser |
 | CLI implementation | Complete | `logic-design` parse, validate, gate-parse, power-intent and capabilities |
 | Fixture corpus | Complete for smoke corpus | `Fixtures/manifest.json` records 8 retained cases with SHA-256 and expected native status |
