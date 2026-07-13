@@ -36,6 +36,7 @@ flowchart LR
 - Transformation-aware `LogicDesignReference` lineage preserves the original canonical digest, immediate input digest, transformation ID, producer version and run ID across engine handoffs.
 - ANSI SystemVerilog modules, parameters, numeric object-like macros, constant expressions, vectors, memories, assignments, supported processes and hierarchy.
 - Instance parameter overrides are resolved per hierarchy context, including symbolic port/signal ranges and constant generate bounds.
+- Clocked process event lists preserve source order and per-signal edge metadata, including asynchronous reset events, through hierarchy elaboration.
 - Object-like numeric macro conditional compilation supports `ifdef`, `ifndef`, `elsif`, `else` and `endif`; unsupported preprocessor forms remain typed blocked results.
 - Project-relative `` `include `` graph resolution through an injected source provider. Malformed, missing and cyclic includes produce typed diagnostics.
 - Constant `generate-for` and `generate-if/else` elaboration, structural gate netlist parsing and connectivity validation.
