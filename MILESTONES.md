@@ -56,7 +56,7 @@ Exit criteria:
 - Stage results participate in approval, review, resume, cancellation, and repair-loop flows.
 - Headless integration tests execute against a working dependency graph and assert artifact integrity.
 
-Status: LogicDesign and multi-engine adapter slices are verified by headless Xcircuite tests. The retained `EndToEndDesignFlowTests/retainedMultiEngineRunResumesAfterReview` flow executes lowering, logic simulation, STA, physical floorplanning, immutable review-packet validation, human approval, and same-run resume. The full Xcircuite regression and the complete DRC/LVS/PEX signoff chain remain separate evidence gates.
+Status: LogicDesign and multi-engine adapter slices are verified by headless Xcircuite tests. The retained `EndToEndDesignFlowTests/retainedMultiEngineRunResumesAfterReview` flow executes lowering, logic simulation, STA, physical floorplanning, native DRC/LVS, deterministic mock PEX, immutable review-packet validation, human approval, and same-run resume. Mock PEX is contract evidence rather than physical signoff; external PEX, oracle and process qualification remain separate gates.
 
 ## Milestone 5: Qualification and release eligibility
 
