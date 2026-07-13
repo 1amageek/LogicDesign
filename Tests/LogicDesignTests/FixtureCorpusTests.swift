@@ -62,7 +62,7 @@ struct FixtureCorpusTests {
         let manifest = try readManifest()
         #expect(manifest.schemaVersion == 1)
         #expect(manifest.corpusID == "logic-design-native-smoke")
-        #expect(manifest.cases.count == 12)
+        #expect(manifest.cases.count == 13)
         #expect(Set(manifest.cases.map(\.id)).count == manifest.cases.count)
         #expect(Set(manifest.cases.map(\.path)).count == manifest.cases.count)
 

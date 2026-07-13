@@ -182,6 +182,18 @@ struct SystemVerilogFrontendTests {
         #expect(process.events.map(\.edge) == [.positive, .negative])
     }
 
+    @Test("decodes legacy RTL process artifacts without event metadata")
+    func decodesLegacyProcessArtifact() throws {
+        let data = Data(
+            #"{"id":"legacy-process","kind":"sequential","sensitivity":["clk"],"clockEdge":"positive","statements":[]}"#.utf8
+        )
+        let process = try JSONDecoder().decode(RTLProcess.self, from: data)
+
+        #expect(process.id == "legacy-process")
+        #expect(process.events.isEmpty)
+        #expect(process.clockEdge == .positive)
+    }
+
     @Test("case statements and latch processes are retained")
     func parsesCaseAndLatch() {
         let source = SystemVerilogSourceUnit(
