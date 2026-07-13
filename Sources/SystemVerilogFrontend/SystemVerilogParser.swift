@@ -683,7 +683,9 @@ public struct SystemVerilogParser: SystemVerilogParsing {
             var events: [RTLProcessEvent] = []
             if keyword == "always" || keyword == "always_ff" {
                 _ = expect("@")
-                if match("(") {
+                if match("*") {
+                    sensitivity = ["*"]
+                } else if match("(") {
                     if match("*") {
                         sensitivity = ["*"]
                     } else {

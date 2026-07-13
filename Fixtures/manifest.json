@@ -2,6 +2,14 @@
   "cases" : [
     {
       "expectedStatus" : "completed",
+      "id" : "always-star",
+      "kind" : "systemVerilog",
+      "path" : "positive/always_star.sv",
+      "sha256" : "af99b954a6812c1d56cbd73bf3acd697a897e6813a33ce5389a5704392df8c9c",
+      "topDesignName" : "always_star"
+    },
+    {
+      "expectedStatus" : "completed",
       "id" : "async-reset",
       "kind" : "systemVerilog",
       "path" : "positive/async_reset.sv",

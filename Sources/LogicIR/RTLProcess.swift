@@ -54,7 +54,9 @@ public struct RTLProcess: Sendable, Hashable, Codable {
         try container.encode(kind, forKey: .kind)
         try container.encode(sensitivity, forKey: .sensitivity)
         try container.encodeIfPresent(clockEdge, forKey: .clockEdge)
-        try container.encode(events, forKey: .events)
+        if !events.isEmpty {
+            try container.encode(events, forKey: .events)
+        }
         try container.encode(statements, forKey: .statements)
         try container.encodeIfPresent(source, forKey: .source)
     }

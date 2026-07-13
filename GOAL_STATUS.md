@@ -10,10 +10,10 @@
 | Public package products | Implemented | Package.swift |
 | Shared Xcircuite request/result contract | Implemented | Public Swift protocols and payloads |
 | Contract build | Passed | swift build |
-| Contract test | Passed | timeout-bounded `swift test`; 43 tests in 5 suites |
+| Contract test | Passed | timeout-bounded `swift test`; 44 tests in 5 suites |
 | Domain implementation | Complete for native subset | LogicIR, SystemVerilogFrontend, PowerIntent and gate netlist parser |
 | CLI implementation | Complete | `logic-design` parse, validate, gate-parse, power-intent and capabilities |
-| Fixture corpus | Complete for smoke corpus | `Fixtures/manifest.json` records 13 retained cases with SHA-256 and expected native status, including parameterized hierarchy, asynchronous-reset events, conditional compilation and typed blocked cases |
+| Fixture corpus | Complete for smoke corpus | `Fixtures/manifest.json` records 14 retained cases with SHA-256 and expected native status, including wildcard-sensitivity and asynchronous-reset events, parameterized hierarchy, conditional compilation and typed blocked cases |
 | Oracle correlation | Not started | No retained comparison evidence |
 | Process qualification | Not started | No PDK-scoped qualification record |
 | Xcircuite stage adapter | Implemented and focused-verified; full gate pending | `LogicElaborationFlowStageExecutor` resolves project-root relative includes, while elaboration/power-intent persist canonical artifacts, envelopes and integrity gates; current serial Xcircuite regression passes 545 tests in 58 suites |
