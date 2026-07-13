@@ -26,7 +26,7 @@ Exit criteria:
 - Snapshot identity is deterministic across encode/decode and independent of run timestamps.
 - Failed, blocked, cancelled, and resumed executions preserve structured evidence.
 
-Status: in progress. Snapshot/request validation, canonical-vs-serialized digest separation, and adapter artifact integrity gates are implemented; orchestrated handoff evidence remains.
+Status: in progress. Snapshot/request validation, canonical-vs-serialized digest separation, adapter artifact integrity gates, and a retained lowering-to-simulation-to-timing-to-physical handoff are implemented; full signoff-chain coverage remains.
 
 ## Milestone 2: Deterministic HDL and power-intent semantics
 
@@ -46,7 +46,7 @@ Exit criteria:
 - Gate connectivity validates drivers, loads, port directions, widths, hierarchy, and stable IDs.
 - Consumers can load canonical artifacts without UI or ad-hoc conversion.
 
-Status: in progress. Gate reverse connectivity and direction validation, the RTL-snapshot-to-lowering digest boundary, and a shared `LogicDesignProvenance` handoff contract are implemented. Native LogicEngine lowering/synthesis, DFTEngine scan/BIST, and Xcircuite elaboration producers attach lineage. TimingEngine signoff analysis, PhysicalDesignEngine execution, and ReleaseEngine signoff now validate supplied lineage and fail closed on invalid or mismatched provenance; remaining handoff consumers and a retained end-to-end review run remain.
+Status: in progress. Gate reverse connectivity and direction validation, the RTL-snapshot-to-lowering digest boundary, and a shared `LogicDesignProvenance` handoff contract are implemented. Native LogicEngine lowering/synthesis, DFTEngine scan/BIST, and Xcircuite elaboration producers attach lineage. TimingEngine signoff analysis, PhysicalDesignEngine execution, and ReleaseEngine signoff now validate supplied lineage and fail closed on invalid or mismatched provenance; remaining handoff consumers and full signoff-chain evidence remain.
 
 ## Milestone 4: Xcircuite execution and human-in-the-loop
 
@@ -56,7 +56,7 @@ Exit criteria:
 - Stage results participate in approval, review, resume, cancellation, and repair-loop flows.
 - Headless integration tests execute against a working dependency graph and assert artifact integrity.
 
-Status: LogicDesign and multi-engine adapter slices are verified by headless Xcircuite tests. The full Xcircuite regression passes with 520 tests in 55 suites, including qualification scope mismatch, provenance enforcement, and physical-design review packet approval/resume coverage. A single end-to-end multi-engine design run with human review across the complete flow remains incomplete.
+Status: LogicDesign and multi-engine adapter slices are verified by headless Xcircuite tests. The retained `EndToEndDesignFlowTests/retainedMultiEngineRunResumesAfterReview` flow executes lowering, logic simulation, STA, physical floorplanning, immutable review-packet validation, human approval, and same-run resume. The full Xcircuite regression and the complete DRC/LVS/PEX signoff chain remain separate evidence gates.
 
 ## Milestone 5: Qualification and release eligibility
 
@@ -67,7 +67,7 @@ Exit criteria:
 - Process/PDK-scoped qualification records include tool, version, inputs, outputs, metrics, and failures.
 - Tool trust and release gates prevent unqualified results from being treated as signoff.
 
-Status: not started. No foundry or process qualification is claimed.
+Status: in progress for the qualification machinery; no external-oracle or foundry/process qualification is claimed. Tool evidence, local corpus/oracle comparison, scope matching, freshness, independence, and release gates exist as typed contracts, while a retained process-scoped evidence record is still required.
 
 ## Execution policy
 
