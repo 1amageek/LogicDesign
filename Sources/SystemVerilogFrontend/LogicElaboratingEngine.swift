@@ -1,6 +1,6 @@
 import Foundation
 import LogicIR
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct LogicElaboratingEngine: LogicElaborating {
     private let parser: SystemVerilogParsing
@@ -28,7 +28,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
 
     public func execute(
         _ request: LogicElaborationRequest
-    ) async throws -> XcircuiteEngineResultEnvelope<LogicElaborationPayload> {
+    ) async throws -> LogicElaborationResult {
         let startedAt = clock()
         do {
             try Task.checkCancellation()
@@ -184,17 +184,17 @@ public struct LogicElaboratingEngine: LogicElaborating {
 
     private func envelope(
         request: LogicElaborationRequest,
-        status: XcircuiteEngineExecutionStatus,
+        status: LogicExecutionStatus,
         diagnostics: [LogicDiagnostic],
         payload: LogicElaborationPayload,
         startedAt: Date
-    ) -> XcircuiteEngineResultEnvelope<LogicElaborationPayload> {
-        XcircuiteEngineResultEnvelope(
+    ) -> LogicElaborationResult {
+        LogicElaborationResult(
             schemaVersion: LogicElaborationRequest.currentSchemaVersion,
             runID: request.runID,
             status: status,
-            diagnostics: diagnostics.map(\.engineDiagnostic),
-            metadata: XcircuiteEngineExecutionMetadata(
+            diagnostics: diagnostics,
+            metadata: LogicExecutionMetadata(
                 engineID: "LogicDesign.SystemVerilogFrontend",
                 implementationID: "native-systemverilog-subset",
                 implementationVersion: "1",

@@ -1,6 +1,6 @@
 import Foundation
 import LogicIR
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct SystemVerilogParser: SystemVerilogParsing {
     private let lexer: SystemVerilogLexing

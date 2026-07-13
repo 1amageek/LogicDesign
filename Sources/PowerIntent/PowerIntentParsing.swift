@@ -1,8 +1,8 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public protocol PowerIntentParsing: Sendable {
     func execute(
         _ request: PowerIntentParsingRequest
-    ) async throws -> XcircuiteEngineResultEnvelope<PowerIntentParsingPayload>
+    ) async throws -> PowerIntentParsingResult
 }

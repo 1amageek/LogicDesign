@@ -4,7 +4,7 @@ import Testing
 @testable import SystemVerilogFrontend
 @testable import PowerIntent
 @testable import LogicDesign
-import XcircuitePackage
+import CircuiteFoundation
 
 @Suite("LogicDesign contract")
 struct ContractTests {
@@ -17,7 +17,7 @@ struct ContractTests {
     func requestRoundTrip() throws {
         let request = LogicElaborationRequest(
             runID: "run-round-trip",
-            inputs: [XcircuiteFileReference(path: "top.sv", kind: .rtl, format: .systemVerilog)],
+            inputs: [ArtifactLocator(path: "top.sv", kind: .rtl, format: .systemVerilog)],
             topDesignName: "top",
             sources: [SystemVerilogSourceUnit(path: "top.sv", source: "module top; endmodule")]
         )
@@ -37,7 +37,7 @@ struct ContractTests {
             runID: "run-provenance"
         )
         let reference = LogicDesignReference(
-            artifact: XcircuiteFileReference(path: "design.json", kind: .netlist, format: .json),
+            artifact: ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
             topDesignName: "top",
             designDigest: "output-design",
             provenance: provenance
@@ -53,7 +53,7 @@ struct ContractTests {
     @Test("provenance validation rejects mismatched transformed input")
     func provenanceValidationRejectsMismatchedInput() {
         let reference = LogicDesignReference(
-            artifact: XcircuiteFileReference(path: "design.json", kind: .netlist, format: .json),
+            artifact: ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
             topDesignName: "top",
             designDigest: "current",
             provenance: LogicDesignProvenance(

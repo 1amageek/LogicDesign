@@ -1,6 +1,6 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public protocol PowerIntentSourceProviding: Sendable {
-    func load(_ reference: XcircuiteFileReference, format: PowerIntentFormat) throws -> PowerIntentSourceUnit
+    func load(_ reference: ArtifactLocator, format: PowerIntentFormat) throws -> PowerIntentSourceUnit
 }

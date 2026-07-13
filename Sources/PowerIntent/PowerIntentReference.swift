@@ -1,13 +1,13 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 import LogicIR
 
 public struct PowerIntentReference: Sendable, Hashable, Codable {
-    public var artifact: XcircuiteFileReference
+    public var artifact: ArtifactLocator
     public var designDigest: String
 
     public init(
-        artifact: XcircuiteFileReference,
+        artifact: ArtifactLocator,
         designDigest: String
     ) {
         self.artifact = artifact

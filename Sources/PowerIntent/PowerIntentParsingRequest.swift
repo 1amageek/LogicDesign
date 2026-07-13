@@ -1,20 +1,20 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 import LogicIR
 
-public struct PowerIntentParsingRequest: XcircuiteEngineRequest {
+public struct PowerIntentParsingRequest: Sendable, Hashable, Codable {
     public static let currentSchemaVersion = 1
 
     public var schemaVersion: Int
     public var runID: String
-    public var inputs: [XcircuiteFileReference]
+    public var inputs: [ArtifactLocator]
     public var design: LogicDesignReference
     public var format: PowerIntentFormat
     public var sources: [PowerIntentSourceUnit]
 
     public init(
         runID: String,
-        inputs: [XcircuiteFileReference],
+        inputs: [ArtifactLocator],
         design: LogicDesignReference,
         format: PowerIntentFormat = .upf,
         sources: [PowerIntentSourceUnit] = []

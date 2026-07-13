@@ -62,17 +62,17 @@ flowchart LR
 
 Every executing product uses:
 
-- a `Codable`, `Hashable`, `Sendable` request conforming to `XcircuiteEngineRequest`;
-- `XcircuiteEngineResultEnvelope<Payload>` for status, diagnostics, artifacts and execution metadata;
+- a `Codable`, `Hashable`, `Sendable` request with `ArtifactLocator` inputs;
+- domain-owned result types (`LogicElaborationResult` and `PowerIntentParsingResult`) for status, diagnostics and execution metadata;
 - protocol-first dependency injection;
-- immutable `XcircuiteFileReference` inputs and outputs;
+- `ArtifactLocator` for planned inputs and `ArtifactReference` for materialized outputs;
 - explicit blocked, failed and cancelled states.
 
 ## Xcircuite integration
 
-Xcircuite treats `LogicDesignReference` and `PowerIntentReference` as canonical stage handoffs consumed by simulation, synthesis, verification, DFT, timing and physical design. The LogicDesign adapter resolves project-root-relative source includes, persists canonical snapshots and result envelopes, and applies an artifact-integrity gate.
+Xcircuite treats `LogicDesignReference` and `PowerIntentReference` as canonical stage handoffs consumed by simulation, synthesis, verification, DFT, timing and physical design. The LogicDesign frontend resolves project-root-relative source includes and persists canonical snapshots; run lifecycle and artifact integrity gates are owned by the integrating flow runtime.
 
-The library does not depend on the Xcircuite runtime. Xcircuite owns the adapter to `DesignFlowKernel.FlowStageExecutor`, artifact persistence, qualification gates, repair loops and human approval.
+The library does not depend on the Xcircuite runtime. Xcircuite owns `DesignFlowKernel` integration, artifact persistence, qualification gates, repair loops and human approval.
 
 ## CLI
 

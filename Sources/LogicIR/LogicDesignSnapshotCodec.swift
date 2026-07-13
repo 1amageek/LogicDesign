@@ -1,5 +1,5 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public enum LogicDesignSnapshotCodec {
     public static func encode(_ snapshot: LogicDesignSnapshot) throws -> Data {
@@ -38,7 +38,8 @@ public enum LogicDesignSnapshotCodec {
             designDigest: nil,
             schemaVersion: snapshot.schemaVersion
         )
-        return XcircuiteHasher().sha256(data: try encode(canonical))
+        let digest = try SHA256ContentDigester().digest(data: try encode(canonical))
+        return digest.hexadecimalValue
     }
 
     public static func finalized(_ snapshot: LogicDesignSnapshot) throws -> LogicDesignSnapshot {

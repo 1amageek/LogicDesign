@@ -1,5 +1,5 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct InMemorySystemVerilogSourceProvider: SystemVerilogSourceProviding {
     public var sources: [String: String]
@@ -8,13 +8,14 @@ public struct InMemorySystemVerilogSourceProvider: SystemVerilogSourceProviding 
         self.sources = sources
     }
 
-    public func load(_ reference: XcircuiteFileReference) throws -> SystemVerilogSourceUnit {
-        guard let source = sources[reference.path] else {
+    public func load(_ reference: ArtifactLocator) throws -> SystemVerilogSourceUnit {
+        let path = reference.location.value
+        guard let source = sources[path] else {
             throw SystemVerilogSourceProviderError.readFailed(
-                path: reference.path,
+                path: path,
                 message: "No source was registered for the referenced path."
             )
         }
-        return SystemVerilogSourceUnit(path: reference.path, source: source)
+        return SystemVerilogSourceUnit(path: path, source: source)
     }
 }

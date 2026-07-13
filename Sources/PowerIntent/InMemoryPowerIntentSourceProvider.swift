@@ -1,5 +1,5 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct InMemoryPowerIntentSourceProvider: PowerIntentSourceProviding {
     public var sources: [String: String]
@@ -8,13 +8,14 @@ public struct InMemoryPowerIntentSourceProvider: PowerIntentSourceProviding {
         self.sources = sources
     }
 
-    public func load(_ reference: XcircuiteFileReference, format: PowerIntentFormat) throws -> PowerIntentSourceUnit {
-        guard let source = sources[reference.path] else {
+    public func load(_ reference: ArtifactLocator, format: PowerIntentFormat) throws -> PowerIntentSourceUnit {
+        let path = reference.location.value
+        guard let source = sources[path] else {
             throw PowerIntentSourceProviderError.readFailed(
-                path: reference.path,
+                path: path,
                 message: "No source was registered for the referenced path."
             )
         }
-        return PowerIntentSourceUnit(path: reference.path, source: source, format: format)
+        return PowerIntentSourceUnit(path: path, source: source, format: format)
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 import LogicIR
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct SystemVerilogLexer: SystemVerilogLexing {
     private static let keywords: Set<String> = [

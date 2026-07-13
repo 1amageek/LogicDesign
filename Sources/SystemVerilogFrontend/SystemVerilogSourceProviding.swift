@@ -1,6 +1,6 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public protocol SystemVerilogSourceProviding: Sendable {
-    func load(_ reference: XcircuiteFileReference) throws -> SystemVerilogSourceUnit
+    func load(_ reference: ArtifactLocator) throws -> SystemVerilogSourceUnit
 }

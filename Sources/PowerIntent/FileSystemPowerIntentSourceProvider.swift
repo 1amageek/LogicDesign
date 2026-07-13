@@ -1,5 +1,5 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct FileSystemPowerIntentSourceProvider: PowerIntentSourceProviding {
     public var root: URL
@@ -8,17 +8,18 @@ public struct FileSystemPowerIntentSourceProvider: PowerIntentSourceProviding {
         self.root = root
     }
 
-    public func load(_ reference: XcircuiteFileReference, format: PowerIntentFormat) throws -> PowerIntentSourceUnit {
-        let url = root.appending(path: reference.path).standardizedFileURL
+    public func load(_ reference: ArtifactLocator, format: PowerIntentFormat) throws -> PowerIntentSourceUnit {
+        let path = reference.location.value
+        let url = root.appending(path: path).standardizedFileURL
         guard url.path.hasPrefix(root.standardizedFileURL.path + "/") else {
-            throw PowerIntentSourceProviderError.invalidPath(reference.path)
+            throw PowerIntentSourceProviderError.invalidPath(path)
         }
         let source: String
         do {
             source = try String(contentsOf: url, encoding: .utf8)
         } catch {
-            throw PowerIntentSourceProviderError.readFailed(path: reference.path, message: error.localizedDescription)
+            throw PowerIntentSourceProviderError.readFailed(path: path, message: error.localizedDescription)
         }
-        return PowerIntentSourceUnit(path: reference.path, source: source, format: format)
+        return PowerIntentSourceUnit(path: path, source: source, format: format)
     }
 }

@@ -1,7 +1,7 @@
 import Foundation
 import LogicIR
 import SystemVerilogFrontend
-import XcircuitePackage
+import CircuiteFoundation
 
 public enum LogicDesignOracleCorrelator {
     public static func validate(_ manifest: LogicDesignOracleManifest) throws {
@@ -37,7 +37,7 @@ public enum LogicDesignOracleCorrelator {
         oracleCase: LogicDesignOracleCase,
         sourceSHA256: String,
         topDesignName: String,
-        result: XcircuiteEngineResultEnvelope<LogicElaborationPayload>
+        result: LogicElaborationResult
     ) throws -> LogicDesignOracleCorrelation {
         try validate(manifest)
         guard manifest.caseWithID(oracleCase.id) != nil else {

@@ -26,12 +26,15 @@ Own the canonical digital design and power-intent state shared by every digital 
 
 - Public execution surfaces are protocol-first, Sendable and dependency-injected.
 - Requests and payloads are Codable, Hashable and schema-versioned.
-- Inputs and outputs use immutable XcircuiteFileReference artifacts.
+- Inputs use `ArtifactLocator`; outputs use immutable `ArtifactReference`
+  values from CircuiteFoundation.
 - Diagnostics contain a stable code, severity, affected entity and suggested actions.
 - Unsupported semantics and missing prerequisites produce blocked results.
 - Native and external-tool backends conform to identical request and payload schemas.
 - Execution capability, corpus validation, oracle correlation, process qualification and release approval remain distinct.
-- Xcircuite owns flow construction, artifact persistence, qualification gates, repair loops, approval and resume.
+- DesignFlowKernel owns flow construction, artifact registration, qualification
+  gates, repair loops, approval, and resume. Xcircuite supplies concrete
+  `.xcircuite` persistence through its own protocol conformances.
 - The package never imports Xcircuite or circuit-studio.
 
 ## Required developer surfaces
@@ -42,4 +45,4 @@ Own the canonical digital design and power-intent state shared by every digital 
 - Contract and parser round-trip tests
 - Reference corpus
 - Capability and limitation report
-- Xcircuite stage adapter tests
+- Integration tests that invoke the public protocols from a flow-stage client

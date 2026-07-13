@@ -3,7 +3,7 @@ import Testing
 import LogicIR
 import SystemVerilogFrontend
 import PowerIntent
-import XcircuitePackage
+import CircuiteFoundation
 
 @Suite("LogicDesign execution")
 struct EngineTests {
@@ -25,16 +25,16 @@ struct EngineTests {
         #expect(result.payload.snapshot?.rtl.sourceFiles.first?.path == "valid.sv")
     }
 
-    @Test("elaboration rejects an unverified filesystem request")
+    @Test("elaboration reports a missing filesystem input")
     func elaborationRejectsMissingInputIntegrity() async throws {
         let request = LogicElaborationRequest(
             runID: "run-unverified",
-            inputs: [XcircuiteFileReference(path: "top.sv", kind: .rtl, format: .systemVerilog)],
+            inputs: [ArtifactLocator(path: "top.sv", kind: .rtl, format: .systemVerilog)],
             topDesignName: "top"
         )
         let result = try await LogicElaboratingEngine(clock: { Date(timeIntervalSince1970: 0) }).execute(request)
         #expect(result.status == .failed)
-        #expect(result.diagnostics.contains { $0.code == "LOGIC_REQUEST_INPUT_INTEGRITY_MISSING" })
+        #expect(result.diagnostics.contains { $0.code == "SV_SOURCE_LOAD_FAILED" })
     }
 
     @Test("elaboration resolves relative includes and propagates macros")
@@ -409,7 +409,7 @@ struct EngineTests {
             format: .upf
         )
         let reference = LogicDesignReference(
-            artifact: XcircuiteFileReference(path: "design.json", kind: .rtl, format: .json),
+            artifact: ArtifactLocator(path: "design.json", kind: .rtl, format: .json),
             topDesignName: "top",
             designDigest: "design-digest"
         )

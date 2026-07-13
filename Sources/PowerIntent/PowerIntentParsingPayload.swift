@@ -1,5 +1,5 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 import LogicIR
 
 public struct PowerIntentParsingPayload: Sendable, Hashable, Codable {

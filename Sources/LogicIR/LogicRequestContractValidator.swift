@@ -1,5 +1,5 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct LogicRequestContractValidator: LogicRequestContractValidating {
     public init() {}
@@ -8,7 +8,7 @@ public struct LogicRequestContractValidator: LogicRequestContractValidating {
         schemaVersion: Int,
         expectedSchemaVersion: Int,
         runID: String,
-        inputs: [XcircuiteFileReference],
+        inputs: [ArtifactLocator],
         topDesignName: String,
         inlineSourceCount: Int
     ) -> LogicValidationResult {
@@ -47,39 +47,12 @@ public struct LogicRequestContractValidator: LogicRequestContractValidating {
             ))
         }
         for input in inputs {
-            if input.path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if input.location.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 diagnostics.append(LogicDiagnostic(
                     severity: .error,
                     code: "LOGIC_REQUEST_INPUT_PATH_MISSING",
                     message: "Input artifact references require a non-empty project-relative path.",
                     suggestedActions: ["provide_input_artifact_path"]
-                ))
-            }
-            if let byteCount = input.byteCount, byteCount < 0 {
-                diagnostics.append(LogicDiagnostic(
-                    severity: .error,
-                    code: "LOGIC_REQUEST_INPUT_BYTE_COUNT_INVALID",
-                    message: "Input artifact byte counts must be non-negative.",
-                    entity: input.path,
-                    suggestedActions: ["recompute_artifact_reference"]
-                ))
-            }
-            if let sha256 = input.sha256, !isSHA256(sha256) {
-                diagnostics.append(LogicDiagnostic(
-                    severity: .error,
-                    code: "LOGIC_REQUEST_INPUT_DIGEST_INVALID",
-                    message: "Input artifact SHA-256 must be a 64-character hexadecimal value.",
-                    entity: input.path,
-                    suggestedActions: ["recompute_artifact_reference"]
-                ))
-            }
-            if inlineSourceCount == 0 && (input.sha256 == nil || input.byteCount == nil) {
-                diagnostics.append(LogicDiagnostic(
-                    severity: .error,
-                    code: "LOGIC_REQUEST_INPUT_INTEGRITY_MISSING",
-                    message: "Filesystem-backed inputs must include SHA-256 and byte-count integrity metadata.",
-                    entity: input.path,
-                    suggestedActions: ["recompute_artifact_reference", "use_verified_stage_artifact"]
                 ))
             }
         }
@@ -89,11 +62,4 @@ public struct LogicRequestContractValidator: LogicRequestContractValidating {
         )
     }
 
-    private func isSHA256(_ value: String) -> Bool {
-        value.utf8.count == 64 && value.utf8.allSatisfy { byte in
-            (byte >= 48 && byte <= 57)
-                || (byte >= 65 && byte <= 70)
-                || (byte >= 97 && byte <= 102)
-        }
-    }
 }

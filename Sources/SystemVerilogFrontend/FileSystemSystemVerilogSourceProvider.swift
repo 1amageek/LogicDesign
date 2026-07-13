@@ -1,5 +1,5 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct FileSystemSystemVerilogSourceProvider: SystemVerilogSourceProviding {
     public var root: URL
@@ -8,17 +8,18 @@ public struct FileSystemSystemVerilogSourceProvider: SystemVerilogSourceProvidin
         self.root = root
     }
 
-    public func load(_ reference: XcircuiteFileReference) throws -> SystemVerilogSourceUnit {
-        let url = root.appending(path: reference.path).standardizedFileURL
+    public func load(_ reference: ArtifactLocator) throws -> SystemVerilogSourceUnit {
+        let path = reference.location.value
+        let url = root.appending(path: path).standardizedFileURL
         guard url.path.hasPrefix(root.standardizedFileURL.path + "/") else {
-            throw SystemVerilogSourceProviderError.invalidPath(reference.path)
+            throw SystemVerilogSourceProviderError.invalidPath(path)
         }
         let source: String
         do {
             source = try String(contentsOf: url, encoding: .utf8)
         } catch {
-            throw SystemVerilogSourceProviderError.readFailed(path: reference.path, message: error.localizedDescription)
+            throw SystemVerilogSourceProviderError.readFailed(path: path, message: error.localizedDescription)
         }
-        return SystemVerilogSourceUnit(path: reference.path, source: source)
+        return SystemVerilogSourceUnit(path: path, source: source)
     }
 }

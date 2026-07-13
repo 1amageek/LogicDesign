@@ -1,6 +1,6 @@
 import Foundation
 import LogicIR
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct SystemVerilogSourceResolver: SystemVerilogSourceResolving {
     private let sourceProvider: SystemVerilogSourceProviding
@@ -83,9 +83,10 @@ public struct SystemVerilogSourceResolver: SystemVerilogSourceResolving {
                     included = knownSource
                 } else {
                     do {
-                        included = try sourceProvider.load(XcircuiteFileReference(
-                            path: includePath,
-                            kind: .rtl,
+                        included = try sourceProvider.load(ArtifactLocator(
+                            location: ArtifactLocation(workspaceRelativePath: includePath),
+                            role: .input,
+                            kind: try ArtifactKind(rawValue: "rtl"),
                             format: .systemVerilog
                         ))
                     } catch {

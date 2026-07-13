@@ -4,7 +4,7 @@ import LogicDesign
 import LogicIR
 import PowerIntent
 import SystemVerilogFrontend
-import XcircuitePackage
+import CircuiteFoundation
 
 @Suite("LogicDesign retained fixture corpus")
 struct FixtureCorpusTests {
@@ -35,12 +35,10 @@ struct FixtureCorpusTests {
                     runID: "fixture-" + entry.id,
                     inputs: [],
                     design: LogicDesignReference(
-                        artifact: XcircuiteFileReference(
+                        artifact: ArtifactLocator(
                             path: "design.json",
                             kind: .rtl,
-                            format: .json,
-                            sha256: String(repeating: "1", count: 64),
-                            byteCount: 0
+                            format: .json
                         ),
                         topDesignName: entry.topDesignName,
                         designDigest: String(repeating: "1", count: 64)
@@ -68,11 +66,10 @@ struct FixtureCorpusTests {
         #expect(Set(manifest.cases.map(\.path)).count == manifest.cases.count)
 
         let root = workspaceRoot()
-        let hasher = XcircuiteHasher()
         for entry in manifest.cases {
             let url = root.appending(path: "Fixtures").appending(path: entry.path)
             let data = try Data(contentsOf: url)
-            #expect(hasher.sha256(data: data) == entry.sha256)
+            #expect(try SHA256ContentDigester().digest(data: data).hexadecimalValue == entry.sha256)
         }
     }
 
@@ -84,7 +81,6 @@ struct FixtureCorpusTests {
         #expect(manifest.cases.count == 17)
 
         let root = workspaceRoot()
-        let hasher = XcircuiteHasher()
         for oracleCase in manifest.cases {
             let sourceURL = root.appending(path: "Fixtures").appending(path: oracleCase.sourcePath)
             let sourceData = try Data(contentsOf: sourceURL)
@@ -103,7 +99,7 @@ struct FixtureCorpusTests {
             let correlation = try LogicDesignOracleCorrelator.correlate(
                 manifest: manifest,
                 oracleCase: oracleCase,
-                sourceSHA256: hasher.sha256(data: sourceData),
+                sourceSHA256: try SHA256ContentDigester().digest(data: sourceData).hexadecimalValue,
                 topDesignName: oracleCase.topDesignName,
                 result: result
             )
@@ -130,7 +126,7 @@ struct FixtureCorpusTests {
         let correlation = try LogicDesignOracleCorrelator.correlate(
             manifest: manifest,
             oracleCase: mismatchedCase,
-            sourceSHA256: XcircuiteHasher().sha256(data: sourceData),
+            sourceSHA256: try SHA256ContentDigester().digest(data: sourceData).hexadecimalValue,
             topDesignName: originalCase.topDesignName,
             result: result
         )

@@ -1,6 +1,6 @@
 import Foundation
 import LogicIR
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct PowerIntentParsingEngine: PowerIntentParsing {
     private let parser: PowerIntentParser
@@ -22,7 +22,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
 
     public func execute(
         _ request: PowerIntentParsingRequest
-    ) async throws -> XcircuiteEngineResultEnvelope<PowerIntentParsingPayload> {
+    ) async throws -> PowerIntentParsingResult {
         let startedAt = clock()
         do {
             try Task.checkCancellation()
@@ -69,7 +69,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                 )
             }
             let validation = validator.validate(intent)
-            let status: XcircuiteEngineExecutionStatus
+            let status: LogicExecutionStatus
             if parsed.unsupportedSemantics {
                 status = .blocked
             } else if parsed.diagnostics.contains(where: { $0.severity == .error }) || !validation.isValid {
@@ -125,17 +125,17 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
 
     private func envelope(
         request: PowerIntentParsingRequest,
-        status: XcircuiteEngineExecutionStatus,
+        status: LogicExecutionStatus,
         diagnostics: [LogicDiagnostic],
         payload: PowerIntentParsingPayload,
         startedAt: Date
-    ) -> XcircuiteEngineResultEnvelope<PowerIntentParsingPayload> {
-        XcircuiteEngineResultEnvelope(
+    ) -> PowerIntentParsingResult {
+        PowerIntentParsingResult(
             schemaVersion: PowerIntentParsingRequest.currentSchemaVersion,
             runID: request.runID,
             status: status,
-            diagnostics: diagnostics.map(\.engineDiagnostic),
-            metadata: XcircuiteEngineExecutionMetadata(
+            diagnostics: diagnostics,
+            metadata: LogicExecutionMetadata(
                 engineID: "LogicDesign.PowerIntent",
                 implementationID: "native-upf-cpf-subset",
                 implementationVersion: "1",

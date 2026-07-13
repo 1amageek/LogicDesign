@@ -3,7 +3,7 @@ import LogicDesign
 import LogicIR
 import PowerIntent
 import SystemVerilogFrontend
-import XcircuitePackage
+import CircuiteFoundation
 
 public enum LogicDesignCLI {
     public static func run(arguments: [String]) async -> Int {
@@ -44,7 +44,7 @@ public enum LogicDesignCLI {
         }
     }
 
-    private static func runSystemVerilog(_ command: Command) async throws -> XcircuiteEngineResultEnvelope<LogicElaborationPayload> {
+    private static func runSystemVerilog(_ command: Command) async throws -> LogicElaborationResult {
         let source = try readSource(at: command.input)
         let sourceUnit = SystemVerilogSourceUnit(path: command.input, source: source)
         let request = LogicElaborationRequest(
@@ -89,7 +89,7 @@ public enum LogicDesignCLI {
             topDesignName: topDesignName,
             sources: [SystemVerilogSourceUnit(path: command.input, source: source)]
         ))
-        let sourceSHA256 = XcircuiteHasher().sha256(data: sourceData)
+        let sourceSHA256 = try SHA256ContentDigester().digest(data: sourceData).hexadecimalValue
         return try LogicDesignOracleCorrelator.correlate(
             manifest: manifest,
             oracleCase: oracleCase,
@@ -99,16 +99,15 @@ public enum LogicDesignCLI {
         )
     }
 
-    private static func runPowerIntent(_ command: Command) async throws -> XcircuiteEngineResultEnvelope<PowerIntentParsingPayload> {
+    private static func runPowerIntent(_ command: Command) async throws -> PowerIntentParsingResult {
         let source = try readSource(at: command.input)
         let sourceUnit = PowerIntentSourceUnit(path: command.input, source: source, format: command.format)
         let designReference = LogicDesignReference(
-            artifact: XcircuiteFileReference(
-                path: "design.json",
-                kind: .rtl,
-                format: .json,
-                sha256: command.designDigest,
-                byteCount: 0
+            artifact: ArtifactLocator(
+                location: try ArtifactLocation(workspaceRelativePath: "design.json"),
+                role: .input,
+                kind: try ArtifactKind(rawValue: "rtl"),
+                format: .json
             ),
             topDesignName: command.topDesign,
             designDigest: command.designDigest

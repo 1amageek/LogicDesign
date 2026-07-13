@@ -1,8 +1,8 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct LogicDiagnostic: Sendable, Hashable, Codable {
-    public var severity: XcircuiteEngineDiagnosticSeverity
+    public var severity: DiagnosticSeverity
     public var code: String
     public var message: String
     public var entity: String?
@@ -10,7 +10,7 @@ public struct LogicDiagnostic: Sendable, Hashable, Codable {
     public var suggestedActions: [String]
 
     public init(
-        severity: XcircuiteEngineDiagnosticSeverity,
+        severity: DiagnosticSeverity,
         code: String,
         message: String,
         entity: String? = nil,
@@ -25,13 +25,21 @@ public struct LogicDiagnostic: Sendable, Hashable, Codable {
         self.suggestedActions = suggestedActions
     }
 
-    public var engineDiagnostic: XcircuiteEngineDiagnostic {
-        XcircuiteEngineDiagnostic(
-            severity: severity,
-            code: code,
-            message: message,
-            entity: entity,
-            suggestedActions: suggestedActions
-        )
+    public var engineDiagnostic: DesignDiagnostic {
+        do {
+            let diagnosticCode = try DiagnosticCode(rawValue: code)
+            let actions = suggestedActions.map {
+                SuggestedAction(code: $0, summary: $0)
+            }
+            return DesignDiagnostic(
+                code: diagnosticCode,
+                severity: severity,
+                summary: message,
+                detail: entity,
+                suggestedActions: actions
+            )
+        } catch {
+            preconditionFailure("Invalid logic diagnostic code: \(error)")
+        }
     }
 }

@@ -1,5 +1,5 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct LogicDesignValidator: LogicDesignValidating {
     public init() {}

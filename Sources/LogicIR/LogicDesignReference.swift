@@ -1,8 +1,8 @@
 import Foundation
-import XcircuitePackage
+import CircuiteFoundation
 
 public struct LogicDesignReference: Sendable, Hashable, Codable {
-    public var artifact: XcircuiteFileReference
+    public var artifact: ArtifactLocator
     public var topDesignName: String
     /// Canonical digest of the referenced design content; artifact.sha256 protects serialized bytes.
     public var designDigest: String
@@ -10,7 +10,7 @@ public struct LogicDesignReference: Sendable, Hashable, Codable {
     public var provenance: LogicDesignProvenance?
 
     public init(
-        artifact: XcircuiteFileReference,
+        artifact: ArtifactLocator,
         topDesignName: String,
         designDigest: String,
         provenance: LogicDesignProvenance? = nil

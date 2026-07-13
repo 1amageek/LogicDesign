@@ -1,61 +1,64 @@
 # LogicDesign Interface Contract
 
-## Common shape
+LogicDesign publishes typed digital-design schemas and protocols.  It is
+usable in-process or by an external tool and does not depend on Xcircuite,
+DesignFlowKernel, or a filesystem runtime.
+
+## Common execution shape
 
 ```swift
 public protocol DomainExecuting: Sendable {
-    func execute(
-        _ request: DomainRequest
-    ) async throws -> XcircuiteEngineResultEnvelope<DomainPayload>
+    associatedtype Request: Sendable & Codable & Hashable
+    associatedtype Result: Sendable & Codable & Hashable
+
+    func execute(_ request: Request) async throws -> Result
 }
 ```
 
-Requests carry a schema version, run ID and typed artifact references. Payloads contain domain metrics only. Diagnostics and artifacts belong to the shared envelope.
+Each product defines its own request and result type.  A result contains the
+domain payload, `DesignDiagnostic` values, `ArtifactReference` values, and
+`ExecutionProvenance` needed to reproduce the execution.  There is no generic
+result envelope and no package-specific compatibility model.
 
-### Design identity and serialized integrity
+Requests carry a schema version and explicit `ArtifactLocator` inputs.  A
+backend resolves locators through its injected source provider and emits
+immutable artifact references with a digest, byte count, role, kind, and
+format.
 
-`LogicDesignReference.designDigest` identifies the canonical design content. `LogicDesignReference.artifact.sha256` and `byteCount` identify and protect the serialized artifact bytes. Snapshot consumers must validate both boundaries: decode and verify the canonical snapshot digest, then verify the referenced artifact bytes before execution.
+## Design identity and integrity
 
-Transformed handoffs may carry `LogicDesignReference.provenance`. It preserves the original canonical source digest, immediate input digest, stable transformation ID, producer identity/version and run ID. `topDesignName` remains part of the reference so consumers can reject cross-top handoffs.
+`LogicDesignReference.designDigest` identifies canonical design content.
+`LogicDesignReference.artifact` identifies the serialized snapshot.  Consumers
+must validate the canonical design digest and then verify the referenced bytes
+before execution.  Transformed handoffs preserve source digest, immediate input
+digest, transformation identity, producer version, and run context in the
+domain provenance record.
 
 ## Products
 
-### LogicIR
-
-Stable RTL and gate-design identity.
-
-### SystemVerilogFrontend
-
-Parsing and elaboration.
-
-### PowerIntent
-
-UPF and CPF semantics.
-
-### LogicDesign
-
-Umbrella API.
-
+| Product | Responsibility |
+| --- | --- |
+| LogicIR | Stable RTL and gate-design identity. |
+| SystemVerilogFrontend | Parsing, preprocessing, and elaboration. |
+| PowerIntent | UPF and CPF semantics. |
+| LogicDesign | Umbrella module that exports the public contracts. |
 
 ## Error contract
 
-- Throw only when execution cannot produce a valid result envelope.
-- Represent design findings and failed checks as typed diagnostics and a completed domain payload.
-- Represent missing prerequisites or insufficient semantics as `blocked`.
-- Preserve cancellation as `cancelled`.
-- Do not swallow parser, process or persistence failures.
+- Throw a typed error only when execution cannot produce a valid domain result.
+- Represent findings and failed checks as `DesignDiagnostic` values in a
+  completed result.
+- Represent missing prerequisites or unsupported semantics as a blocked result.
+- Preserve cancellation as a cancelled result or typed cancellation error.
+- Never swallow parser, process, or persistence failures.
 
-## Xcircuite adapter
+## Integration boundary
 
-The adapter must:
+LogicDesign exposes protocols and value types only.  Xcircuite may provide a
+flow-stage implementation that invokes these protocols, while DesignFlowKernel
+owns run lifecycle, approval, resume, and policy.  Xcircuite owns concrete
+`.xcircuite` persistence.  ToolQualification evaluates tool capability and
+trust independently from the engine result.
 
-1. resolve project-relative references through XcircuitePackage;
-2. verify input digests;
-3. evaluate ToolQualification requirements;
-4. invoke the injected engine protocol;
-5. persist every returned artifact;
-6. map diagnostics and status to FlowStageResult;
-7. attach design, PDK and tool provenance;
-8. leave approval and resume handling to DesignFlowKernel.
-
-The native LogicDesign adapters persist canonical artifacts in the run package, include those references in the engine envelope, persist the envelope through `XcircuitePackageStore`, and add an artifact-integrity gate to the resulting flow stage.
+The LogicDesign package itself never imports Xcircuite or circuit-studio and
+does not provide an adapter, facade, or re-export for either package.
