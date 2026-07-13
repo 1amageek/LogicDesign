@@ -74,11 +74,11 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The current contract suite passes with 33 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The current Xcircuite integration regression passes with 523 tests in 55 suites, including LogicDesign, LogicEngine, DFT, PDK, timing, physical-design, native DRC/LVS, deterministic mock PEX, the retained multi-engine human review/resume flow and release adapter coverage.
+The current contract suite passes with 36 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The Xcircuite full regression requires revalidation in the current shared worktree; its previous baseline is not treated as current evidence while dependency builds are changing.
 
 ## Qualification boundary
 
-The native implementation is smoke-checked and deterministic. Full SystemVerilog, UPF and CPF language coverage, external-tool correlation, PDK/process qualification, release approval and human approval/resume orchestration are separate platform gates. See `CAPABILITIES.md`, `MILESTONES.md` and `GOAL_STATUS.md` for the current evidence and remaining gaps.
+The native implementation is smoke-checked and deterministic. Hierarchy flattening is implemented for connected identifier-based ports without instance parameter overrides or bidirectional ports; unsupported hierarchy forms return typed blocked diagnostics. Full SystemVerilog, UPF and CPF language coverage, external-tool correlation, PDK/process qualification, release approval and human approval/resume orchestration are separate platform gates. See `CAPABILITIES.md`, `MILESTONES.md` and `GOAL_STATUS.md` for the current evidence and remaining gaps.
 
 See `DESIGN.md`, `INTERFACES.md` and `IMPLEMENTATION_PLAN.md` before implementing a backend.
 

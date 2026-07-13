@@ -89,6 +89,27 @@ struct FixtureCorpusTests {
         #expect(result.payload.snapshot?.rtl.modules.count == 1)
     }
 
+    @Test("hierarchy fixture elaborates to a flat canonical snapshot")
+    func hierarchyFixtureFlattens() async throws {
+        let source = try readFixture("Fixtures/positive/hierarchy.sv")
+        let result = try await LogicElaboratingEngine(
+            clock: { Date(timeIntervalSince1970: 0) }
+        ).execute(LogicElaborationRequest(
+            runID: "fixture-hierarchy-flat",
+            inputs: [],
+            topDesignName: "top",
+            sources: [SystemVerilogSourceUnit(
+                path: "Fixtures/positive/hierarchy.sv",
+                source: source
+            )]
+        ))
+
+        #expect(result.status == .completed)
+        #expect(result.payload.snapshot?.rtl.modules.count == 1)
+        #expect(result.payload.snapshot?.rtl.modules.first?.instances.isEmpty == true)
+        #expect(result.payload.snapshot?.rtl.modules.first?.assignments.count == 2)
+    }
+
     @Test("constant conditional generate fixture elaborates")
     func conditionalGenerateFixture() async throws {
         let source = try readFixture("Fixtures/positive/conditional_generate.sv")

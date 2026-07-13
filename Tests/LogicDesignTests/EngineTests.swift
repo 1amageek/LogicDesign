@@ -63,6 +63,67 @@ struct EngineTests {
         #expect(result.payload.snapshot?.rtl.modules.first?.ports.first?.range?.width == 4)
     }
 
+    @Test("hierarchical instances flatten into a single canonical top module")
+    func elaborationFlattensHierarchy() async throws {
+        let source = SystemVerilogSourceUnit(
+            path: "hierarchy.sv",
+            source: """
+            module leaf(input logic a, output logic y);
+                assign y = a;
+            endmodule
+            module top(input logic a, output logic y);
+                logic child_y;
+                leaf u_leaf(.a(a), .y(child_y));
+                assign y = child_y;
+            endmodule
+            """
+        )
+        let request = LogicElaborationRequest(
+            runID: "run-hierarchy",
+            inputs: [],
+            topDesignName: "top",
+            sources: [source]
+        )
+
+        let result = try await LogicElaboratingEngine(
+            clock: { Date(timeIntervalSince1970: 0) }
+        ).execute(request)
+
+        #expect(result.status == .completed)
+        #expect(result.payload.snapshot?.rtl.modules.count == 1)
+        #expect(result.payload.snapshot?.rtl.modules.first?.instances.isEmpty == true)
+        #expect(result.payload.snapshot?.rtl.modules.first?.assignments.count == 3)
+        #expect(result.payload.snapshot?.rtl.modules.first?.signals.contains {
+            $0.name == "u_leaf__y"
+        } == true)
+    }
+
+    @Test("recursive hierarchy is blocked with a typed diagnostic")
+    func recursiveHierarchyIsBlocked() async throws {
+        let source = SystemVerilogSourceUnit(
+            path: "recursive.sv",
+            source: """
+            module a(input logic value, output logic result);
+                b u_b(.value(value), .result(result));
+            endmodule
+            module b(input logic value, output logic result);
+                a u_a(.value(value), .result(result));
+            endmodule
+            """
+        )
+        let result = try await LogicElaboratingEngine(
+            clock: { Date(timeIntervalSince1970: 0) }
+        ).execute(LogicElaborationRequest(
+            runID: "run-recursive-hierarchy",
+            inputs: [],
+            topDesignName: "a",
+            sources: [source]
+        ))
+
+        #expect(result.status == .blocked)
+        #expect(result.diagnostics.contains { $0.code == "LOGIC_HIERARCHY_CYCLE" })
+    }
+
     @Test("elaboration reports a missing include as a typed diagnostic")
     func elaborationReportsMissingInclude() async throws {
         let source = SystemVerilogSourceUnit(

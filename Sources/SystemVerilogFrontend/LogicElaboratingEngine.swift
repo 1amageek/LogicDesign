@@ -5,6 +5,7 @@ import XcircuitePackage
 public struct LogicElaboratingEngine: LogicElaborating {
     private let parser: SystemVerilogParsing
     private let validator: LogicDesignValidating
+    private let hierarchyElaborator: any RTLHierarchyElaborating
     private let sourceProvider: SystemVerilogSourceProviding
     private let sourceResolver: SystemVerilogSourceResolving
     private let clock: @Sendable () -> Date
@@ -12,12 +13,14 @@ public struct LogicElaboratingEngine: LogicElaborating {
     public init(
         parser: SystemVerilogParsing = SystemVerilogParser(),
         validator: LogicDesignValidating = LogicDesignValidator(),
+        hierarchyElaborator: any RTLHierarchyElaborating = RTLHierarchyElaborator(),
         sourceProvider: SystemVerilogSourceProviding = FileSystemSystemVerilogSourceProvider(),
         sourceResolver: SystemVerilogSourceResolving? = nil,
         clock: @escaping @Sendable () -> Date = Date.init
     ) {
         self.parser = parser
         self.validator = validator
+        self.hierarchyElaborator = hierarchyElaborator
         self.sourceProvider = sourceProvider
         self.sourceResolver = sourceResolver ?? SystemVerilogSourceResolver(sourceProvider: sourceProvider)
         self.clock = clock
@@ -77,7 +80,22 @@ public struct LogicElaboratingEngine: LogicElaborating {
                 )
             }
 
-            let elaboratedDesign = RTLGenerateElaborator().elaborate(design)
+            let generatedDesign = RTLGenerateElaborator().elaborate(design)
+            let hierarchyResult = hierarchyElaborator.elaborate(generatedDesign)
+            guard let elaboratedDesign = hierarchyResult.design else {
+                return envelope(
+                    request: request,
+                    status: .blocked,
+                    diagnostics: parseResult.diagnostics + hierarchyResult.diagnostics,
+                    payload: LogicElaborationPayload(
+                        design: nil,
+                        sourceUnitCount: sources.count,
+                        snapshot: nil,
+                        validation: nil
+                    ),
+                    startedAt: startedAt
+                )
+            }
             let validation = validator.validate(elaboratedDesign)
             if parseResult.diagnostics.contains(where: { $0.severity == .error }) || !validation.isValid {
                 return envelope(

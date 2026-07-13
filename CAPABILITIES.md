@@ -6,6 +6,7 @@ The package currently provides a deterministic, in-process subset for:
 
 - stable RTL identities, source spans and SHA-256 source provenance;
 - ANSI SystemVerilog modules, ports, parameters, numeric object-like compiler macros, relative include resolution, constant expressions, vectors and memories;
+- hierarchy flattening for connected identifier-based ports, with deterministic instance-path naming and recursion diagnostics;
 - continuous assignments, supported procedural assignments, `if`, and canonical retention of `case`/`always_latch` statements, module instances and named connections;
 - canonical JSON snapshot round trips with schema/digest verification and RTL/gate structural validation;
 - gate pin/net reverse-reference, driver/load direction, duplicate identity and connectivity validation;
@@ -16,7 +17,7 @@ The package currently provides a deterministic, in-process subset for:
 
 ## Explicit limitations
 
-The native frontend blocks unsupported semantics rather than treating them as verified. The elaborating engine resolves project-relative include graphs through the injected source provider and reports malformed, missing, and cyclic includes as typed diagnostics. Direct parsing without include resolution, conditional compilation, non-constant or else-if generate constructs, interfaces, packages, classes, assertions, full UPF/CPF semantics and external-tool correlation remain blocked. Constant generate-if/else, generate-for and numeric macros are supported by native elaboration. Case statements and latch processes are parsed and retained in RTL IR; lowerers that cannot preserve their semantics must return a structured blocked result. No process-specific foundry qualification is claimed.
+The native frontend blocks unsupported semantics rather than treating them as verified. The elaborating engine resolves project-relative include graphs through the injected source provider and reports malformed, missing, and cyclic includes as typed diagnostics. Direct parsing without include resolution, conditional compilation, non-constant or else-if generate constructs, interfaces, packages, classes, assertions, full UPF/CPF semantics and external-tool correlation remain blocked. Constant generate-if/else, generate-for, numeric macros and identifier-connected hierarchy are supported by native elaboration. Instance parameter overrides, bidirectional ports and non-identifier output connections remain blocked with typed diagnostics. Case statements and latch processes are parsed and retained in RTL IR; lowerers that cannot preserve their semantics must return a structured blocked result. No process-specific foundry qualification is claimed.
 
 ## Evidence boundary
 
