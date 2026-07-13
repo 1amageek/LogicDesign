@@ -680,6 +680,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
             }
             var sensitivity: [String] = []
             var clockEdge: RTLClockEdge?
+            var events: [RTLProcessEvent] = []
             if keyword == "always" || keyword == "always_ff" {
                 _ = expect("@")
                 if match("(") {
@@ -687,12 +688,26 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                         sensitivity = ["*"]
                     } else {
                         while !isAtEnd && current.lexeme != ")" {
-                            if match("posedge") {
-                                clockEdge = .positive
-                            } else if match("negedge") {
-                                clockEdge = .negative
+                            if match("or") || match(",") {
+                                continue
                             }
-                            if let name = consumeIdentifier() { sensitivity.append(name) } else { _ = advance() }
+                            let edge: RTLClockEdge?
+                            if match("posedge") {
+                                edge = .positive
+                            } else if match("negedge") {
+                                edge = .negative
+                            } else {
+                                edge = nil
+                            }
+                            if let name = consumeIdentifier() {
+                                sensitivity.append(name)
+                                events.append(RTLProcessEvent(signal: name, edge: edge))
+                                if clockEdge == nil, let edge {
+                                    clockEdge = edge
+                                }
+                            } else {
+                                _ = advance()
+                            }
                         }
                     }
                     _ = expect(")")
@@ -704,6 +719,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 kind: kind,
                 sensitivity: sensitivity,
                 clockEdge: clockEdge,
+                events: events,
                 statements: [statement],
                 source: statementSpan(statement)
             )

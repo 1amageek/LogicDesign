@@ -95,6 +95,12 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
                     return sensitivity
                 },
                 clockEdge: process.clockEdge,
+                events: process.events.map { event in
+                    RTLProcessEvent(
+                        signal: state.mappedIdentifier(event.signal, mapping: topMapping),
+                        edge: event.edge
+                    )
+                },
                 statements: process.statements.map { state.rewrite($0, mapping: topMapping) },
                 source: process.source
             )
@@ -341,6 +347,12 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
                         return sensitivity
                     },
                     clockEdge: process.clockEdge,
+                    events: process.events.map { event in
+                        RTLProcessEvent(
+                            signal: mappedIdentifier(event.signal, mapping: childMapping),
+                            edge: event.edge
+                        )
+                    },
                     statements: process.statements.map { rewrite($0, mapping: childMapping) },
                     source: process.source
                 )
@@ -402,6 +414,16 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
             values.mapValues {
                 .integer(value: $0, width: nil, isSigned: true)
             }
+        }
+
+        func mappedIdentifier(
+            _ signal: String,
+            mapping: [String: RTLExpression]
+        ) -> String {
+            if case .identifier(let name) = mapping[signal] {
+                return name
+            }
+            return signal
         }
 
         mutating func validateGenerateContext(

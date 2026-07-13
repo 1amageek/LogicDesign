@@ -165,6 +165,23 @@ struct SystemVerilogFrontendTests {
         #expect(result.design?.modules.first?.processes.first?.clockEdge == .negative)
     }
 
+    @Test("retains clock and asynchronous reset events in source order")
+    func retainsAsynchronousResetEvents() {
+        let source = SystemVerilogSourceUnit(
+            path: "async-reset.sv",
+            source: "module top(input logic clk, input logic reset_n, input logic d, output logic q); always_ff @(posedge clk or negedge reset_n) begin if (!reset_n) q <= 1'b0; else q <= d; end endmodule"
+        )
+        let result = SystemVerilogParser().parse([source], topDesignName: "top")
+        #expect(result.diagnostics.isEmpty)
+        guard let process = result.design?.modules.first?.processes.first else {
+            Issue.record("Expected an asynchronous-reset process")
+            return
+        }
+        #expect(process.sensitivity == ["clk", "reset_n"])
+        #expect(process.events.map(\.signal) == ["clk", "reset_n"])
+        #expect(process.events.map(\.edge) == [.positive, .negative])
+    }
+
     @Test("case statements and latch processes are retained")
     func parsesCaseAndLatch() {
         let source = SystemVerilogSourceUnit(
