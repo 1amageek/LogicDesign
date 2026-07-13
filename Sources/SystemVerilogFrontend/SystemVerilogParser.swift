@@ -42,12 +42,14 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 allowResolvedIncludes: allowResolvedIncludes
             )
             while !state.isAtEnd {
-                if state.match("module") {
+                if state.current.lexeme == "`" {
+                    state.parseCompilerDirective()
+                } else if !state.isPreprocessorActive {
+                    _ = state.advance()
+                } else if state.match("module") {
                     if let module = state.parseModule() {
                         modules.append(module)
                     }
-                } else if state.current.lexeme == "`" {
-                    state.parseCompilerDirective()
                 } else {
                     let token = state.current
                     diagnostics.append(LogicDiagnostic(
@@ -65,6 +67,9 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 macroValues = state.macroValues
                 state.diagnostics.removeAll()
             }
+            state.finalizePreprocessor()
+            diagnostics.append(contentsOf: state.diagnostics)
+            unsupported = unsupported || state.unsupportedSemantics
         }
 
         let design = modules.isEmpty ? nil : RTLDesign(
@@ -87,8 +92,16 @@ public struct SystemVerilogParser: SystemVerilogParsing {
         var parameterValues: [String: Int64] = [:]
         var macroValues: [String: Int64]
         var allowResolvedIncludes: Bool
+        private var conditionalFrames: [ConditionalFrame] = []
         var diagnostics: [LogicDiagnostic] = []
         var unsupportedSemantics = false
+
+        private struct ConditionalFrame {
+            var parentActive: Bool
+            var branchTaken: Bool
+            var branchActive: Bool
+            var elseSeen: Bool
+        }
 
         init(
             tokens: [SystemVerilogToken],
@@ -105,6 +118,9 @@ public struct SystemVerilogParser: SystemVerilogParsing {
         var current: SystemVerilogToken { tokens[min(index, tokens.count - 1)] }
         var previous: SystemVerilogToken { tokens[max(0, index - 1)] }
         var isAtEnd: Bool { current.kind == .endOfFile }
+        var isPreprocessorActive: Bool {
+            conditionalFrames.allSatisfy(\.branchActive)
+        }
 
         mutating func advance() -> SystemVerilogToken {
             let token = current
@@ -169,7 +185,18 @@ public struct SystemVerilogParser: SystemVerilogParsing {
             var instances: [RTLInstance] = []
             var generateBlocks: [RTLGenerateBlock] = []
 
-            while !isAtEnd && current.lexeme != "endmodule" {
+            while !isAtEnd {
+                if current.lexeme == "`" {
+                    parseCompilerDirective()
+                    continue
+                }
+                if !isPreprocessorActive {
+                    _ = advance()
+                    continue
+                }
+                if current.lexeme == "endmodule" {
+                    break
+                }
                 switch current.lexeme {
                 case "parameter", "localparam":
                     parameters.append(contentsOf: parseParameterDeclarations(until: ";"))
@@ -197,8 +224,6 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                     }
                 case "generate":
                     generateBlocks.append(contentsOf: parseGenerateBlocks())
-                case "`":
-                    parseCompilerDirective()
                 case "interface", "program", "package", "class", "primitive", "fork":
                     unsupportedSemantics = true
                     diagnostics.append(LogicDiagnostic(
@@ -265,7 +290,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 let direction = parseDirection(default: .input)
                 let dataType = parseDataType(default: .logic)
                 let signed = match("signed")
-                let range = parseRange()
+                let parsedRange = parseRange()
                 guard let name = consumeIdentifier() else {
                     diagnostics.append(LogicDiagnostic(
                         severity: .error,
@@ -278,7 +303,15 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                     _ = match(",")
                     continue
                 }
-                ports.append(makePort(name: name, direction: direction, dataType: dataType, range: range, signed: signed, source: previous.span))
+                ports.append(makePort(
+                    name: name,
+                    direction: direction,
+                    dataType: dataType,
+                    range: parsedRange.map { $0.range },
+                    rangeExpression: parsedRange.map { $0.expression },
+                    signed: signed,
+                    source: previous.span
+                ))
                 if !match(",") { break }
             }
             return ports
@@ -288,10 +321,18 @@ public struct SystemVerilogParser: SystemVerilogParsing {
             let direction = parseDirection(default: .input)
             let dataType = parseDataType(default: .logic)
             let signed = match("signed")
-            let range = parseRange()
+            let parsedRange = parseRange()
             var ports: [RTLPort] = []
             while let name = consumeIdentifier() {
-                ports.append(makePort(name: name, direction: direction, dataType: dataType, range: range, signed: signed, source: previous.span))
+                ports.append(makePort(
+                    name: name,
+                    direction: direction,
+                    dataType: dataType,
+                    range: parsedRange.map { $0.range },
+                    rangeExpression: parsedRange.map { $0.expression },
+                    signed: signed,
+                    source: previous.span
+                ))
                 if !match(",") { break }
                 if current.lexeme == "input" || current.lexeme == "output" || current.lexeme == "inout" {
                     break
@@ -312,17 +353,19 @@ public struct SystemVerilogParser: SystemVerilogParsing {
             default: dataType = .logic; storage = .combinational
             }
             let signed = match("signed")
-            let range = parseRange()
+            let parsedRange = parseRange()
             var signals: [RTLSignal] = []
             var memories: [RTLMemory] = []
             while let name = consumeIdentifier() {
                 if current.lexeme == "[" {
-                    let addressRange = parseRange() ?? LogicRange(msb: 0, lsb: 0)
+                    let parsedAddressRange = parseRange()
                     memories.append(RTLMemory(
                         id: StableLogicID.make(kind: "memory", path: sourcePath, name: name),
                         name: name,
-                        elementRange: range,
-                        addressRange: addressRange,
+                        elementRange: parsedRange.map { $0.range },
+                        addressRange: parsedAddressRange.map { $0.range } ?? LogicRange(msb: 0, lsb: 0),
+                        elementRangeExpression: parsedRange.map { $0.expression },
+                        addressRangeExpression: parsedAddressRange.map { $0.expression },
                         source: previous.span
                     ))
                 } else {
@@ -331,7 +374,8 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                         name: name,
                         dataType: dataType,
                         storage: storage,
-                        range: range,
+                        range: parsedRange.map { $0.range },
+                        rangeExpression: parsedRange.map { $0.expression },
                         isSigned: signed,
                         source: previous.span
                     ))
@@ -366,6 +410,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                     id: StableLogicID.make(kind: "parameter", path: sourcePath, name: name),
                     name: name,
                     value: value,
+                    defaultExpression: expression,
                     source: previous.span
                 ))
                 parameterValues[name] = value
@@ -403,7 +448,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
         mutating func parseCompilerDirective() {
             let directiveStart = current.span.start
             guard match("`") else { return }
-            guard let directive = consumeIdentifier() else {
+            guard current.kind == .identifier || current.kind == .keyword else {
                 diagnostics.append(LogicDiagnostic(
                     severity: .error,
                     code: "SV_DIRECTIVE_NAME_MISSING",
@@ -414,13 +459,37 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 skipCurrentLine(startingAt: directiveStart.line)
                 return
             }
+            let directive = advance().lexeme
 
             switch directive {
+            case "ifdef", "ifndef":
+                parseConditionalStart(
+                    directive,
+                    location: directiveStart
+                )
+            case "elsif":
+                parseConditionalElseIf(location: directiveStart)
+            case "else":
+                parseConditionalElse(location: directiveStart)
+            case "endif":
+                parseConditionalEnd(location: directiveStart)
             case "timescale", "default_nettype", "celldefine", "endcelldefine":
+                guard isPreprocessorActive else {
+                    skipCurrentLine(startingAt: directiveStart.line)
+                    return
+                }
                 skipCurrentLine(startingAt: directiveStart.line)
             case "include" where allowResolvedIncludes:
+                guard isPreprocessorActive else {
+                    skipCurrentLine(startingAt: directiveStart.line)
+                    return
+                }
                 skipCurrentLine(startingAt: directiveStart.line)
             case "define":
+                guard isPreprocessorActive else {
+                    skipCurrentLine(startingAt: directiveStart.line)
+                    return
+                }
                 guard let name = consumeIdentifier() else {
                     diagnostics.append(LogicDiagnostic(
                         severity: .error,
@@ -461,6 +530,10 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 macroValues[name] = value
                 skipCurrentLine(startingAt: directiveStart.line)
             default:
+                guard isPreprocessorActive else {
+                    skipCurrentLine(startingAt: directiveStart.line)
+                    return
+                }
                 unsupportedSemantics = true
                 diagnostics.append(LogicDiagnostic(
                     severity: .error,
@@ -472,6 +545,128 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 ))
                 skipCurrentLine(startingAt: directiveStart.line)
             }
+        }
+
+        mutating func parseConditionalStart(
+            _ directive: String,
+            location: LogicSourceLocation
+        ) {
+            let parentActive = isPreprocessorActive
+            guard let name = consumeIdentifier() else {
+                diagnostics.append(LogicDiagnostic(
+                    severity: .error,
+                    code: "SV_CONDITIONAL_MACRO_MISSING",
+                    message: "A conditional compilation directive requires a macro name.",
+                    location: current.span,
+                    suggestedActions: ["provide_macro_name"]
+                ))
+                unsupportedSemantics = true
+                skipCurrentLine(startingAt: location.line)
+                conditionalFrames.append(ConditionalFrame(
+                    parentActive: parentActive,
+                    branchTaken: false,
+                    branchActive: false,
+                    elseSeen: false
+                ))
+                return
+            }
+            let defined = macroValues[name] != nil
+            let condition = directive == "ifdef" ? defined : !defined
+            conditionalFrames.append(ConditionalFrame(
+                parentActive: parentActive,
+                branchTaken: condition,
+                branchActive: parentActive && condition,
+                elseSeen: false
+            ))
+            skipCurrentLine(startingAt: location.line)
+        }
+
+        mutating func parseConditionalElseIf(location: LogicSourceLocation) {
+            guard !conditionalFrames.isEmpty else {
+                recordUnmatchedConditional("elsif", location: location)
+                skipCurrentLine(startingAt: location.line)
+                return
+            }
+            guard let name = consumeIdentifier() else {
+                diagnostics.append(LogicDiagnostic(
+                    severity: .error,
+                    code: "SV_CONDITIONAL_MACRO_MISSING",
+                    message: "An elsif directive requires a macro name.",
+                    location: current.span,
+                    suggestedActions: ["provide_macro_name"]
+                ))
+                unsupportedSemantics = true
+                skipCurrentLine(startingAt: location.line)
+                return
+            }
+            var frame = conditionalFrames[conditionalFrames.count - 1]
+            guard !frame.elseSeen else {
+                recordUnmatchedConditional("elsif", location: location)
+                skipCurrentLine(startingAt: location.line)
+                return
+            }
+            let condition = macroValues[name] != nil
+            frame.branchActive = frame.parentActive && !frame.branchTaken && condition
+            frame.branchTaken = frame.branchTaken || condition
+            conditionalFrames[conditionalFrames.count - 1] = frame
+            skipCurrentLine(startingAt: location.line)
+        }
+
+        mutating func parseConditionalElse(location: LogicSourceLocation) {
+            guard !conditionalFrames.isEmpty else {
+                recordUnmatchedConditional("else", location: location)
+                skipCurrentLine(startingAt: location.line)
+                return
+            }
+            var frame = conditionalFrames[conditionalFrames.count - 1]
+            guard !frame.elseSeen else {
+                recordUnmatchedConditional("else", location: location)
+                skipCurrentLine(startingAt: location.line)
+                return
+            }
+            frame.elseSeen = true
+            frame.branchActive = frame.parentActive && !frame.branchTaken
+            frame.branchTaken = true
+            conditionalFrames[conditionalFrames.count - 1] = frame
+            skipCurrentLine(startingAt: location.line)
+        }
+
+        mutating func parseConditionalEnd(location: LogicSourceLocation) {
+            guard !conditionalFrames.isEmpty else {
+                recordUnmatchedConditional("endif", location: location)
+                skipCurrentLine(startingAt: location.line)
+                return
+            }
+            _ = conditionalFrames.removeLast()
+            skipCurrentLine(startingAt: location.line)
+        }
+
+        mutating func recordUnmatchedConditional(
+            _ directive: String,
+            location: LogicSourceLocation
+        ) {
+            unsupportedSemantics = true
+            diagnostics.append(LogicDiagnostic(
+                severity: .error,
+                code: "SV_CONDITIONAL_UNMATCHED",
+                message: "The conditional compilation directive has no matching active block.",
+                entity: directive,
+                location: LogicSourceSpan(start: location, end: location),
+                suggestedActions: ["balance_conditional_directives", "use_external_preprocessor"]
+            ))
+        }
+
+        mutating func finalizePreprocessor() {
+            guard !conditionalFrames.isEmpty else { return }
+            unsupportedSemantics = true
+            diagnostics.append(LogicDiagnostic(
+                severity: .error,
+                code: "SV_CONDITIONAL_UNTERMINATED",
+                message: "A conditional compilation block is not terminated by endif.",
+                location: current.span,
+                suggestedActions: ["add_endif", "use_external_preprocessor"]
+            ))
+            conditionalFrames.removeAll()
         }
 
         mutating func parseProcess() -> RTLProcess? {
@@ -807,7 +1002,11 @@ public struct SystemVerilogParser: SystemVerilogParsing {
             var instances: [RTLInstance] = []
             var assignments: [RTLAssignment] = []
             while !isAtEnd && current.lexeme != "end" {
-                if current.lexeme == "assign" {
+                if current.lexeme == "`" {
+                    parseCompilerDirective()
+                } else if !isPreprocessorActive {
+                    _ = advance()
+                } else if current.lexeme == "assign" {
                     if let assignment = parseAssignment(nonBlocking: false) { assignments.append(assignment) }
                 } else if let parsed = parseInstance() {
                     instances.append(contentsOf: parsed)
@@ -847,18 +1046,24 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 return nil
             }
             _ = expect("=")
-            let initial = evaluate(parseExpression())
+            let initialExpression = parseExpression()
+            let initial = evaluate(initialExpression)
             _ = expect(";")
             _ = consumeIdentifier()
             let comparison = advance().lexeme
-            let limit = evaluate(parseExpression())
+            let limitExpression = parseExpression()
+            let limit = evaluate(limitExpression)
             _ = expect(";")
             _ = consumeIdentifier()
             _ = expect("=")
             _ = consumeIdentifier()
             let stepOperator = current.lexeme
             _ = advance()
-            let stepValue = evaluate(parseExpression())
+            let stepMagnitudeExpression = parseExpression()
+            let stepExpression: RTLExpression = stepOperator == "-"
+                ? .unary(operator: "-", operand: stepMagnitudeExpression)
+                : stepMagnitudeExpression
+            let stepValue = evaluate(stepExpression)
             _ = expect(")")
             guard let initial, let limit, comparison == "<", let stepValue else {
                 unsupportedSemantics = true
@@ -881,6 +1086,9 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 start: initial,
                 limit: limit,
                 step: stepValue == 0 ? 1 : (stepOperator == "-" ? -stepValue : stepValue),
+                startExpression: initialExpression,
+                limitExpression: limitExpression,
+                stepExpression: stepExpression,
                 instances: body.instances,
                 assignments: body.assignments,
                 source: LogicSourceSpan(start: start, end: body.end)
@@ -977,13 +1185,18 @@ public struct SystemVerilogParser: SystemVerilogParsing {
             return result
         }
 
-        mutating func parseRange() -> LogicRange? {
+        mutating func parseRange() -> (range: LogicRange, expression: RTLRangeExpression)? {
             guard match("[") else { return nil }
-            let msb = evaluate(parseExpression()) ?? 0
+            let msbExpression = parseExpression()
+            let msb = evaluate(msbExpression) ?? 0
             _ = expect(":")
-            let lsb = evaluate(parseExpression()) ?? 0
+            let lsbExpression = parseExpression()
+            let lsb = evaluate(lsbExpression) ?? 0
             _ = expect("]")
-            return LogicRange(msb: Int(msb), lsb: Int(lsb))
+            return (
+                range: LogicRange(msb: Int(msb), lsb: Int(lsb)),
+                expression: RTLRangeExpression(msb: msbExpression, lsb: lsbExpression)
+            )
         }
 
         mutating func parseDirection(default fallback: LogicDirection) -> LogicDirection {
@@ -1026,6 +1239,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
             direction: LogicDirection,
             dataType: LogicDataType,
             range: LogicRange?,
+            rangeExpression: RTLRangeExpression?,
             signed: Bool,
             source: LogicSourceSpan
         ) -> RTLPort {
@@ -1035,6 +1249,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 direction: direction,
                 dataType: dataType,
                 range: range,
+                rangeExpression: rangeExpression,
                 isSigned: signed,
                 source: source
             )

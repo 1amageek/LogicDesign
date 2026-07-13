@@ -9,6 +9,9 @@ public struct RTLGenerateBlock: Sendable, Hashable, Codable {
     public var start: Int64
     public var limit: Int64
     public var step: Int64
+    public var startExpression: RTLExpression?
+    public var limitExpression: RTLExpression?
+    public var stepExpression: RTLExpression?
     public var instances: [RTLInstance]
     public var assignments: [RTLAssignment]
     public var source: LogicSourceSpan?
@@ -22,6 +25,9 @@ public struct RTLGenerateBlock: Sendable, Hashable, Codable {
         start: Int64,
         limit: Int64,
         step: Int64 = 1,
+        startExpression: RTLExpression? = nil,
+        limitExpression: RTLExpression? = nil,
+        stepExpression: RTLExpression? = nil,
         instances: [RTLInstance] = [],
         assignments: [RTLAssignment] = [],
         source: LogicSourceSpan? = nil
@@ -34,6 +40,9 @@ public struct RTLGenerateBlock: Sendable, Hashable, Codable {
         self.start = start
         self.limit = limit
         self.step = step
+        self.startExpression = startExpression
+        self.limitExpression = limitExpression
+        self.stepExpression = stepExpression
         self.instances = instances
         self.assignments = assignments
         self.source = source
@@ -48,6 +57,9 @@ public struct RTLGenerateBlock: Sendable, Hashable, Codable {
         case start
         case limit
         case step
+        case startExpression
+        case limitExpression
+        case stepExpression
         case instances
         case assignments
         case source
@@ -63,6 +75,9 @@ public struct RTLGenerateBlock: Sendable, Hashable, Codable {
         start = try container.decode(Int64.self, forKey: .start)
         limit = try container.decode(Int64.self, forKey: .limit)
         step = try container.decode(Int64.self, forKey: .step)
+        startExpression = try container.decodeIfPresent(RTLExpression.self, forKey: .startExpression)
+        limitExpression = try container.decodeIfPresent(RTLExpression.self, forKey: .limitExpression)
+        stepExpression = try container.decodeIfPresent(RTLExpression.self, forKey: .stepExpression)
         instances = try container.decode([RTLInstance].self, forKey: .instances)
         assignments = try container.decode([RTLAssignment].self, forKey: .assignments)
         source = try container.decodeIfPresent(LogicSourceSpan.self, forKey: .source)
@@ -78,6 +93,9 @@ public struct RTLGenerateBlock: Sendable, Hashable, Codable {
         try container.encode(start, forKey: .start)
         try container.encode(limit, forKey: .limit)
         try container.encode(step, forKey: .step)
+        try container.encodeIfPresent(startExpression, forKey: .startExpression)
+        try container.encodeIfPresent(limitExpression, forKey: .limitExpression)
+        try container.encodeIfPresent(stepExpression, forKey: .stepExpression)
         try container.encode(instances, forKey: .instances)
         try container.encode(assignments, forKey: .assignments)
         try container.encodeIfPresent(source, forKey: .source)

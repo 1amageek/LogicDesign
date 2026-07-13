@@ -10,11 +10,27 @@
     },
     {
       "expectedStatus" : "completed",
+      "id" : "conditional-compilation",
+      "kind" : "systemVerilog",
+      "path" : "positive/conditional_compilation.sv",
+      "sha256" : "5d3f81d9a4368b82e6fa660ec7c0a7d3b6cb02e32c12c5e8844ae6e8d8eeafd8",
+      "topDesignName" : "conditional_compilation"
+    },
+    {
+      "expectedStatus" : "completed",
       "id" : "hierarchy",
       "kind" : "systemVerilog",
       "path" : "positive/hierarchy.sv",
       "sha256" : "d7e252f5b17e87091cc68e629ef6c23a1ab80261b97dd84c4bc2b10d6d24efc1",
       "topDesignName" : "top"
+    },
+    {
+      "expectedStatus" : "completed",
+      "id" : "parameterized-hierarchy",
+      "kind" : "systemVerilog",
+      "path" : "positive/parameterized_hierarchy.sv",
+      "sha256" : "3dc4b1f9345f19b569eee0d0ca54c03c27c70b7710077d39af9cd2bb3a800be9",
+      "topDesignName" : "parameterized_top"
     },
     {
       "expectedStatus" : "completed",
@@ -39,6 +55,22 @@
       "path" : "negative/unresolved_signal.sv",
       "sha256" : "c52072c4743ef7f0d74c11382e9823bd1749c178b8cc2fec52b2eff6825820e9",
       "topDesignName" : "broken"
+    },
+    {
+      "expectedStatus" : "blocked",
+      "id" : "unknown-hierarchy-parameter",
+      "kind" : "systemVerilog",
+      "path" : "negative/unknown_hierarchy_parameter.sv",
+      "sha256" : "42be80cb24e276c8715441197cc47098b232fc719108f362b3581ba418716dc5",
+      "topDesignName" : "unknown_parameter_top"
+    },
+    {
+      "expectedStatus" : "blocked",
+      "id" : "unterminated-conditional",
+      "kind" : "systemVerilog",
+      "path" : "negative/unterminated_conditional.sv",
+      "sha256" : "9b9fe133e45a4049237404dc904a0b2fbae3b6328c60e08dc00fb2657d1afa46",
+      "topDesignName" : "unterminated_conditional"
     },
     {
       "expectedStatus" : "blocked",

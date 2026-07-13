@@ -6,6 +6,7 @@ public struct RTLPort: Sendable, Hashable, Codable {
     public var direction: LogicDirection
     public var dataType: LogicDataType
     public var range: LogicRange?
+    public var rangeExpression: RTLRangeExpression?
     public var isSigned: Bool
     public var source: LogicSourceSpan?
 
@@ -15,6 +16,7 @@ public struct RTLPort: Sendable, Hashable, Codable {
         direction: LogicDirection,
         dataType: LogicDataType = .logic,
         range: LogicRange? = nil,
+        rangeExpression: RTLRangeExpression? = nil,
         isSigned: Bool = false,
         source: LogicSourceSpan? = nil
     ) {
@@ -23,6 +25,7 @@ public struct RTLPort: Sendable, Hashable, Codable {
         self.direction = direction
         self.dataType = dataType
         self.range = range
+        self.rangeExpression = rangeExpression
         self.isSigned = isSigned
         self.source = source
     }

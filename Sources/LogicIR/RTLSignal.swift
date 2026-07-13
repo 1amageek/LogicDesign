@@ -6,6 +6,7 @@ public struct RTLSignal: Sendable, Hashable, Codable {
     public var dataType: LogicDataType
     public var storage: LogicStorageKind
     public var range: LogicRange?
+    public var rangeExpression: RTLRangeExpression?
     public var isSigned: Bool
     public var source: LogicSourceSpan?
 
@@ -15,6 +16,7 @@ public struct RTLSignal: Sendable, Hashable, Codable {
         dataType: LogicDataType = .logic,
         storage: LogicStorageKind = .combinational,
         range: LogicRange? = nil,
+        rangeExpression: RTLRangeExpression? = nil,
         isSigned: Bool = false,
         source: LogicSourceSpan? = nil
     ) {
@@ -23,6 +25,7 @@ public struct RTLSignal: Sendable, Hashable, Codable {
         self.dataType = dataType
         self.storage = storage
         self.range = range
+        self.rangeExpression = rangeExpression
         self.isSigned = isSigned
         self.source = source
     }

@@ -33,6 +33,59 @@ struct SystemVerilogFrontendTests {
         #expect(result.design?.modules.first?.ports.first?.range?.width == 4)
     }
 
+    @Test("conditional compilation selects the active macro branch")
+    func selectsConditionalCompilationBranch() {
+        let source = SystemVerilogSourceUnit(
+            path: "conditional-compilation.sv",
+            source: """
+            `define SECOND 1
+            `ifdef FIRST
+                module top(input logic a, output logic y);
+                    assign y = 1'b0;
+                endmodule
+            `elsif SECOND
+                module top(input logic a, output logic y);
+                    assign y = a;
+                endmodule
+            `else
+                module top(input logic a, output logic y);
+                    assign y = 1'b1;
+                endmodule
+            `endif
+            """
+        )
+        let result = SystemVerilogParser().parse([source], topDesignName: "top")
+
+        #expect(result.unsupportedSemantics == false)
+        #expect(result.diagnostics.isEmpty)
+        #expect(result.design?.modules.count == 1)
+        #expect(result.design?.modules.first?.assignments.count == 1)
+        if case .identifier(let name) = result.design?.modules.first?.assignments.first?.value {
+            #expect(name == "a")
+        } else {
+            Issue.record("Expected the active conditional branch assignment")
+        }
+    }
+
+    @Test("unterminated conditional compilation is blocked with a typed diagnostic")
+    func blocksUnterminatedConditionalCompilation() {
+        let source = SystemVerilogSourceUnit(
+            path: "unterminated-conditional.sv",
+            source: """
+            `ifdef ENABLED
+            module top(input logic a, output logic y);
+                assign y = a;
+            endmodule
+            """
+        )
+        let result = SystemVerilogParser().parse([source], topDesignName: "top")
+
+        #expect(result.unsupportedSemantics)
+        #expect(result.diagnostics.contains {
+            $0.code == "SV_CONDITIONAL_UNTERMINATED"
+        })
+    }
+
     @Test("unsupported include directives remain blocked")
     func blocksUnsupportedIncludeDirective() {
         let source = SystemVerilogSourceUnit(
@@ -68,6 +121,37 @@ struct SystemVerilogFrontendTests {
         #expect(result.design?.modules.first?.ports.first(where: { $0.name == "q" })?.range?.width == 8)
         #expect(result.design?.modules.first?.processes.count == 1)
         #expect(result.design?.modules.first?.processes.first?.clockEdge == .positive)
+    }
+
+    @Test("retains parameter, range, and generate expressions for contextual elaboration")
+    func retainsContextualElaborationExpressions() {
+        let source = SystemVerilogSourceUnit(
+            path: "context.sv",
+            source: """
+            module context #(parameter BASE = 1, parameter WIDTH = BASE + 1, parameter COUNT = 2) (
+                input logic [WIDTH-1:0] a,
+                output logic [WIDTH-1:0] y
+            );
+                wire [COUNT-1:0] bits;
+                generate
+                    for (genvar i = 0; i < COUNT; i = i + 1) begin : g
+                        assign bits[i] = a[0];
+                    end
+                endgenerate
+                assign y = a;
+            endmodule
+            """
+        )
+        let result = SystemVerilogParser().parse([source], topDesignName: "context")
+        let module = result.design?.modules.first
+
+        #expect(result.diagnostics.isEmpty)
+        #expect(module?.parameters.first(where: { $0.name == "WIDTH" })?.defaultExpression != nil)
+        #expect(module?.ports.first(where: { $0.name == "a" })?.rangeExpression != nil)
+        #expect(module?.signals.first?.rangeExpression != nil)
+        #expect(module?.generateBlocks.first?.startExpression != nil)
+        #expect(module?.generateBlocks.first?.limitExpression != nil)
+        #expect(module?.generateBlocks.first?.stepExpression != nil)
     }
 
     @Test("retains a negative clock edge in the canonical RTL process")

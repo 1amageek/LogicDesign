@@ -124,6 +124,118 @@ struct EngineTests {
         #expect(result.diagnostics.contains { $0.code == "LOGIC_HIERARCHY_CYCLE" })
     }
 
+    @Test("hierarchy parameter overrides resolve port widths")
+    func hierarchyParameterOverrideResolvesPortWidths() async throws {
+        let source = SystemVerilogSourceUnit(
+            path: "parameterized-hierarchy.sv",
+            source: """
+            module leaf #(parameter WIDTH = 1) (
+                input logic [WIDTH-1:0] a,
+                output logic [WIDTH-1:0] y
+            );
+                assign y = a;
+            endmodule
+            module top(input logic [3:0] a, output logic [3:0] y);
+                leaf #(.WIDTH(4)) u_leaf(.a(a), .y(y));
+            endmodule
+            """
+        )
+        let result = try await LogicElaboratingEngine(
+            clock: { Date(timeIntervalSince1970: 0) }
+        ).execute(LogicElaborationRequest(
+            runID: "run-parameterized-hierarchy",
+            inputs: [],
+            topDesignName: "top",
+            sources: [source]
+        ))
+
+        #expect(result.status == .completed)
+        let module = result.payload.snapshot?.rtl.modules.first
+        #expect(module?.ports.first(where: { $0.name == "y" })?.range?.width == 4)
+        #expect(module?.signals.first(where: { $0.name == "u_leaf__y" })?.range?.width == 4)
+        #expect(module?.assignments.contains {
+            if case .identifier(let target) = $0.target {
+                return target == "u_leaf__y"
+            }
+            return false
+        } == true)
+    }
+
+    @Test("hierarchy parameter overrides re-evaluate generate bounds")
+    func hierarchyParameterOverrideReevaluatesGenerateBounds() async throws {
+        let source = SystemVerilogSourceUnit(
+            path: "parameterized-generate.sv",
+            source: """
+            module leaf #(parameter COUNT = 1) (
+                input logic a,
+                output logic y
+            );
+                wire [COUNT-1:0] bits;
+                generate
+                    for (genvar i = 0; i < COUNT; i = i + 1) begin : g
+                        assign bits[i] = a;
+                    end
+                endgenerate
+                assign y = a;
+            endmodule
+            module top(input logic a, output logic y);
+                leaf #(.COUNT(3)) u_leaf(.a(a), .y(y));
+            endmodule
+            """
+        )
+        let result = try await LogicElaboratingEngine(
+            clock: { Date(timeIntervalSince1970: 0) }
+        ).execute(LogicElaborationRequest(
+            runID: "run-parameterized-generate",
+            inputs: [],
+            topDesignName: "top",
+            sources: [source]
+        ))
+
+        #expect(result.status == .completed)
+        let module = result.payload.snapshot?.rtl.modules.first
+        #expect(module?.signals.first(where: { $0.name == "u_leaf__bits" })?.range?.width == 3)
+        #expect(module?.assignments.filter {
+            if case .index(let value, _) = $0.target,
+               case .identifier(let name) = value {
+                return name == "u_leaf__bits"
+            }
+            return false
+        }.count == 3)
+    }
+
+    @Test("unknown hierarchy parameter overrides are blocked with a typed diagnostic")
+    func unknownHierarchyParameterOverrideIsBlocked() async throws {
+        let source = SystemVerilogSourceUnit(
+            path: "unknown-parameter.sv",
+            source: """
+            module leaf #(parameter WIDTH = 1) (
+                input logic [WIDTH-1:0] a,
+                output logic [WIDTH-1:0] y
+            );
+                assign y = a;
+            endmodule
+            module top(input logic a, output logic y);
+                leaf #(.UNKNOWN(4)) u_leaf(.a(a), .y(y));
+            endmodule
+            """
+        )
+        let result = try await LogicElaboratingEngine(
+            clock: { Date(timeIntervalSince1970: 0) }
+        ).execute(LogicElaborationRequest(
+            runID: "run-unknown-parameter",
+            inputs: [],
+            topDesignName: "top",
+            sources: [source]
+        ))
+
+        #expect(result.status == .blocked)
+        #expect(result.diagnostics.contains {
+            $0.code == "LOGIC_HIERARCHY_PARAMETER_UNRESOLVED" &&
+            $0.entity == "top.u_leaf.UNKNOWN"
+        })
+    }
+
     @Test("elaboration reports a missing include as a typed diagnostic")
     func elaborationReportsMissingInclude() async throws {
         let source = SystemVerilogSourceUnit(

@@ -38,18 +38,71 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
             return RTLHierarchyElaborationResult(design: nil, diagnostics: diagnostics)
         }
 
-        var flattenedTop = topModule
-        flattenedTop.instances = []
-        flattenedTop.generateBlocks = []
         var state = State(
             modulesByName: modulesByName,
             topModuleName: design.topModuleName,
             diagnostics: []
         )
-        state.flattenInstances(
+        guard let topParameterValues = state.parameterValues(
+            for: topModule,
+            overrides: [:],
+            entity: topModule.name
+        ) else {
+            return RTLHierarchyElaborationResult(design: nil, diagnostics: state.diagnostics)
+        }
+        let expandedTop = state.generateElaborator.elaborate(
+            topModule,
+            parameterValues: topParameterValues
+        )
+        guard state.validateGenerateContext(
             in: topModule,
+            parameters: topParameterValues,
+            entity: topModule.name
+        ) else {
+            return RTLHierarchyElaborationResult(design: nil, diagnostics: state.diagnostics)
+        }
+        var flattenedTop = expandedTop
+        flattenedTop.instances = []
+        flattenedTop.generateBlocks = []
+        flattenedTop.ports = state.resolvedPorts(
+            expandedTop.ports,
+            parameters: topParameterValues,
+            instancePath: [topModule.name]
+        )
+        flattenedTop.signals = state.resolvedSignals(
+            expandedTop.signals,
+            parameters: topParameterValues,
+            instancePath: [topModule.name]
+        )
+        let topMapping = state.parameterMapping(topParameterValues)
+        flattenedTop.assignments = expandedTop.assignments.map {
+            RTLAssignment(
+                id: $0.id,
+                target: state.rewrite($0.target, mapping: topMapping),
+                value: state.rewrite($0.value, mapping: topMapping),
+                nonBlocking: $0.nonBlocking,
+                source: $0.source
+            )
+        }
+        flattenedTop.processes = expandedTop.processes.map { process in
+            RTLProcess(
+                id: process.id,
+                kind: process.kind,
+                sensitivity: process.sensitivity.map { sensitivity in
+                    if case .identifier(let name) = topMapping[sensitivity] {
+                        return name
+                    }
+                    return sensitivity
+                },
+                clockEdge: process.clockEdge,
+                statements: process.statements.map { state.rewrite($0, mapping: topMapping) },
+                source: process.source
+            )
+        }
+        state.flattenInstances(
+            in: expandedTop,
             prefix: "",
-            mapping: [:],
+            mapping: topMapping,
             path: [topModule.name],
             into: &flattenedTop
         )
@@ -72,6 +125,8 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
     private struct State {
         let modulesByName: [String: [RTLModule]]
         let topModuleName: String
+        let generateElaborator = RTLGenerateElaborator()
+        let evaluator = RTLConstantEvaluator()
         var diagnostics: [LogicDiagnostic]
 
         mutating func flattenInstances(
@@ -93,7 +148,7 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
             guard module.generateBlocks.isEmpty else {
                 diagnostics.append(diagnostic(
                     code: "LOGIC_HIERARCHY_GENERATE_UNELABORATED",
-                    message: "Hierarchy elaboration requires constant generate blocks to be expanded first.",
+                    message: "Hierarchy elaboration requires generate blocks to be expanded with an instance parameter context.",
                     entity: module.name,
                     actions: ["run_generate_elaboration", "resolve_generate_conditions"]
                 ))
@@ -118,16 +173,6 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
             path: [String],
             into flattenedTop: inout RTLModule
         ) {
-            guard instance.parameterOverrides.isEmpty else {
-                diagnostics.append(diagnostic(
-                    code: "LOGIC_HIERARCHY_PARAMETER_OVERRIDE_UNSUPPORTED",
-                    message: "Instance parameter overrides require parameter-aware hierarchy elaboration.",
-                    entity: path.joined(separator: "."),
-                    location: instance.source,
-                    actions: ["elaborate_instance_parameters", "remove_parameter_override"]
-                ))
-                return
-            }
             guard let child = modulesByName[instance.moduleName]?.first else {
                 diagnostics.append(diagnostic(
                     code: "LOGIC_HIERARCHY_INSTANCE_UNRESOLVED",
@@ -149,15 +194,49 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
                 return
             }
 
+            guard let childParameterValues = parameterValues(
+                for: child,
+                overrides: instance.parameterOverrides,
+                entity: path.joined(separator: ".")
+            ) else {
+                return
+            }
+            let expandedChild = generateElaborator.elaborate(
+                child,
+                parameterValues: childParameterValues
+            )
+            guard validateGenerateContext(
+                in: child,
+                parameters: childParameterValues,
+                entity: path.joined(separator: ".")
+            ) else {
+                return
+            }
+            guard expandedChild.generateBlocks.isEmpty else {
+                diagnostics.append(diagnostic(
+                    code: "LOGIC_HIERARCHY_GENERATE_UNELABORATED",
+                    message: "A child generate block could not be expanded for its instance parameter context.",
+                    entity: path.joined(separator: "."),
+                    location: instance.source,
+                    actions: ["make_generate_expression_constant", "use_explicit_instances"]
+                ))
+                return
+            }
+
+            var childMapping = parameterMapping(childParameterValues)
+            let childPorts = resolvedPorts(
+                expandedChild.ports,
+                parameters: childParameterValues,
+                instancePath: path
+            )
             let connections = connectionMap(
                 instance.connections,
-                ports: child.ports,
+                ports: childPorts,
                 entity: path.joined(separator: ".")
             )
             guard connections != nil else { return }
 
-            var childMapping: [String: RTLExpression] = [:]
-            for port in child.ports {
+            for port in childPorts {
                 guard let connection = connections?[port.name] else {
                     if port.direction == .output {
                         let localName = prefix + port.name
@@ -225,7 +304,12 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
                 }
             }
 
-            for signal in child.signals {
+            let childSignals = resolvedSignals(
+                expandedChild.signals,
+                parameters: childParameterValues,
+                instancePath: path
+            )
+            for signal in childSignals {
                 let localName = prefix + signal.name
                 addSignal(
                     name: localName,
@@ -236,7 +320,7 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
                 childMapping[signal.name] = .identifier(localName)
             }
 
-            let childAssignments = child.assignments.map { assignment in
+            let childAssignments = expandedChild.assignments.map { assignment in
                 RTLAssignment(
                     id: stableID(kind: "hierarchical-assignment", path: path, name: assignment.id),
                     target: rewrite(assignment.target, mapping: childMapping),
@@ -246,7 +330,7 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
                 )
             }
             flattenedTop.assignments.append(contentsOf: childAssignments)
-            flattenedTop.processes.append(contentsOf: child.processes.map { process in
+            flattenedTop.processes.append(contentsOf: expandedChild.processes.map { process in
                 RTLProcess(
                     id: stableID(kind: "hierarchical-process", path: path, name: process.id),
                     kind: process.kind,
@@ -263,12 +347,162 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
             })
 
             flattenInstances(
-                in: child,
+                in: expandedChild,
                 prefix: prefix,
                 mapping: childMapping,
                 path: path,
                 into: &flattenedTop
             )
+        }
+
+        mutating func parameterValues(
+            for module: RTLModule,
+            overrides: [String: Int64],
+            entity: String
+        ) -> [String: Int64]? {
+            let parameterNames = Set(module.parameters.map(\.name))
+            for name in overrides.keys where !parameterNames.contains(name) {
+                diagnostics.append(diagnostic(
+                    code: "LOGIC_HIERARCHY_PARAMETER_UNRESOLVED",
+                    message: "An instance parameter override refers to an undeclared parameter.",
+                    entity: "\(entity).\(name)",
+                    actions: ["correct_parameter_name", "remove_parameter_override"]
+                ))
+            }
+            guard !overrides.keys.contains(where: { !parameterNames.contains($0) }) else {
+                return nil
+            }
+
+            var values: [String: Int64] = [:]
+            for parameter in module.parameters {
+                let defaultExpression = parameter.defaultExpression ?? .integer(
+                    value: parameter.value,
+                    width: nil,
+                    isSigned: true
+                )
+                guard let defaultValue = evaluator.evaluate(
+                    defaultExpression,
+                    parameters: values
+                ) else {
+                    diagnostics.append(diagnostic(
+                        code: "LOGIC_HIERARCHY_PARAMETER_DEFAULT_UNRESOLVED",
+                        message: "A module parameter default cannot be evaluated in declaration order.",
+                        entity: "\(entity).\(parameter.name)",
+                        location: parameter.source,
+                        actions: ["make_parameter_default_constant", "use_an_external_elaborator"]
+                    ))
+                    return nil
+                }
+                values[parameter.name] = overrides[parameter.name] ?? defaultValue
+            }
+            return values
+        }
+
+        func parameterMapping(_ values: [String: Int64]) -> [String: RTLExpression] {
+            values.mapValues {
+                .integer(value: $0, width: nil, isSigned: true)
+            }
+        }
+
+        mutating func validateGenerateContext(
+            in module: RTLModule,
+            parameters: [String: Int64],
+            entity: String
+        ) -> Bool {
+            for block in module.generateBlocks {
+                if block.kind == .conditional {
+                    guard let condition = block.condition,
+                          evaluator.evaluate(condition, parameters: parameters) != nil else {
+                        diagnostics.append(diagnostic(
+                            code: "LOGIC_HIERARCHY_GENERATE_PARAMETER_UNRESOLVED",
+                            message: "A generate condition cannot be evaluated for the instance parameter context.",
+                            entity: "\(entity).\(block.label)",
+                            location: block.source,
+                            actions: ["make_generate_condition_constant", "use_explicit_instances"]
+                        ))
+                        return false
+                    }
+                    continue
+                }
+                let start = evaluator.evaluate(
+                    block.startExpression ?? .integer(value: block.start, width: nil, isSigned: true),
+                    parameters: parameters
+                )
+                let limit = evaluator.evaluate(
+                    block.limitExpression ?? .integer(value: block.limit, width: nil, isSigned: true),
+                    parameters: parameters
+                )
+                let step = evaluator.evaluate(
+                    block.stepExpression ?? .integer(value: block.step, width: nil, isSigned: true),
+                    parameters: parameters
+                )
+                guard let start, let limit, let step, step != 0 else {
+                    diagnostics.append(diagnostic(
+                        code: "LOGIC_HIERARCHY_GENERATE_PARAMETER_UNRESOLVED",
+                        message: "A generate-for bound cannot be evaluated for the instance parameter context.",
+                        entity: "\(entity).\(block.label)",
+                        location: block.source,
+                        actions: ["make_generate_bounds_constant", "use_explicit_instances"]
+                    ))
+                    return false
+                }
+                _ = (start, limit)
+            }
+            return true
+        }
+
+        mutating func resolvedPorts(
+            _ ports: [RTLPort],
+            parameters: [String: Int64],
+            instancePath: [String]
+        ) -> [RTLPort] {
+            ports.compactMap { port in
+                guard let expression = port.rangeExpression else { return port }
+                guard let msb = evaluator.evaluate(expression.msb, parameters: parameters),
+                      let lsb = evaluator.evaluate(expression.lsb, parameters: parameters),
+                      let msbInt = Int(exactly: msb),
+                      let lsbInt = Int(exactly: lsb) else {
+                    diagnostics.append(diagnostic(
+                        code: "LOGIC_HIERARCHY_RANGE_PARAMETER_UNRESOLVED",
+                        message: "A hierarchy port range cannot be evaluated for the instance parameter context.",
+                        entity: "\(instancePath.joined(separator: ".")).\(port.name)",
+                        location: port.source,
+                        actions: ["make_range_constant", "use_an_external_elaborator"]
+                    ))
+                    return nil
+                }
+                var resolved = port
+                resolved.range = LogicRange(msb: msbInt, lsb: lsbInt)
+                resolved.rangeExpression = nil
+                return resolved
+            }
+        }
+
+        mutating func resolvedSignals(
+            _ signals: [RTLSignal],
+            parameters: [String: Int64],
+            instancePath: [String]
+        ) -> [RTLSignal] {
+            signals.compactMap { signal in
+                guard let expression = signal.rangeExpression else { return signal }
+                guard let msb = evaluator.evaluate(expression.msb, parameters: parameters),
+                      let lsb = evaluator.evaluate(expression.lsb, parameters: parameters),
+                      let msbInt = Int(exactly: msb),
+                      let lsbInt = Int(exactly: lsb) else {
+                    diagnostics.append(diagnostic(
+                        code: "LOGIC_HIERARCHY_RANGE_PARAMETER_UNRESOLVED",
+                        message: "A hierarchy signal range cannot be evaluated for the instance parameter context.",
+                        entity: "\(instancePath.joined(separator: ".")).\(signal.name)",
+                        location: signal.source,
+                        actions: ["make_range_constant", "use_an_external_elaborator"]
+                    ))
+                    return nil
+                }
+                var resolved = signal
+                resolved.range = LogicRange(msb: msbInt, lsb: lsbInt)
+                resolved.rangeExpression = nil
+                return resolved
+            }
         }
 
         mutating func connectionMap(

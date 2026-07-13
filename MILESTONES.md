@@ -36,7 +36,7 @@ Exit criteria:
 - UPF and CPF semantics are modeled with source spans, stable IDs, reference validation, and explicit unsupported-command boundaries.
 - Each new semantic has positive, negative, and round-trip corpus coverage.
 
-Status: in progress. Numeric macro/timescale preprocessing, relative include graph resolution, constant generate-if/else, and connected hierarchy flattening are executable native slices; malformed, missing, recursive hierarchy and cyclic includes produce typed diagnostics. Instance parameter overrides, bidirectional ports and non-identifier output connections remain explicit blocked boundaries. Case statements and latch processes are retained in RTL IR but remain blocked by lowerers that cannot preserve their semantics. Conditional compilation, function-like macros, and wider procedural coverage remain.
+Status: in progress. Numeric macro/timescale preprocessing, object-like conditional compilation, relative include graph resolution, contextual constant generate, symbolic ranges, parameterized hierarchy and connected hierarchy flattening are executable native slices; malformed, missing, recursive hierarchy, cyclic includes, unresolved parameter contexts and unterminated conditionals produce typed diagnostics. Bidirectional ports and non-identifier output connections remain explicit blocked boundaries. Case statements and latch processes are retained in RTL IR but remain blocked by lowerers that cannot preserve their semantics. Function-like or expression-valued macros and wider procedural coverage remain.
 
 ## Milestone 3: Cross-engine design identity
 
@@ -56,7 +56,7 @@ Exit criteria:
 - Stage results participate in approval, review, resume, cancellation, and repair-loop flows.
 - Headless integration tests execute against a working dependency graph and assert artifact integrity.
 
-Status: LogicDesign and multi-engine adapter slices are verified by focused headless tests. The retained `EndToEndDesignFlowTests/retainedMultiEngineRunResumesAfterReview` flow defines lowering, logic simulation, STA, physical floorplanning, native DRC/LVS, deterministic mock PEX, immutable review-packet validation, human approval, and same-run resume. The production PEX factory and unavailable-tool blocked mapping are additionally verified by an isolated headless integration test. A fresh complete dependency-graph rerun is pending because unrelated active DFT test code currently fails to compile; mock PEX is contract evidence rather than physical signoff, and real PEX environment execution, oracle and process qualification remain separate gates.
+Status: LogicDesign and focused Xcircuite adapters are verified by headless tests. The retained `EndToEndDesignFlowTests/retainedMultiEngineRunResumesAfterReview` flow defines lowering, logic simulation, STA, physical floorplanning, native DRC/LVS, deterministic mock PEX, immutable review-packet validation, human approval, and same-run resume. The current serial full regression passes 534 tests in 58 suites. Mock PEX is contract evidence rather than physical signoff, and real PEX environment execution, oracle and process qualification remain separate gates; parallel shared-workspace runs are not signoff evidence.
 
 ## Milestone 5: Qualification and release eligibility
 

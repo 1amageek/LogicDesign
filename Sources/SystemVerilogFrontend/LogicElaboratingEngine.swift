@@ -80,8 +80,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
                 )
             }
 
-            let generatedDesign = RTLGenerateElaborator().elaborate(design)
-            let hierarchyResult = hierarchyElaborator.elaborate(generatedDesign)
+            let hierarchyResult = hierarchyElaborator.elaborate(design)
             guard let elaboratedDesign = hierarchyResult.design else {
                 return envelope(
                     request: request,

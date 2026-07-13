@@ -35,6 +35,8 @@ flowchart LR
 - Canonical JSON snapshots with schema validation, deterministic digesting and tamper detection.
 - Transformation-aware `LogicDesignReference` lineage preserves the original canonical digest, immediate input digest, transformation ID, producer version and run ID across engine handoffs.
 - ANSI SystemVerilog modules, parameters, numeric object-like macros, constant expressions, vectors, memories, assignments, supported processes and hierarchy.
+- Instance parameter overrides are resolved per hierarchy context, including symbolic port/signal ranges and constant generate bounds.
+- Object-like numeric macro conditional compilation supports `ifdef`, `ifndef`, `elsif`, `else` and `endif`; unsupported preprocessor forms remain typed blocked results.
 - Project-relative `` `include `` graph resolution through an injected source provider. Malformed, missing and cyclic includes produce typed diagnostics.
 - Constant `generate-for` and `generate-if/else` elaboration, structural gate netlist parsing and connectivity validation.
 - UPF/CPF domain, supply-set, isolation, level-shifter and retention policy modeling within the native subset.
@@ -74,11 +76,11 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The current contract suite passes with 36 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The Xcircuite full regression requires revalidation in the current shared worktree; its previous baseline is not treated as current evidence while dependency builds are changing.
+The current contract suite passes with 42 tests in 5 suites. The retained fixture corpus is executed as part of that suite. The retained manifest contains 12 cases, including parameterized hierarchy success, conditional compilation success and unresolved/unterminated blocking. The current serial Xcircuite regression passes 534 tests in 58 suites; a parallel run in the shared workspace is not signoff evidence because concurrent SwiftPM processes can interfere. This integration gate remains separate from process qualification.
 
 ## Qualification boundary
 
-The native implementation is smoke-checked and deterministic. Hierarchy flattening is implemented for connected identifier-based ports without instance parameter overrides or bidirectional ports; unsupported hierarchy forms return typed blocked diagnostics. Full SystemVerilog, UPF and CPF language coverage, external-tool correlation, PDK/process qualification, release approval and human approval/resume orchestration are separate platform gates. See `CAPABILITIES.md`, `MILESTONES.md` and `GOAL_STATUS.md` for the current evidence and remaining gaps.
+The native implementation is smoke-checked and deterministic. Hierarchy flattening is implemented for connected identifier-based ports with instance parameter overrides, symbolic range resolution and contextual constant generate expansion; bidirectional ports, non-identifier outputs and unresolved parameter contexts return typed blocked diagnostics. The Xcircuite production PEX boundary now exposes real-backend selection and fail-closed unavailable-tool mapping, but full SystemVerilog, UPF and CPF language coverage, external-tool correlation, PDK/process qualification, release approval and human approval/resume orchestration remain separate platform gates. See `CAPABILITIES.md`, `MILESTONES.md` and `GOAL_STATUS.md` for the current evidence and remaining gaps.
 
 See `DESIGN.md`, `INTERFACES.md` and `IMPLEMENTATION_PLAN.md` before implementing a backend.
 
