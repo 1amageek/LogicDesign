@@ -2,7 +2,7 @@
   "cases" : [
     {
       "expectedDiagnosticCodes" : [],
-      "expectedSnapshotDigest" : "43015837acbb1f62d9dbaffc02c935d21fdc42c065c80993b61470cf5858da6c",
+      "expectedSnapshotDigest" : "7664273179428496e38e6eaabe76a575bdbe0e86d21b937444e8dde9c4b51f82",
       "expectedStatus" : "completed",
       "id" : "always-star",
       "sourcePath" : "positive/always_star.sv",

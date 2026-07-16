@@ -8,15 +8,15 @@
 |---|---|---|
 | Responsibility boundary | Complete | README.md and DESIGN.md |
 | Public package products | Implemented | Package.swift |
-| Shared Xcircuite request/result contract | Implemented | Public Swift protocols and payloads |
+| Canonical Foundation and domain request/result contract | Implemented | Public Swift protocols and payloads |
 | Contract build | Passed | swift build |
 | Contract test | Passed | timeout-bounded `xcodebuild test`; 52 tests in 5 suites |
 | Domain implementation | Complete for native subset | LogicIR, SystemVerilogFrontend, PowerIntent and gate netlist parser |
 | CLI implementation | Complete | `logic-design` parse, validate, correlate, gate-parse, power-intent and capabilities |
 | Fixture corpus | Complete for native corpus | `Fixtures/manifest.json` records 20 retained cases with SHA-256 and expected native status, including macro expansion, generate branching, indexed/inout hierarchy, parameterized memory, power directives, sensitivity events and typed blocked cases |
-| Oracle correlation | Complete for retained local reference corpus | `Fixtures/oracle/manifest.json` correlates 17 SystemVerilog cases by source SHA-256, status, completed snapshot digest and typed negative diagnostic codes; this is not external-tool qualification |
+| Oracle correlation | Complete for retained local reference corpus | `Fixtures/oracle/manifest.json` correlates 17 SystemVerilog cases by exact canonical case identity, manifest/case digest, source SHA-256, status, completed snapshot digest and typed negative diagnostic codes; this is not external-tool qualification |
 | Process qualification | External responsibility | PDK/process qualification is owned by the separate qualification workflow |
-| Xcircuite stage adapter | External responsibility | Xcircuite owns runtime adapters, persistence, trust gates and approval/resume orchestration |
+| Xcircuite stage composition | External responsibility | Xcircuite invokes LogicDesign protocols directly and owns persistence, trust gates and approval/resume orchestration |
 | End-to-end flow evidence | External responsibility | Downstream packages own simulation, timing, physical, PEX and human review flow evidence |
 | Release readiness | External responsibility | Release policy consumes LogicDesign artifacts but is not implemented by this package |
 

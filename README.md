@@ -56,7 +56,7 @@ flowchart LR
 - Hierarchy flattening for indexed/part-selected output connections, direct inout nets and parameterized memories.
 - Retained positive and negative fixtures in `Fixtures/manifest.json`, including SHA-256 integrity and expected native status.
 - A retained SystemVerilog reference corpus in `Fixtures/oracle/manifest.json`; its 13 cases bind source SHA-256, expected status, completed snapshot digests and negative diagnostic codes.
-- Typed `LogicDesignOracleManifest`, `LogicDesignOracleCorrelator` and `LogicDesignOracleCorrelation` APIs for Agent/CI-readable comparison evidence.
+- Typed `LogicDesignOracleManifest`, `LogicDesignOracleCorrelator` and `LogicDesignOracleCorrelation` APIs for Agent/CI-readable comparison evidence. Correlation accepts only the exact canonical case stored in the validated manifest and retains deterministic manifest and case digests.
 
 ## Contract
 

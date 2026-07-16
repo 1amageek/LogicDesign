@@ -40,8 +40,11 @@ public enum LogicDesignOracleCorrelator {
         result: LogicElaborationResult
     ) throws -> LogicDesignOracleCorrelation {
         try validate(manifest)
-        guard manifest.caseWithID(oracleCase.id) != nil else {
+        guard let canonicalCase = manifest.caseWithID(oracleCase.id) else {
             throw LogicDesignOracleCorrelationError.caseNotFound(oracleCase.id)
+        }
+        guard canonicalCase == oracleCase else {
+            throw LogicDesignOracleCorrelationError.caseDoesNotMatchManifest(oracleCase.id)
         }
         guard sourceSHA256 == oracleCase.sourceSHA256 else {
             throw LogicDesignOracleCorrelationError.sourceDigestMismatch(
@@ -102,7 +105,9 @@ public enum LogicDesignOracleCorrelator {
             oracleID: manifest.oracleID,
             oracleVersion: manifest.oracleVersion,
             corpusID: manifest.corpusID,
+            manifestDigest: try digest(manifest),
             caseID: oracleCase.id,
+            caseDigest: try digest(canonicalCase),
             matched: mismatches.isEmpty,
             observation: observation,
             mismatches: mismatches
@@ -125,5 +130,13 @@ public enum LogicDesignOracleCorrelator {
 
     private static func isSHA256(_ value: String) -> Bool {
         value.count == 64 && value.allSatisfy { $0.isHexDigit }
+    }
+
+    private static func digest<T: Encodable>(_ value: T) throws -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        return try SHA256ContentDigester()
+            .digest(data: encoder.encode(value))
+            .hexadecimalValue
     }
 }

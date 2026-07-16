@@ -104,6 +104,8 @@ struct FixtureCorpusTests {
                 result: result
             )
             #expect(correlation.matched, "Reference oracle mismatch for \(oracleCase.id): \(correlation.mismatches)")
+            #expect(correlation.manifestDigest.count == 64)
+            #expect(correlation.caseDigest.count == 64)
         }
     }
 
@@ -121,18 +123,44 @@ struct FixtureCorpusTests {
             topDesignName: originalCase.topDesignName,
             sources: [SystemVerilogSourceUnit(path: "Fixtures/" + originalCase.sourcePath, source: source)]
         ))
-        var mismatchedCase = originalCase
-        mismatchedCase.expectedSnapshotDigest = String(repeating: "0", count: 64)
         let correlation = try LogicDesignOracleCorrelator.correlate(
             manifest: manifest,
-            oracleCase: mismatchedCase,
+            oracleCase: originalCase,
             sourceSHA256: try SHA256ContentDigester().digest(data: sourceData).hexadecimalValue,
-            topDesignName: originalCase.topDesignName,
+            topDesignName: "different-top",
             result: result
         )
 
         #expect(!correlation.matched)
-        #expect(correlation.mismatches.contains { $0.field == "snapshotDigest" })
+        #expect(correlation.mismatches.contains { $0.field == "topDesignName" })
+    }
+
+    @Test("reference oracle rejects a case that differs from its canonical manifest entry")
+    func referenceOracleRejectsTamperedCase() async throws {
+        let manifest = try readOracleManifest()
+        let originalCase = try #require(manifest.caseWithID("simple-counter"))
+        let sourceData = try Data(contentsOf: workspaceRoot().appending(path: "Fixtures/" + originalCase.sourcePath))
+        let source = try #require(String(data: sourceData, encoding: .utf8))
+        let result = try await LogicElaboratingEngine(
+            clock: { Date(timeIntervalSince1970: 0) }
+        ).execute(LogicElaborationRequest(
+            runID: "oracle-tampered-case",
+            inputs: [],
+            topDesignName: originalCase.topDesignName,
+            sources: [SystemVerilogSourceUnit(path: "Fixtures/" + originalCase.sourcePath, source: source)]
+        ))
+        var tamperedCase = originalCase
+        tamperedCase.expectedSnapshotDigest = String(repeating: "0", count: 64)
+
+        #expect(throws: LogicDesignOracleCorrelationError.self) {
+            try LogicDesignOracleCorrelator.correlate(
+                manifest: manifest,
+                oracleCase: tamperedCase,
+                sourceSHA256: try SHA256ContentDigester().digest(data: sourceData).hexadecimalValue,
+                topDesignName: originalCase.topDesignName,
+                result: result
+            )
+        }
     }
 
     @Test("positive SystemVerilog fixture elaborates")

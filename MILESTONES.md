@@ -21,12 +21,12 @@ Status: complete for the current audit. The gap inventory is recorded in `GOAL_S
 
 Exit criteria:
 
-- Requests, payloads, snapshots, references, and envelopes have explicit schema compatibility checks.
+- Requests, typed results, snapshots, and references validate the exact current schema version.
 - Source and output references are digest-verified and immutable at every Xcircuite handoff.
 - Snapshot identity is deterministic across encode/decode and independent of run timestamps.
 - Failed, blocked, cancelled, and resumed executions preserve structured evidence.
 
-Status: complete for the LogicDesign boundary. Snapshot/request validation, canonical-vs-serialized digest separation, immutable artifact references and structured failed/blocked/cancelled evidence are implemented. Runtime adapter and signoff-chain ownership belongs to downstream packages.
+Status: complete for the LogicDesign boundary. Snapshot/request validation, canonical-vs-serialized digest separation, immutable artifact references and structured failed/blocked/cancelled evidence are implemented. Runtime composition and signoff-chain ownership belongs to downstream packages.
 
 ## Milestone 2: Deterministic HDL and power-intent semantics
 
@@ -52,11 +52,11 @@ Status: complete for LogicDesign contracts. Gate reverse connectivity and direct
 
 Exit criteria:
 
-- Stage adapters resolve and verify inputs, evaluate trust gates, persist raw and canonical artifacts, and attach provenance.
+- Stage executors resolve and verify inputs, evaluate trust gates, persist raw and canonical artifacts, and attach provenance.
 - Stage results participate in approval, review, resume, cancellation, and repair-loop flows.
 - Headless integration tests execute against a working dependency graph and assert artifact integrity.
 
-Status: external responsibility. LogicDesign publishes the typed inputs, canonical artifacts, diagnostics and provenance consumed by Xcircuite; runtime adapters, dependency graph execution, review, approval and resume are owned by Xcircuite and its downstream packages.
+Status: external responsibility. LogicDesign publishes the typed protocols, inputs, canonical artifacts, diagnostics and provenance consumed directly by Xcircuite composition; dependency graph execution, review, approval and resume are owned by Xcircuite and its downstream packages.
 
 ## Milestone 5: Qualification and release eligibility
 

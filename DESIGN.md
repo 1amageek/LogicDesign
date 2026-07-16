@@ -23,7 +23,7 @@ LogicDesign protocols and result schemas
                  ↓
 native or external-tool backends
                  ↓
-Xcircuite stage adapters
+Xcircuite composition and stage execution
                  ↓
 DesignFlowKernel and .xcircuite artifacts
 ```

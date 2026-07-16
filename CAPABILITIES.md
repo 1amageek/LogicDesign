@@ -13,7 +13,7 @@ The package currently provides a deterministic, in-process subset for:
 - canonical JSON snapshot round trips with schema/digest verification and RTL/gate structural validation;
 - gate pin/net reverse-reference, driver/load direction, duplicate identity and connectivity validation;
 - UPF/CPF power domains, supply sets, domain supply association, isolation, level shifters, retention and structured source directives;
-- typed request/result envelopes with failed, blocked and cancelled execution states;
+- typed domain requests and results with failed, blocked and cancelled execution states;
 - request contract validation for schema version, run identity, top design and artifact integrity metadata;
 - retained reference-oracle correlation for the 13-case SystemVerilog corpus, including source digest binding, canonical snapshot digests and structured mismatch evidence;
 - a deterministic JSON CLI (`logic-design`).

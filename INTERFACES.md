@@ -15,10 +15,9 @@ public protocol DomainExecuting: Sendable {
 }
 ```
 
-Each product defines its own request and result type.  A result contains the
+Each product defines its own request and result type. A result contains the
 domain payload, `DesignDiagnostic` values, `ArtifactReference` values, and
-`ExecutionProvenance` needed to reproduce the execution.  There is no generic
-result envelope and no package-specific compatibility model.
+`ExecutionProvenance` needed to reproduce the execution.
 
 Requests carry a schema version and explicit `ArtifactLocator` inputs.  A
 backend resolves locators through its injected source provider and emits
@@ -60,5 +59,5 @@ owns run lifecycle, approval, resume, and policy.  Xcircuite owns concrete
 `.xcircuite` persistence.  ToolQualification evaluates tool capability and
 trust independently from the engine result.
 
-The LogicDesign package itself never imports Xcircuite or circuit-studio and
-does not provide an adapter, facade, or re-export for either package.
+The LogicDesign package itself remains independently usable and exposes only
+its canonical domain protocols and value types.
