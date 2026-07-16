@@ -51,7 +51,8 @@ let package = Package(
         ),
         .testTarget(
             name: "LogicDesignTests",
-            dependencies: ["LogicIR", "SystemVerilogFrontend", "PowerIntent", "LogicDesign", "LogicDesignCLI", .product(name: "CircuiteFoundation", package: "CircuiteFoundation")]
+            dependencies: ["LogicIR", "SystemVerilogFrontend", "PowerIntent", "LogicDesign", "LogicDesignCLI", .product(name: "CircuiteFoundation", package: "CircuiteFoundation")],
+            resources: [.copy("../../Fixtures")]
         ),
     ]
 )

@@ -72,10 +72,8 @@ struct FixtureCorpusTests {
         #expect(Set(manifest.cases.map(\.id)).count == manifest.cases.count)
         #expect(Set(manifest.cases.map(\.path)).count == manifest.cases.count)
 
-        let root = workspaceRoot()
         for entry in manifest.cases {
-            let url = root.appending(path: "Fixtures").appending(path: entry.path)
-            let data = try Data(contentsOf: url)
+            let data = try FixtureCorpusResources.data(at: "Fixtures/" + entry.path)
             #expect(try SHA256ContentDigester().digest(data: data).hexadecimalValue == entry.sha256)
         }
     }
@@ -87,10 +85,8 @@ struct FixtureCorpusTests {
         #expect(manifest.corpusID == "logic-design-native-reference-v1")
         #expect(manifest.cases.count == 17)
 
-        let root = workspaceRoot()
         for oracleCase in manifest.cases {
-            let sourceURL = root.appending(path: "Fixtures").appending(path: oracleCase.sourcePath)
-            let sourceData = try Data(contentsOf: sourceURL)
+            let sourceData = try FixtureCorpusResources.data(at: "Fixtures/" + oracleCase.sourcePath)
             let source = try #require(String(data: sourceData, encoding: .utf8))
             let result = try await LogicElaboratingEngine(
                 clock: { Date(timeIntervalSince1970: 0) }
@@ -120,7 +116,7 @@ struct FixtureCorpusTests {
     func referenceOracleReportsSnapshotMismatch() async throws {
         let manifest = try readOracleManifest()
         let originalCase = try #require(manifest.caseWithID("simple-counter"))
-        let sourceData = try Data(contentsOf: workspaceRoot().appending(path: "Fixtures/" + originalCase.sourcePath))
+        let sourceData = try FixtureCorpusResources.data(at: "Fixtures/" + originalCase.sourcePath)
         let source = try #require(String(data: sourceData, encoding: .utf8))
         let result = try await LogicElaboratingEngine(
             clock: { Date(timeIntervalSince1970: 0) }
@@ -146,7 +142,7 @@ struct FixtureCorpusTests {
     func referenceOracleRejectsTamperedCase() async throws {
         let manifest = try readOracleManifest()
         let originalCase = try #require(manifest.caseWithID("simple-counter"))
-        let sourceData = try Data(contentsOf: workspaceRoot().appending(path: "Fixtures/" + originalCase.sourcePath))
+        let sourceData = try FixtureCorpusResources.data(at: "Fixtures/" + originalCase.sourcePath)
         let source = try #require(String(data: sourceData, encoding: .utf8))
         let result = try await LogicElaboratingEngine(
             clock: { Date(timeIntervalSince1970: 0) }
@@ -256,24 +252,16 @@ struct FixtureCorpusTests {
     }
 
     private func readFixture(_ path: String) throws -> String {
-        let root = workspaceRoot()
-        return try String(contentsOf: root.appending(path: path), encoding: .utf8)
+        try FixtureCorpusResources.string(at: path)
     }
 
     private func readManifest() throws -> FixtureCorpusManifest {
-        let data = try Data(contentsOf: workspaceRoot().appending(path: "Fixtures/manifest.json"))
+        let data = try FixtureCorpusResources.data(at: "Fixtures/manifest.json")
         return try JSONDecoder().decode(FixtureCorpusManifest.self, from: data)
     }
 
     private func readOracleManifest() throws -> LogicDesignOracleManifest {
-        let data = try Data(contentsOf: workspaceRoot().appending(path: "Fixtures/oracle/manifest.json"))
+        let data = try FixtureCorpusResources.data(at: "Fixtures/oracle/manifest.json")
         return try JSONDecoder().decode(LogicDesignOracleManifest.self, from: data)
-    }
-
-    private func workspaceRoot() -> URL {
-        URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
     }
 }
