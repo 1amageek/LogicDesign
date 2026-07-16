@@ -28,6 +28,9 @@ Own the canonical digital design and power-intent state shared by every digital 
 - Requests and payloads are Codable, Hashable and schema-versioned.
 - Inputs use `ArtifactLocator`; outputs use immutable `ArtifactReference`
   values from CircuiteFoundation.
+- Elaboration and power-intent parsing protocols refine
+  `CircuiteFoundation.Engine` directly; their results expose artifact,
+  diagnostic and evidence capabilities without a parallel facade.
 - Diagnostics contain a stable code, severity, affected entity and suggested actions.
 - Unsupported semantics and missing prerequisites produce blocked results.
 - Native and external-tool backends conform to identical request and payload schemas.

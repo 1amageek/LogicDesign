@@ -65,7 +65,7 @@ public enum LogicDesignOracleCorrelator {
             topDesignName: topDesignName,
             status: result.status.rawValue,
             snapshotDigest: snapshotDigest,
-            diagnosticCodes: result.diagnostics.map(\.code),
+            diagnosticCodes: result.logicDiagnostics.map(\.code),
             implementationID: result.provenance.producer.build ?? result.provenance.producer.identifier,
             implementationVersion: result.provenance.producer.version
         )

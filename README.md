@@ -64,6 +64,9 @@ Every executing product uses:
 
 - a `Codable`, `Hashable`, `Sendable` request with `ArtifactLocator` inputs;
 - domain-owned result types (`LogicElaborationResult` and `PowerIntentParsingResult`) for status, diagnostics and execution metadata;
+- domain protocols that refine `CircuiteFoundation.Engine` directly;
+- direct `ArtifactProducing`, `DiagnosticReporting` and `EvidenceProviding`
+  conformance on execution results;
 - protocol-first dependency injection;
 - `ArtifactLocator` for planned inputs and `ArtifactReference` for materialized outputs;
 - explicit blocked, failed and cancelled states.
@@ -83,7 +86,7 @@ swift run logic-design capabilities
 swift run logic-design parse --input Fixtures/positive/simple_counter.sv --top counter --output /tmp/counter.json
 swift run logic-design correlate --input Fixtures/positive/simple_counter.sv --oracle Fixtures/oracle/manifest.json --case simple-counter
 swift run logic-design gate-parse --input Fixtures/positive/simple_gate.v --top top
-swift run logic-design power-intent --input Fixtures/power/sample.cpf --format cpf --top top --design-digest fixture
+swift run logic-design power-intent --input Fixtures/power/sample.cpf --format cpf --top top --design <design.json>
 ```
 
 ## Build and test

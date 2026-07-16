@@ -35,10 +35,17 @@ struct FixtureCorpusTests {
                     runID: "fixture-" + entry.id,
                     inputs: [],
                     design: LogicDesignReference(
-                        artifact: ArtifactLocator(
-                            path: "design.json",
-                            kind: .rtl,
-                            format: .json
+                        artifact: ArtifactReference(
+                            locator: ArtifactLocator(
+                                path: "design.json",
+                                kind: .rtl,
+                                format: .json
+                            ),
+                            digest: try ContentDigest(
+                                algorithm: .sha256,
+                                hexadecimalValue: String(repeating: "1", count: 64)
+                            ),
+                            byteCount: 128
                         ),
                         topDesignName: entry.topDesignName,
                         designDigest: String(repeating: "1", count: 64)

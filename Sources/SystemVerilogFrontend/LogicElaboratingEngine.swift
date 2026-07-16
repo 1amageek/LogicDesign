@@ -41,7 +41,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
                 inlineSourceCount: request.sources.count
             )
             guard contract.isValid else {
-                return try envelope(
+                return try makeResult(
                     request: request,
                     status: .failed,
                     diagnostics: contract.diagnostics,
@@ -52,7 +52,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
             let sources = try resolveSources(request)
             let parseResult = parser.parseResolvedIncludes(sources, topDesignName: request.topDesignName)
             if parseResult.unsupportedSemantics {
-                return try envelope(
+                return try makeResult(
                     request: request,
                     status: .blocked,
                     diagnostics: parseResult.diagnostics,
@@ -66,7 +66,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
                 )
             }
             guard let design = parseResult.design else {
-                return try envelope(
+                return try makeResult(
                     request: request,
                     status: .failed,
                     diagnostics: parseResult.diagnostics + [LogicDiagnostic(
@@ -82,7 +82,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
 
             let hierarchyResult = hierarchyElaborator.elaborate(design)
             guard let elaboratedDesign = hierarchyResult.design else {
-                return try envelope(
+                return try makeResult(
                     request: request,
                     status: .blocked,
                     diagnostics: parseResult.diagnostics + hierarchyResult.diagnostics,
@@ -97,7 +97,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
             }
             let validation = validator.validate(elaboratedDesign)
             if parseResult.diagnostics.contains(where: { $0.severity == .error }) || !validation.isValid {
-                return try envelope(
+                return try makeResult(
                     request: request,
                     status: .failed,
                     diagnostics: parseResult.diagnostics + validation.diagnostics,
@@ -114,7 +114,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
             let snapshot = try LogicDesignSnapshotCodec.finalized(
                 LogicDesignSnapshot(rtl: elaboratedDesign)
             )
-            return try envelope(
+            return try makeResult(
                 request: request,
                 status: .completed,
                 diagnostics: parseResult.diagnostics + validation.diagnostics,
@@ -127,7 +127,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
                 startedAt: startedAt
             )
         } catch is CancellationError {
-            return try envelope(
+            return try makeResult(
                 request: request,
                 status: .cancelled,
                 diagnostics: [LogicDiagnostic(
@@ -140,7 +140,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
                 startedAt: startedAt
             )
         } catch let error as SystemVerilogSourceResolutionError {
-            return try envelope(
+            return try makeResult(
                 request: request,
                 status: .failed,
                 diagnostics: [LogicDiagnostic(
@@ -157,7 +157,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
                 startedAt: startedAt
             )
         } catch {
-            return try envelope(
+            return try makeResult(
                 request: request,
                 status: .failed,
                 diagnostics: [LogicDiagnostic(
@@ -182,7 +182,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
         return try sourceResolver.resolve(initialSources)
     }
 
-    private func envelope(
+    private func makeResult(
         request: LogicElaborationRequest,
         status: LogicExecutionStatus,
         diagnostics: [LogicDiagnostic],
@@ -193,7 +193,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
             schemaVersion: LogicElaborationRequest.currentSchemaVersion,
             runID: request.runID,
             status: status,
-            diagnostics: diagnostics,
+            logicDiagnostics: diagnostics,
             provenance: try ExecutionProvenance(
                 producer: ProducerIdentity(
                     kind: .engine,

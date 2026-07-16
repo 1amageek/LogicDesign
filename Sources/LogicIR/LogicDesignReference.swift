@@ -2,7 +2,8 @@ import Foundation
 import CircuiteFoundation
 
 public struct LogicDesignReference: Sendable, Hashable, Codable {
-    public var artifact: ArtifactLocator
+    /// Immutable identity of the materialized design artifact.
+    public var artifact: ArtifactReference
     public var topDesignName: String
     /// Canonical digest of the referenced design content; artifact.sha256 protects serialized bytes.
     public var designDigest: String
@@ -10,7 +11,7 @@ public struct LogicDesignReference: Sendable, Hashable, Codable {
     public var provenance: LogicDesignProvenance?
 
     public init(
-        artifact: ArtifactLocator,
+        artifact: ArtifactReference,
         topDesignName: String,
         designDigest: String,
         provenance: LogicDesignProvenance? = nil

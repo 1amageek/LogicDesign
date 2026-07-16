@@ -101,16 +101,22 @@ public enum LogicDesignCLI {
 
     private static func runPowerIntent(_ command: Command) async throws -> PowerIntentParsingResult {
         let source = try readSource(at: command.input)
+        let designData = try readSourceData(at: command.designPath)
+        let designDigest = try SHA256ContentDigester().digest(data: designData)
         let sourceUnit = PowerIntentSourceUnit(path: command.input, source: source, format: command.format)
         let designReference = LogicDesignReference(
-            artifact: ArtifactLocator(
-                location: try ArtifactLocation(workspaceRelativePath: "design.json"),
-                role: .input,
-                kind: try ArtifactKind(rawValue: "rtl"),
-                format: .json
+            artifact: ArtifactReference(
+                locator: ArtifactLocator(
+                    location: try ArtifactLocation(workspaceRelativePath: command.designPath),
+                    role: .input,
+                    kind: try ArtifactKind(rawValue: "rtl"),
+                    format: .json
+                ),
+                digest: designDigest,
+                byteCount: UInt64(designData.count)
             ),
             topDesignName: command.topDesign,
-            designDigest: command.designDigest
+            designDigest: designDigest.hexadecimalValue
         )
         let request = PowerIntentParsingRequest(
             runID: command.runID,
@@ -168,7 +174,7 @@ public enum LogicDesignCLI {
         var topDesign: String = "top"
         var runID: String = "logic-design-cli"
         var format: PowerIntentFormat = .upf
-        var designDigest: String = ""
+        var designPath: String = ""
 
         init(arguments: [String]) throws {
             guard let first = arguments.first else { kind = .help; return }
@@ -193,7 +199,7 @@ public enum LogicDesignCLI {
                 case "--output": output = arguments[index + 1]
                 case "--top": topDesign = arguments[index + 1]
                 case "--run-id": runID = arguments[index + 1]
-                case "--design-digest": designDigest = arguments[index + 1]
+                case "--design": designPath = arguments[index + 1]
                 case "--format":
                     guard let parsed = PowerIntentFormat(rawValue: arguments[index + 1]) else { throw CLIError.invalidValue(argument) }
                     format = parsed
@@ -210,8 +216,8 @@ public enum LogicDesignCLI {
             if kind == .correlate, caseID.isEmpty {
                 throw CLIError.missingValue("--case")
             }
-            if kind == .powerIntent, designDigest.isEmpty {
-                throw CLIError.missingValue("--design-digest")
+            if kind == .powerIntent, designPath.isEmpty {
+                throw CLIError.missingValue("--design")
             }
         }
     }
@@ -246,7 +252,7 @@ public enum LogicDesignCLI {
             "  validate --input <file> --top <module>",
             "  correlate --input <file> --oracle <manifest.json> --case <case-id> [--top <module>]",
             "  gate-parse --input <file> --top <module>",
-            "  power-intent --input <file> --format <upf|cpf> --design-digest <sha256> [--output <intent.json>]"
+            "  power-intent --input <file> --format <upf|cpf> --design <design.json> [--output <intent.json>]"
         ].joined(separator: "\n")
     }
 }

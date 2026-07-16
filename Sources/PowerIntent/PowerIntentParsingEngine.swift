@@ -35,7 +35,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                 inlineSourceCount: request.sources.count
             )
             guard contract.isValid else {
-                return try envelope(
+                return try makeResult(
                     request: request,
                     status: .failed,
                     diagnostics: contract.diagnostics,
@@ -44,7 +44,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                 )
             }
             guard !request.design.designDigest.isEmpty else {
-                return try envelope(
+                return try makeResult(
                     request: request,
                     status: .blocked,
                     diagnostics: [LogicDiagnostic(
@@ -60,7 +60,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
             let sources = try resolveSources(request)
             let parsed = parser.parse(sources)
             guard let intent = parsed.design else {
-                return try envelope(
+                return try makeResult(
                     request: request,
                     status: .failed,
                     diagnostics: parsed.diagnostics,
@@ -77,7 +77,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
             } else {
                 status = .completed
             }
-            return try envelope(
+            return try makeResult(
                 request: request,
                 status: status,
                 diagnostics: parsed.diagnostics + validation.diagnostics,
@@ -90,7 +90,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                 startedAt: startedAt
             )
         } catch is CancellationError {
-            return try envelope(
+            return try makeResult(
                 request: request,
                 status: .cancelled,
                 diagnostics: [LogicDiagnostic(
@@ -103,7 +103,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                 startedAt: startedAt
             )
         } catch {
-            return try envelope(
+            return try makeResult(
                 request: request,
                 status: .failed,
                 diagnostics: [LogicDiagnostic(
@@ -123,7 +123,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
         return try request.inputs.map { try sourceProvider.load($0, format: request.format) }
     }
 
-    private func envelope(
+    private func makeResult(
         request: PowerIntentParsingRequest,
         status: LogicExecutionStatus,
         diagnostics: [LogicDiagnostic],
@@ -134,7 +134,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
             schemaVersion: PowerIntentParsingRequest.currentSchemaVersion,
             runID: request.runID,
             status: status,
-            diagnostics: diagnostics,
+            logicDiagnostics: diagnostics,
             provenance: try ExecutionProvenance(
                 producer: ProducerIdentity(
                     kind: .engine,

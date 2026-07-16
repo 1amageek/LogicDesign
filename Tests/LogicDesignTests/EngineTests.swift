@@ -7,7 +7,7 @@ import CircuiteFoundation
 
 @Suite("LogicDesign execution")
 struct EngineTests {
-    @Test("elaboration returns a completed envelope for valid RTL")
+    @Test("elaboration returns a completed domain result for valid RTL")
     func elaborationCompletes() async throws {
         let source = SystemVerilogSourceUnit(
             path: "valid.sv",
@@ -34,7 +34,7 @@ struct EngineTests {
         )
         let result = try await LogicElaboratingEngine(clock: { Date(timeIntervalSince1970: 0) }).execute(request)
         #expect(result.status == .failed)
-        #expect(result.diagnostics.contains { $0.code == "SV_SOURCE_LOAD_FAILED" })
+        #expect(result.logicDiagnostics.contains { $0.code == "SV_SOURCE_LOAD_FAILED" })
     }
 
     @Test("elaboration resolves relative includes and propagates macros")
@@ -121,7 +121,7 @@ struct EngineTests {
         ))
 
         #expect(result.status == .blocked)
-        #expect(result.diagnostics.contains { $0.code == "LOGIC_HIERARCHY_CYCLE" })
+        #expect(result.logicDiagnostics.contains { $0.code == "LOGIC_HIERARCHY_CYCLE" })
     }
 
     @Test("hierarchy parameter overrides resolve port widths")
@@ -228,7 +228,7 @@ struct EngineTests {
         ))
 
         #expect(result.status == .completed)
-        #expect(result.diagnostics.isEmpty)
+        #expect(result.logicDiagnostics.isEmpty)
         #expect(result.payload.snapshot?.rtl.modules.first?.assignments.contains {
             if case .index(let value, _) = $0.target,
                case .identifier(let name) = value {
@@ -306,7 +306,7 @@ struct EngineTests {
         ))
 
         #expect(result.status == .blocked)
-        #expect(result.diagnostics.contains {
+        #expect(result.logicDiagnostics.contains {
             $0.code == "LOGIC_HIERARCHY_PARAMETER_UNRESOLVED" &&
             $0.entity == "top.u_leaf.UNKNOWN"
         })
@@ -330,7 +330,7 @@ struct EngineTests {
         ).execute(request)
 
         #expect(result.status == .failed)
-        #expect(result.diagnostics.contains { $0.code == "SV_INCLUDE_MISSING" })
+        #expect(result.logicDiagnostics.contains { $0.code == "SV_INCLUDE_MISSING" })
     }
 
     @Test("unsupported RTL is blocked")
@@ -347,7 +347,7 @@ struct EngineTests {
         )
         let result = try await LogicElaboratingEngine(clock: { Date(timeIntervalSince1970: 0) }).execute(request)
         #expect(result.status == .blocked)
-        #expect(result.diagnostics.contains { $0.code == "SV_UNSUPPORTED_GENERATE" })
+        #expect(result.logicDiagnostics.contains { $0.code == "SV_UNSUPPORTED_GENERATE" })
     }
 
     @Test("constant generate-for blocks are expanded in the snapshot")
@@ -409,7 +409,14 @@ struct EngineTests {
             format: .upf
         )
         let reference = LogicDesignReference(
-            artifact: ArtifactLocator(path: "design.json", kind: .rtl, format: .json),
+            artifact: ArtifactReference(
+                locator: ArtifactLocator(path: "design.json", kind: .rtl, format: .json),
+                digest: try ContentDigest(
+                    algorithm: .sha256,
+                    hexadecimalValue: String(repeating: "3", count: 64)
+                ),
+                byteCount: 128
+            ),
             topDesignName: "top",
             designDigest: "design-digest"
         )

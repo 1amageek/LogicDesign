@@ -8,7 +8,7 @@
 |---|---|---|
 | Responsibility boundary | Complete | README.md and DESIGN.md |
 | Public package products | Implemented | Package.swift |
-| Canonical Foundation and domain request/result contract | Implemented | Public Swift protocols and payloads |
+| Canonical engine and evidence contract | Implemented | Domain protocols refine `CircuiteFoundation.Engine`; results directly expose artifacts, diagnostics and evidence |
 | Contract build | Passed | swift build |
 | Contract test | Passed | timeout-bounded `xcodebuild test`; 52 tests in 5 suites |
 | Domain implementation | Complete for native subset | LogicIR, SystemVerilogFrontend, PowerIntent and gate netlist parser |

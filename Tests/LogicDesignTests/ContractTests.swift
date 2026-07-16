@@ -37,7 +37,14 @@ struct ContractTests {
             runID: "run-provenance"
         )
         let reference = LogicDesignReference(
-            artifact: ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
+            artifact: ArtifactReference(
+                locator: ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
+                digest: try ContentDigest(
+                    algorithm: .sha256,
+                    hexadecimalValue: String(repeating: "1", count: 64)
+                ),
+                byteCount: 128
+            ),
             topDesignName: "top",
             designDigest: "output-design",
             provenance: provenance
@@ -51,9 +58,16 @@ struct ContractTests {
     }
 
     @Test("provenance validation rejects mismatched transformed input")
-    func provenanceValidationRejectsMismatchedInput() {
+    func provenanceValidationRejectsMismatchedInput() throws {
         let reference = LogicDesignReference(
-            artifact: ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
+            artifact: ArtifactReference(
+                locator: ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
+                digest: try ContentDigest(
+                    algorithm: .sha256,
+                    hexadecimalValue: String(repeating: "2", count: 64)
+                ),
+                byteCount: 128
+            ),
             topDesignName: "top",
             designDigest: "current",
             provenance: LogicDesignProvenance(
@@ -69,4 +83,21 @@ struct ContractTests {
 
         #expect(issues.contains { $0.code == "design_provenance_input_digest_mismatch" })
     }
+
+    @Test("execution contracts conform directly to the shared engine protocol")
+    func directEngineConformance() {
+        requireEngine(LogicElaboratingEngine.self)
+        requireEngine(PowerIntentParsingEngine.self)
+    }
+
+    @Test("execution results expose shared evidence capabilities")
+    func directResultCapabilities() {
+        requireEvidenceResult(LogicElaborationResult.self)
+        requireEvidenceResult(PowerIntentParsingResult.self)
+    }
+
+    private func requireEngine<T: Engine>(_: T.Type) {}
+
+    private func requireEvidenceResult<T>(_: T.Type)
+    where T: ArtifactProducing & DiagnosticReporting & EvidenceProviding {}
 }

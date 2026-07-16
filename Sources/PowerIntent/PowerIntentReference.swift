@@ -3,11 +3,12 @@ import CircuiteFoundation
 import LogicIR
 
 public struct PowerIntentReference: Sendable, Hashable, Codable {
-    public var artifact: ArtifactLocator
+    /// Immutable identity of the materialized power-intent artifact.
+    public var artifact: ArtifactReference
     public var designDigest: String
 
     public init(
-        artifact: ArtifactLocator,
+        artifact: ArtifactReference,
         designDigest: String
     ) {
         self.artifact = artifact
