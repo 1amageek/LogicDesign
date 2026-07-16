@@ -66,8 +66,8 @@ public enum LogicDesignOracleCorrelator {
             status: result.status.rawValue,
             snapshotDigest: snapshotDigest,
             diagnosticCodes: result.diagnostics.map(\.code),
-            implementationID: result.metadata.implementationID,
-            implementationVersion: result.metadata.implementationVersion
+            implementationID: result.provenance.producer.build ?? result.provenance.producer.identifier,
+            implementationVersion: result.provenance.producer.version
         )
 
         var mismatches: [LogicDesignOracleMismatch] = []

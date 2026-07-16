@@ -1,7 +1,7 @@
 import Foundation
-@_exported import LogicIR
-@_exported import PowerIntent
-@_exported import SystemVerilogFrontend
+import LogicIR
+import PowerIntent
+import SystemVerilogFrontend
 
 public enum LogicDesignAPI {
     public static let contractVersion = 1

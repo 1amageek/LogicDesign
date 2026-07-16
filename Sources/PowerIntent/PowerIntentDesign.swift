@@ -55,14 +55,21 @@ public struct PowerIntentDesign: Sendable, Hashable, Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        guard schemaVersion == Self.currentSchemaVersion else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .schemaVersion,
+                in: container,
+                debugDescription: "Unsupported power intent schema version \(schemaVersion)."
+            )
+        }
         format = try container.decode(PowerIntentFormat.self, forKey: .format)
         domains = try container.decode([PowerDomain].self, forKey: .domains)
         supplySets = try container.decode([PowerSupplySet].self, forKey: .supplySets)
         isolationPolicies = try container.decode([PowerIntentIsolation].self, forKey: .isolationPolicies)
         levelShifters = try container.decode([PowerIntentLevelShifter].self, forKey: .levelShifters)
         retentionPolicies = try container.decode([PowerIntentRetention].self, forKey: .retentionPolicies)
-        directives = try container.decodeIfPresent([String].self, forKey: .directives) ?? []
-        structuredDirectives = try container.decodeIfPresent([PowerIntentDirective].self, forKey: .structuredDirectives) ?? []
+        directives = try container.decode([String].self, forKey: .directives)
+        structuredDirectives = try container.decode([PowerIntentDirective].self, forKey: .structuredDirectives)
         sourceFiles = try container.decode([LogicSourceFile].self, forKey: .sourceFiles)
     }
 

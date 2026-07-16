@@ -69,7 +69,7 @@ public struct RTLGenerateBlock: Sendable, Hashable, Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
         label = try container.decode(String.self, forKey: .label)
-        kind = try container.decodeIfPresent(RTLGenerateKind.self, forKey: .kind) ?? .forLoop
+        kind = try container.decode(RTLGenerateKind.self, forKey: .kind)
         condition = try container.decodeIfPresent(RTLExpression.self, forKey: .condition)
         loopVariable = try container.decode(String.self, forKey: .loopVariable)
         start = try container.decode(Int64.self, forKey: .start)

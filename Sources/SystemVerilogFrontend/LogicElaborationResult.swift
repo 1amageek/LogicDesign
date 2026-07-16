@@ -1,4 +1,5 @@
 import Foundation
+import CircuiteFoundation
 import LogicIR
 
 /// Result of a SystemVerilog elaboration execution.
@@ -7,7 +8,7 @@ public struct LogicElaborationResult: Sendable, Hashable, Codable {
     public let runID: String
     public let status: LogicExecutionStatus
     public let diagnostics: [LogicDiagnostic]
-    public let metadata: LogicExecutionMetadata
+    public let provenance: ExecutionProvenance
     public let payload: LogicElaborationPayload
 
     public init(
@@ -15,14 +16,14 @@ public struct LogicElaborationResult: Sendable, Hashable, Codable {
         runID: String,
         status: LogicExecutionStatus,
         diagnostics: [LogicDiagnostic] = [],
-        metadata: LogicExecutionMetadata,
+        provenance: ExecutionProvenance,
         payload: LogicElaborationPayload
     ) {
         self.schemaVersion = schemaVersion
         self.runID = runID
         self.status = status
         self.diagnostics = diagnostics
-        self.metadata = metadata
+        self.provenance = provenance
         self.payload = payload
     }
 }

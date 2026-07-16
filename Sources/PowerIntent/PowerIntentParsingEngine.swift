@@ -35,7 +35,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                 inlineSourceCount: request.sources.count
             )
             guard contract.isValid else {
-                return envelope(
+                return try envelope(
                     request: request,
                     status: .failed,
                     diagnostics: contract.diagnostics,
@@ -44,7 +44,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                 )
             }
             guard !request.design.designDigest.isEmpty else {
-                return envelope(
+                return try envelope(
                     request: request,
                     status: .blocked,
                     diagnostics: [LogicDiagnostic(
@@ -60,7 +60,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
             let sources = try resolveSources(request)
             let parsed = parser.parse(sources)
             guard let intent = parsed.design else {
-                return envelope(
+                return try envelope(
                     request: request,
                     status: .failed,
                     diagnostics: parsed.diagnostics,
@@ -77,7 +77,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
             } else {
                 status = .completed
             }
-            return envelope(
+            return try envelope(
                 request: request,
                 status: status,
                 diagnostics: parsed.diagnostics + validation.diagnostics,
@@ -90,7 +90,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                 startedAt: startedAt
             )
         } catch is CancellationError {
-            return envelope(
+            return try envelope(
                 request: request,
                 status: .cancelled,
                 diagnostics: [LogicDiagnostic(
@@ -103,7 +103,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                 startedAt: startedAt
             )
         } catch {
-            return envelope(
+            return try envelope(
                 request: request,
                 status: .failed,
                 diagnostics: [LogicDiagnostic(
@@ -129,16 +129,22 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
         diagnostics: [LogicDiagnostic],
         payload: PowerIntentParsingPayload,
         startedAt: Date
-    ) -> PowerIntentParsingResult {
+    ) throws -> PowerIntentParsingResult {
         PowerIntentParsingResult(
             schemaVersion: PowerIntentParsingRequest.currentSchemaVersion,
             runID: request.runID,
             status: status,
             diagnostics: diagnostics,
-            metadata: LogicExecutionMetadata(
-                engineID: "LogicDesign.PowerIntent",
-                implementationID: "native-upf-cpf-subset",
-                implementationVersion: "1",
+            provenance: try ExecutionProvenance(
+                producer: ProducerIdentity(
+                    kind: .engine,
+                    identifier: "LogicDesign.PowerIntent",
+                    version: "1",
+                    build: "native-upf-cpf-subset"
+                ),
+                invocation: ExecutionInvocation.inProcess(
+                    entryPoint: "PowerIntentParsingEngine.execute"
+                ),
                 startedAt: startedAt,
                 completedAt: clock()
             ),
