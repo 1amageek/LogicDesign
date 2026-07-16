@@ -5,15 +5,14 @@ import Foundation
 let workspaceRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()
     .deletingLastPathComponent()
-let isFullLSIWorkspace = FileManager.default.fileExists(
-    atPath: workspaceRoot.appendingPathComponent("Xcircuite/Package.swift").path
-)
-
-let circuiteFoundationDependency: Package.Dependency = isFullLSIWorkspace && FileManager.default.fileExists(
+let circuiteFoundationDependency: Package.Dependency = FileManager.default.fileExists(
     atPath: workspaceRoot.appendingPathComponent("CircuiteFoundation/Package.swift").path
 )
     ? .package(path: "../CircuiteFoundation")
-    : .package(url: "https://github.com/1amageek/CircuiteFoundation.git", revision: "8b5b1427280415e8acb3789cb364284b906f6cab")
+    : .package(
+        url: "https://github.com/1amageek/CircuiteFoundation.git",
+        revision: "2ec6ee13a89ac6885be3c26b41a9ee0ef89948ac"
+    )
 
 let package = Package(
     name: "LogicDesign",
