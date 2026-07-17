@@ -393,19 +393,6 @@ public struct LogicDesignValidator: LogicDesignValidating {
             for child in ifTrue + ifFalse {
                 validateStatement(child, knownNames: knownNames, module: module, diagnostics: &diagnostics, source: source)
             }
-        case .caseStatement(let expression, let items, let defaultStatements):
-            validateExpression(expression, knownNames: knownNames, module: module, diagnostics: &diagnostics, source: source)
-            for item in items {
-                for match in item.matches {
-                    validateExpression(match, knownNames: knownNames, module: module, diagnostics: &diagnostics, source: item.source ?? source)
-                }
-                for child in item.statements {
-                    validateStatement(child, knownNames: knownNames, module: module, diagnostics: &diagnostics, source: item.source ?? source)
-                }
-            }
-            for child in defaultStatements {
-                validateStatement(child, knownNames: knownNames, module: module, diagnostics: &diagnostics, source: source)
-            }
         case .typedCaseStatement(_, let expression, let items, let defaultStatements):
             validateExpression(expression, knownNames: knownNames, module: module, diagnostics: &diagnostics, source: source)
             for item in items {

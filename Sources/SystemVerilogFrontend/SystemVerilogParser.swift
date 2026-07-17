@@ -793,8 +793,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
                 for child in ifTrue + ifFalse {
                     collectReadIdentifiers(from: child, into: &result)
                 }
-            case .caseStatement(let expression, let items, let defaults),
-                 .typedCaseStatement(_, let expression, let items, let defaults):
+            case .typedCaseStatement(_, let expression, let items, let defaults):
                 collectReadIdentifiers(from: expression, into: &result)
                 for item in items {
                     for match in item.matches {
@@ -1599,7 +1598,7 @@ public struct SystemVerilogParser: SystemVerilogParsing {
             case .assignment(let assignment): return assignment.source
             case .block(let statements): return statements.compactMap(statementSpan).first
             case .conditional: return nil
-            case .caseStatement, .typedCaseStatement: return nil
+            case .typedCaseStatement: return nil
             case .null: return nil
             }
         }

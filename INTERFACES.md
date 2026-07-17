@@ -31,9 +31,8 @@ format.
 projection is no longer part of the canonical artifact, and version 1 power
 intent artifacts are rejected rather than silently reinterpreted.
 
-The SystemVerilog parser emits `typedCaseStatement` values. The untyped
-`caseStatement` value remains only as an input compatibility case for existing
-IR consumers and is not produced by the native frontend.
+The SystemVerilog parser emits `typedCaseStatement` values for standard,
+`casex`, and `casez` semantics. The IR has no untyped compatibility case.
 
 ## Design identity and integrity
 

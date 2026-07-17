@@ -811,12 +811,6 @@ public struct RTLHierarchyElaborator: RTLHierarchyElaborating {
                     ifTrue: ifTrue.map { rewrite($0, mapping: mapping) },
                     ifFalse: ifFalse.map { rewrite($0, mapping: mapping) }
                 )
-            case .caseStatement(let expression, let items, let defaults):
-                return .caseStatement(
-                    expression: rewrite(expression, mapping: mapping),
-                    items: items.map { rewrite($0, mapping: mapping) },
-                    defaultStatements: defaults.map { rewrite($0, mapping: mapping) }
-                )
             case .typedCaseStatement(let kind, let expression, let items, let defaults):
                 return .typedCaseStatement(
                     kind: kind,
