@@ -22,7 +22,6 @@ public struct PowerIntentParser: Sendable {
         var isolations: [PowerIntentIsolation] = []
         var levelShifters: [PowerIntentLevelShifter] = []
         var retentions: [PowerIntentRetention] = []
-        var directives: [String] = []
         var structuredDirectives: [PowerIntentDirective] = []
         var diagnostics: [LogicDiagnostic] = []
         var unsupported = false
@@ -129,7 +128,7 @@ public struct PowerIntentParser: Sendable {
                         source: span
                     ))
                 case "create_nominal_condition", "create_power_mode", "set_scope", "set_port_attributes", "set_related_supply_net":
-                    directives.append(text.trimmingCharacters(in: .whitespacesAndNewlines))
+                    break
                 default:
                     unsupported = true
                     diagnostics.append(LogicDiagnostic(
@@ -151,7 +150,6 @@ public struct PowerIntentParser: Sendable {
             isolationPolicies: unique(isolations, key: { $0.name }),
             levelShifters: unique(levelShifters, key: { $0.name }),
             retentionPolicies: unique(retentions, key: { $0.name }),
-            directives: directives,
             structuredDirectives: unique(structuredDirectives, key: { $0.id }),
             sourceFiles: sources.map(\.file)
         )

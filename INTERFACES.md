@@ -7,15 +7,17 @@ DesignFlowKernel, or a filesystem runtime.
 ## Common execution shape
 
 ```swift
-public protocol DomainExecuting: Sendable {
-    associatedtype Request: Sendable & Codable & Hashable
-    associatedtype Result: Sendable & Codable & Hashable
+public protocol Engine<Request, Output>: Sendable {
+    associatedtype Request: Sendable
+    associatedtype Output: Sendable
 
-    func execute(_ request: Request) async throws -> Result
+    func execute(_ request: Request) async throws -> Output
 }
 ```
 
-Each product defines its own request and result type. A result contains the
+`SystemVerilogFrontend` and `PowerIntent` refine
+`CircuiteFoundation.Engine` directly. Each product defines its own request and
+result type. A result contains the
 domain payload, `DesignDiagnostic` values, `ArtifactReference` values, and
 `ExecutionProvenance` needed to reproduce the execution.
 
@@ -23,6 +25,15 @@ Requests carry a schema version and explicit `ArtifactLocator` inputs.  A
 backend resolves locators through its injected source provider and emits
 immutable artifact references with a digest, byte count, role, kind, and
 format.
+
+`PowerIntentDesign` schema version 2 retains directives only through
+`structuredDirectives: [PowerIntentDirective]`. The former raw string
+projection is no longer part of the canonical artifact, and version 1 power
+intent artifacts are rejected rather than silently reinterpreted.
+
+The SystemVerilog parser emits `typedCaseStatement` values. The untyped
+`caseStatement` value remains only as an input compatibility case for existing
+IR consumers and is not produced by the native frontend.
 
 ## Design identity and integrity
 

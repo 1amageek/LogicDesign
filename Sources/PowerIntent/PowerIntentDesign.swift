@@ -2,7 +2,7 @@ import Foundation
 import LogicIR
 
 public struct PowerIntentDesign: Sendable, Hashable, Codable {
-    public static let currentSchemaVersion = 1
+    public static let currentSchemaVersion = 2
 
     public var schemaVersion: Int
     public var format: PowerIntentFormat
@@ -11,7 +11,6 @@ public struct PowerIntentDesign: Sendable, Hashable, Codable {
     public var isolationPolicies: [PowerIntentIsolation]
     public var levelShifters: [PowerIntentLevelShifter]
     public var retentionPolicies: [PowerIntentRetention]
-    public var directives: [String]
     public var structuredDirectives: [PowerIntentDirective]
     public var sourceFiles: [LogicSourceFile]
 
@@ -22,7 +21,6 @@ public struct PowerIntentDesign: Sendable, Hashable, Codable {
         isolationPolicies: [PowerIntentIsolation] = [],
         levelShifters: [PowerIntentLevelShifter] = [],
         retentionPolicies: [PowerIntentRetention] = [],
-        directives: [String] = [],
         structuredDirectives: [PowerIntentDirective] = [],
         sourceFiles: [LogicSourceFile] = [],
         schemaVersion: Int = PowerIntentDesign.currentSchemaVersion
@@ -34,7 +32,6 @@ public struct PowerIntentDesign: Sendable, Hashable, Codable {
         self.isolationPolicies = isolationPolicies
         self.levelShifters = levelShifters
         self.retentionPolicies = retentionPolicies
-        self.directives = directives
         self.structuredDirectives = structuredDirectives
         self.sourceFiles = sourceFiles
     }
@@ -47,7 +44,6 @@ public struct PowerIntentDesign: Sendable, Hashable, Codable {
         case isolationPolicies
         case levelShifters
         case retentionPolicies
-        case directives
         case structuredDirectives
         case sourceFiles
     }
@@ -68,7 +64,6 @@ public struct PowerIntentDesign: Sendable, Hashable, Codable {
         isolationPolicies = try container.decode([PowerIntentIsolation].self, forKey: .isolationPolicies)
         levelShifters = try container.decode([PowerIntentLevelShifter].self, forKey: .levelShifters)
         retentionPolicies = try container.decode([PowerIntentRetention].self, forKey: .retentionPolicies)
-        directives = try container.decode([String].self, forKey: .directives)
         structuredDirectives = try container.decode([PowerIntentDirective].self, forKey: .structuredDirectives)
         sourceFiles = try container.decode([LogicSourceFile].self, forKey: .sourceFiles)
     }
@@ -82,7 +77,6 @@ public struct PowerIntentDesign: Sendable, Hashable, Codable {
         try container.encode(isolationPolicies, forKey: .isolationPolicies)
         try container.encode(levelShifters, forKey: .levelShifters)
         try container.encode(retentionPolicies, forKey: .retentionPolicies)
-        try container.encode(directives, forKey: .directives)
         try container.encode(structuredDirectives, forKey: .structuredDirectives)
         try container.encode(sourceFiles, forKey: .sourceFiles)
     }

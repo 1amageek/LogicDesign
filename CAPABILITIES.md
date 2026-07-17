@@ -15,7 +15,7 @@ The package currently provides a deterministic, in-process subset for:
 - UPF/CPF power domains, supply sets, domain supply association, isolation, level shifters, retention and structured source directives;
 - typed domain requests and results with failed, blocked and cancelled execution states;
 - request contract validation for schema version, run identity, top design and artifact integrity metadata;
-- retained reference-oracle correlation for the 13-case SystemVerilog corpus, including source digest binding, canonical snapshot digests and structured mismatch evidence;
+- retained reference-oracle correlation for the 17-case SystemVerilog corpus, including source digest binding, canonical snapshot digests and structured mismatch evidence;
 - a deterministic JSON CLI (`logic-design`).
 
 ## Intentional responsibility boundary

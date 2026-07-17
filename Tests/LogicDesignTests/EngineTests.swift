@@ -436,6 +436,10 @@ struct EngineTests {
         #expect(result.payload.intent?.structuredDirectives.count == 5)
         if let intent = result.payload.intent {
             let data = try JSONEncoder().encode(intent)
+            let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+            #expect(object["schemaVersion"] as? Int == PowerIntentDesign.currentSchemaVersion)
+            #expect(object["directives"] == nil)
+            #expect(object["structuredDirectives"] != nil)
             let decoded = try JSONDecoder().decode(PowerIntentDesign.self, from: data)
             #expect(decoded == intent)
         }
