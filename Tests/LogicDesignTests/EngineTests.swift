@@ -23,6 +23,13 @@ struct EngineTests {
         #expect(result.status == .completed)
         #expect(result.payload.snapshot?.designDigest != nil)
         #expect(result.payload.snapshot?.rtl.sourceFiles.first?.path == "valid.sv")
+        let evidenceID = result.evidence.id
+        #expect(result.evidence.id == evidenceID)
+        let decoded = try JSONDecoder().decode(
+            LogicElaborationResult.self,
+            from: JSONEncoder().encode(result)
+        )
+        #expect(decoded.evidence.id == evidenceID)
     }
 
     @Test("elaboration reports a missing filesystem input")
