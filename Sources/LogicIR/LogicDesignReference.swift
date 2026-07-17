@@ -21,4 +21,16 @@ public struct LogicDesignReference: Sendable, Hashable, Codable {
         self.designDigest = designDigest
         self.provenance = provenance
     }
+
+    public init(
+        artifact: ArtifactReference,
+        topDesignName: String,
+        designRevision: ContentDigest,
+        provenance: LogicDesignProvenance? = nil
+    ) {
+        self.artifact = artifact
+        self.topDesignName = topDesignName
+        self.designDigest = designRevision.hexadecimalValue
+        self.provenance = provenance
+    }
 }
