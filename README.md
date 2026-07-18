@@ -6,7 +6,7 @@ Canonical digital design state, SystemVerilog frontend and power-intent contract
 
 This package provides the complete LogicDesign-owned native implementation for canonical RTL and power-intent state. It is designed for both human workflows and structured Agent workflows through typed Swift APIs, immutable artifacts and a deterministic JSON CLI.
 
-The implementation is intentionally explicit about its qualification boundary: unsupported language semantics return structured blocked results, while native parser success does not claim full-language, external-oracle or process-specific qualification.
+The implementation is explicit about its validation and evidence boundary: unsupported language semantics return structured blocked results, while native parser success produces evidence for an independent qualification decision rather than owning that decision.
 
 ## Products
 
@@ -81,6 +81,8 @@ The library does not depend on the Xcircuite runtime. Xcircuite owns `DesignFlow
 
 The CLI emits deterministic JSON for machine consumption. A successful operation exits with status `0`; invalid input, failed validation or blocked native semantics exits non-zero and includes structured diagnostics.
 
+The `capabilities` command emits capability report schema version 2. The report declares supported capabilities, blocked language semantics, package-owned validation checks and a typed evidence boundary. `LogicDesignEvidenceBoundary.producedEvidence` lists evidence produced by this package, while `externalDecisions` lists decisions owned by ToolQualification, process policy and release authorization. It does not contain a package-owned qualification result.
+
 ```bash
 swift run logic-design capabilities
 swift run logic-design parse --input Fixtures/positive/simple_counter.sv --top counter --output /tmp/counter.json
@@ -96,15 +98,15 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The LogicDesign contract suite passes with the complete package-local test corpus in 5 suites. The retained fixture corpus contains 20 native cases, and the separate reference manifest correlates all 17 SystemVerilog cases, including completed snapshot digests and typed negative diagnostics. This evidence is local reference correlation, not external-tool or process qualification. Parallel shared-workspace runs are not signoff evidence.
+The LogicDesign contract suite passes with 58 package-local tests in 6 suites. The retained fixture corpus contains 20 native cases, and the separate reference manifest correlates all 17 SystemVerilog cases, including completed snapshot digests and typed negative diagnostics. This evidence is local reference correlation, not external-tool or process qualification. Parallel shared-workspace runs are not signoff evidence.
 
-## Qualification boundary
+## Evidence and qualification ownership
 
 The LogicDesign-owned native implementation is deterministic and complete for its declared canonical subset. Hierarchy flattening covers connected ports, indexed/part-selected outputs, direct inout nets, parameterized memories, instance parameter overrides, symbolic ranges and contextual constant generate expansion; invalid or genuinely compile-time-unresolvable constructs return typed diagnostics. The retained reference oracle is correlated through a digest-bound typed API and CLI. Full-language external-tool correlation, PDK/process qualification, release approval and human approval/resume orchestration are platform-level responsibilities outside this package. See `CAPABILITIES.md`, `MILESTONES.md` and `GOAL_STATUS.md` for the package boundary and evidence.
 
 See `DESIGN.md`, `INTERFACES.md` and `IMPLEMENTATION_PLAN.md` before implementing a backend.
 
-See `CAPABILITIES.md` for the qualification boundary and explicit blocked semantics.
+See `CAPABILITIES.md` for the validation/evidence boundary and explicit blocked semantics.
 
 ## Current integration evidence
 

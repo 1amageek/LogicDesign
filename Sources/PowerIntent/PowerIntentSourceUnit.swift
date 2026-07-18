@@ -1,6 +1,5 @@
 import Foundation
 import LogicIR
-import CircuiteFoundation
 
 public struct PowerIntentSourceUnit: Sendable, Hashable, Codable {
     public var path: String
@@ -15,12 +14,7 @@ public struct PowerIntentSourceUnit: Sendable, Hashable, Codable {
 
     public var file: LogicSourceFile {
         let data = Data(source.utf8)
-        let digest: String
-        do {
-            digest = try SHA256ContentDigester().digest(data: data).hexadecimalValue
-        } catch {
-            preconditionFailure("Unable to digest power-intent source: \(error)")
-        }
+        let digest = LogicSourceDigest.sha256HexadecimalValue(of: data)
         return LogicSourceFile(
             path: path,
             sha256: digest,

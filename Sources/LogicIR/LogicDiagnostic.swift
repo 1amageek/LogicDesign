@@ -26,20 +26,27 @@ public struct LogicDiagnostic: Sendable, Hashable, Codable {
     }
 
     public var engineDiagnostic: DesignDiagnostic {
+        let diagnosticCode: DiagnosticCode
+        let invalidCodeDetail: String?
         do {
-            let diagnosticCode = try DiagnosticCode(rawValue: code)
-            let actions = suggestedActions.map {
-                SuggestedAction(code: $0, summary: $0)
-            }
-            return DesignDiagnostic(
-                code: diagnosticCode,
-                severity: severity,
-                summary: message,
-                detail: entity,
-                suggestedActions: actions
-            )
+            diagnosticCode = try DiagnosticCode(rawValue: code)
+            invalidCodeDetail = nil
         } catch {
-            preconditionFailure("Invalid logic diagnostic code: \(error)")
+            diagnosticCode = .trusted("logic.invalid-diagnostic-code")
+            invalidCodeDetail = "Invalid logic diagnostic code: \(code)"
         }
+        let detail = [entity, invalidCodeDetail]
+            .compactMap { $0 }
+            .joined(separator: "; ")
+        let actions = suggestedActions.map {
+            SuggestedAction(code: $0, summary: $0)
+        }
+        return DesignDiagnostic(
+            code: diagnosticCode,
+            severity: severity,
+            summary: message,
+            detail: detail.isEmpty ? nil : detail,
+            suggestedActions: actions
+        )
     }
 }

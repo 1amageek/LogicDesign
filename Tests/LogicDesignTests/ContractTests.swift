@@ -7,11 +7,30 @@ import CircuiteFoundation
 
 @Suite("LogicDesign contract")
 struct ContractTests {
+    @Test("artifact locator rejects an invalid workspace-relative path")
+    func artifactLocatorRejectsInvalidPath() {
+        #expect(throws: ArtifactLocationError.self) {
+            try ArtifactLocator(path: "../top.sv", kind: .rtl, format: .systemVerilog)
+        }
+    }
+
+    @Test("invalid domain diagnostic codes become structured diagnostics")
+    func invalidDiagnosticCodeIsStructured() {
+        let diagnostic = LogicDiagnostic(
+            severity: .error,
+            code: " invalid-code",
+            message: "The producer returned an invalid code."
+        ).engineDiagnostic
+
+        #expect(diagnostic.code.rawValue == "logic.invalid-diagnostic-code")
+        #expect(diagnostic.detail?.contains(" invalid-code") == true)
+    }
+
     @Test("requests preserve the shared JSON contract")
     func requestRoundTrip() throws {
         let request = LogicElaborationRequest(
             runID: "run-round-trip",
-            inputs: [ArtifactLocator(path: "top.sv", kind: .rtl, format: .systemVerilog)],
+            inputs: [try ArtifactLocator(path: "top.sv", kind: .rtl, format: .systemVerilog)],
             topDesignName: "top",
             sources: [SystemVerilogSourceUnit(path: "top.sv", source: "module top; endmodule")]
         )
@@ -32,7 +51,7 @@ struct ContractTests {
         )
         let reference = LogicDesignReference(
             artifact: ArtifactReference(
-                locator: ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
+                locator: try ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
                 digest: try ContentDigest(
                     algorithm: .sha256,
                     hexadecimalValue: String(repeating: "1", count: 64)
@@ -55,7 +74,7 @@ struct ContractTests {
     func provenanceValidationRejectsMismatchedInput() throws {
         let reference = LogicDesignReference(
             artifact: ArtifactReference(
-                locator: ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
+                locator: try ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
                 digest: try ContentDigest(
                     algorithm: .sha256,
                     hexadecimalValue: String(repeating: "2", count: 64)

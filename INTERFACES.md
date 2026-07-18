@@ -34,6 +34,15 @@ intent artifacts are rejected rather than silently reinterpreted.
 The SystemVerilog parser emits `typedCaseStatement` values for standard,
 `casex`, and `casez` semantics. The IR has no untyped compatibility case.
 
+## Capability inspection
+
+`logic-design capabilities` emits `LogicDesignCapabilityReport` schema version
+2. Its `capabilities`, `blockedSemantics`, and `validationChecks` describe the
+package's executable surface. `LogicDesignEvidenceBoundary.producedEvidence`
+describes package outputs, while `externalDecisions` identifies decisions made
+by ToolQualification, process policy, or release authorization. The report has
+no qualification status and schema version 1 is rejected.
+
 ## Design identity and integrity
 
 `LogicDesignReference.designDigest` identifies canonical design content.

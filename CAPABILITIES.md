@@ -25,3 +25,5 @@ The native frontend is complete for the LogicDesign canonical subset and fails c
 ## Evidence boundary
 
 The 20 fixtures in `Fixtures/manifest.json` are native corpus evidence, while `Fixtures/oracle/manifest.json` is a retained local reference-correlation artifact. The latter verifies deterministic implementation behavior against independently retained expected outputs; it does not establish external-tool agreement, PDK scope, foundry approval or release signoff. Xcircuite and the separate qualification packages remain responsible for their own artifact persistence, policy gates, human approval and resume handling.
+
+`logic-design capabilities` serializes `LogicDesignCapabilityReport` schema version 2. The report separates `validationChecks` from `LogicDesignEvidenceBoundary`: LogicDesign declares the checks it can run and the evidence it produces, while external-tool agreement, process-scope acceptance, tool-trust qualification and release authorization remain external decisions. The report intentionally has no qualification status.

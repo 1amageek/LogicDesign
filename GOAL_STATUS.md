@@ -10,9 +10,9 @@
 | Public package products | Implemented | Package.swift |
 | Canonical engine and evidence contract | Implemented | Domain protocols refine `CircuiteFoundation.Engine`; results directly expose artifacts, diagnostics and evidence |
 | Contract build | Passed | swift build |
-| Contract test | Passed | timeout-bounded `xcodebuild test`; 54 tests in 5 suites |
+| Contract test | Passed | timeout-bounded `xcodebuild test`; 58 tests in 6 suites |
 | Domain implementation | Complete for native subset | LogicIR, SystemVerilogFrontend, PowerIntent and gate netlist parser |
-| CLI implementation | Complete | `logic-design` parse, validate, correlate, gate-parse, power-intent and capabilities |
+| CLI implementation | Complete | `logic-design` parse, validate, correlate, gate-parse, power-intent and schema-versioned capabilities with a typed validation/evidence boundary |
 | Fixture corpus | Complete for native corpus | `Fixtures/manifest.json` records 20 retained cases with SHA-256 and expected native status, including macro expansion, generate branching, indexed/inout hierarchy, parameterized memory, power directives, sensitivity events and typed blocked cases |
 | Oracle correlation | Complete for retained local reference corpus | `Fixtures/oracle/manifest.json` correlates 17 SystemVerilog cases by exact canonical case identity, manifest/case digest, source SHA-256, status, completed snapshot digest and typed negative diagnostic codes; this is not external-tool qualification |
 | Process qualification | External responsibility | PDK/process qualification is owned by the separate qualification workflow |
@@ -35,7 +35,7 @@ The detailed roadmap and exit criteria are maintained in `MILESTONES.md`.
 
 ## Function status
 
-| Function | Contract | Implementation | Validation corpus | Qualification |
+| Function | Contract | Implementation | Validation corpus | Package validation |
 |---|---|---|---|---|
 | SystemVerilog lexical and syntax frontend | Contract defined | Native subset implemented | Positive/negative fixtures | Smoke checked |
 | Preprocessing and elaboration | Contract defined | Numeric, expression-valued and function-like macros, object-like conditional compilation, declaration-order parameters, relative include graphs, constant expressions, inclusive/descending generate-for, constant generate-if/else-if/else, symbolic ranges and connected hierarchy flattening | Positive preprocessing/include/hierarchy/generate/conditional fixtures plus typed include, recursive-hierarchy, unresolved-parameter and unterminated-conditional failures | Complete for native subset |
@@ -58,7 +58,7 @@ corpus validation
       ↓
 reference-oracle correlation
       ↓
-process-scoped qualification
+ToolQualification process decision
       ↓
 Downstream flow integration and repair loop
       ↓
@@ -76,4 +76,4 @@ The LogicDesign package goal is complete when every LogicDesign-owned P0 functio
 - LogicDesign's retained reference oracle correlation passes for 17 SystemVerilog cases; parallel shared-workspace runs are not signoff evidence.
 - The LogicEngine lowering slice consumes the canonical `LogicDesignReference.designDigest` for RTL snapshots while retaining `artifact.sha256` for serialized-byte integrity.
 
-This file must be updated by implementation agents whenever a maturity gate changes. A source file or type name alone is never evidence of implementation or qualification.
+This file must be updated by implementation agents whenever a maturity gate changes. A source file or type name alone is never evidence of implementation or independent acceptance.
