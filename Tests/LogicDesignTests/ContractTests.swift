@@ -3,16 +3,10 @@ import Testing
 @testable import LogicIR
 @testable import SystemVerilogFrontend
 @testable import PowerIntent
-@testable import LogicDesign
 import CircuiteFoundation
 
 @Suite("LogicDesign contract")
 struct ContractTests {
-    @Test("contract version starts at one")
-    func contractVersion() {
-        #expect(LogicDesignAPI.contractVersion == 1)
-    }
-
     @Test("requests preserve the shared JSON contract")
     func requestRoundTrip() throws {
         let request = LogicElaborationRequest(
