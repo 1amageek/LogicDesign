@@ -3,18 +3,18 @@ import CircuiteFoundation
 import LogicIR
 
 public struct PowerIntentParsingRequest: Sendable, Hashable, Codable {
-    public static let currentSchemaVersion = 1
+    public static let currentSchemaVersion = 2
 
     public var schemaVersion: Int
     public var runID: String
-    public var inputs: [ArtifactLocator]
+    public var inputs: [ArtifactReference]
     public var design: LogicDesignReference
     public var format: PowerIntentFormat
     public var sources: [PowerIntentSourceUnit]
 
     public init(
         runID: String,
-        inputs: [ArtifactLocator],
+        inputs: [ArtifactReference],
         design: LogicDesignReference,
         format: PowerIntentFormat = .upf,
         sources: [PowerIntentSourceUnit] = []

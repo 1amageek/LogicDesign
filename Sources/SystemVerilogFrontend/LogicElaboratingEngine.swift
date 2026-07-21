@@ -197,8 +197,8 @@ public struct LogicElaboratingEngine: LogicElaborating {
             provenance: try ExecutionProvenance(
                 producer: ProducerIdentity(
                     kind: .engine,
-                    identifier: "LogicDesign.SystemVerilogFrontend",
-                    version: "1",
+                    identifier: "logic-design.native",
+                    version: "1.0.0",
                     build: "native-systemverilog-subset"
                 ),
                 invocation: ExecutionInvocation.inProcess(

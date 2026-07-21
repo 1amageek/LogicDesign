@@ -30,7 +30,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                 schemaVersion: request.schemaVersion,
                 expectedSchemaVersion: PowerIntentParsingRequest.currentSchemaVersion,
                 runID: request.runID,
-                inputs: request.inputs,
+                inputs: request.inputs.map(\.locator),
                 topDesignName: request.design.topDesignName,
                 inlineSourceCount: request.sources.count
             )
@@ -120,7 +120,9 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
 
     private func resolveSources(_ request: PowerIntentParsingRequest) throws -> [PowerIntentSourceUnit] {
         if !request.sources.isEmpty { return request.sources }
-        return try request.inputs.map { try sourceProvider.load($0, format: request.format) }
+        return try request.inputs
+            .filter { $0.locator.kind == .powerIntent }
+            .map { try sourceProvider.load($0.locator, format: request.format) }
     }
 
     private func makeResult(
@@ -138,10 +140,11 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
             provenance: try ExecutionProvenance(
                 producer: ProducerIdentity(
                     kind: .engine,
-                    identifier: "LogicDesign.PowerIntent",
-                    version: "1",
+                    identifier: "logic-design.power-intent",
+                    version: "1.0.0",
                     build: "native-upf-cpf-subset"
                 ),
+                inputs: request.inputs,
                 invocation: ExecutionInvocation.inProcess(
                     entryPoint: "PowerIntentParsingEngine.execute"
                 ),
