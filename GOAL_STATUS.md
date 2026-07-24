@@ -10,7 +10,7 @@
 | Public package products | Implemented | Package.swift |
 | Canonical engine and evidence contract | Implemented | Domain protocols refine `CircuiteFoundation.Engine`; results directly expose artifacts, diagnostics and evidence |
 | Contract build | Passed | swift build |
-| Contract test | Passed | timeout-bounded `xcodebuild test`; 58 tests in 6 suites |
+| Contract test | Passed | timeout-bounded `xcodebuild test`; 63 tests in 6 suites |
 | Domain implementation | Complete for native subset | LogicIR, SystemVerilogFrontend, PowerIntent and gate netlist parser |
 | CLI implementation | Complete | `logic-design` parse, validate, correlate, gate-parse, power-intent and schema-versioned capabilities with a typed validation/evidence boundary |
 | Fixture corpus | Complete for native corpus | `Fixtures/manifest.json` records 20 retained cases with SHA-256 and expected native status, including macro expansion, generate branching, indexed/inout hierarchy, parameterized memory, power directives, sensitivity events and typed blocked cases |

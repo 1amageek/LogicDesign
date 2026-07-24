@@ -9,9 +9,12 @@ This package provides the complete LogicDesign-owned native implementation for c
 The implementation is explicit about its validation and evidence boundary: unsupported language semantics return structured blocked results, while native parser success produces evidence for an independent qualification decision rather than owning that decision.
 
 `GateModule.portBindings` is the canonical top-level port-to-net relation. Parsed
-gate netlists populate it explicitly, validators require every port exactly once
-when the relation is present, and downstream transformations can expose an
-existing internal net at a new port without inventing a helper cell.
+gate netlists populate it explicitly, and validators always require every port
+exactly once. Legacy snapshots without the field migrate only exact,
+unambiguous port-name/net-name matches; incomplete or ambiguous migration
+remains invalid instead of inventing connectivity. New programmatic
+`GateModule` construction never infers bindings. Downstream transformations can
+expose an existing internal net at a new port without inventing a helper cell.
 
 ## Products
 
@@ -103,7 +106,7 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The LogicDesign contract suite passes with 58 package-local tests in 6 suites. The retained fixture corpus contains 20 native cases, and the separate reference manifest correlates all 17 SystemVerilog cases, including completed snapshot digests and typed negative diagnostics. This evidence is local reference correlation, not external-tool or process qualification. Parallel shared-workspace runs are not signoff evidence.
+The LogicDesign contract suite passes with 63 package-local tests in 6 suites. The retained fixture corpus contains 20 native cases, and the separate reference manifest correlates all 17 SystemVerilog cases, including completed snapshot digests and typed negative diagnostics. This evidence is local reference correlation, not external-tool or process qualification. Parallel shared-workspace runs are not signoff evidence.
 
 ## Evidence and qualification ownership
 

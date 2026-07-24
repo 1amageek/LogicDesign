@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 import LogicIR
 
@@ -28,8 +29,8 @@ struct ValidationTests {
         #expect(result.design?.modules.first?.cells.count == 2)
         #expect(result.design?.modules.first?.nets.contains { $0.name == "n1" } == true)
         let module = result.design?.modules.first
-        #expect(module?.portBindings?.count == module?.ports.count)
-        #expect(module?.portBindings?.allSatisfy { binding in
+        #expect(module?.portBindings.count == module?.ports.count)
+        #expect(module?.portBindings.allSatisfy { binding in
             module?.nets.contains { $0.id == binding.netID } == true
         } == true)
     }
@@ -56,6 +57,66 @@ struct ValidationTests {
             portBindings: [],
             nets: [net]
         )
+        let result = LogicDesignValidator().validate(
+            GateDesign(topModuleName: "top", modules: [module])
+        )
+        #expect(result.isValid == false)
+        #expect(result.diagnostics.contains { $0.code == "GATE_PORT_BINDING_INCOMPLETE" })
+    }
+
+    @Test("legacy gate modules migrate only unambiguous port bindings")
+    func legacyGatePortBindingsMigrateUnambiguousNames() throws {
+        let port = RTLPort(id: "port-a", name: "a", direction: .input)
+        let net = GateNet(id: "net-a", name: "a")
+        let canonical = GateModule(
+            id: "module-1",
+            name: "top",
+            ports: [port],
+            portBindings: [GatePortBinding(portID: port.id, netID: net.id)],
+            nets: [net]
+        )
+        let encoded = try JSONEncoder().encode(canonical)
+        guard var object = try JSONSerialization.jsonObject(with: encoded) as? [String: Any] else {
+            Issue.record("Gate module did not encode as a JSON object.")
+            return
+        }
+        object.removeValue(forKey: "portBindings")
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+
+        let migrated = try JSONDecoder().decode(GateModule.self, from: legacyData)
+
+        #expect(migrated.portBindings == [
+            GatePortBinding(portID: port.id, netID: net.id)
+        ])
+        #expect(
+            LogicDesignValidator().validate(
+                GateDesign(topModuleName: "top", modules: [migrated])
+            ).isValid
+        )
+    }
+
+    @Test("ambiguous legacy port names remain invalid")
+    func ambiguousLegacyGatePortBindingsRemainInvalid() throws {
+        let port = RTLPort(id: "port-a", name: "a", direction: .input)
+        let canonical = GateModule(
+            id: "module-1",
+            name: "top",
+            ports: [port],
+            nets: [
+                GateNet(id: "net-a-1", name: "a"),
+                GateNet(id: "net-a-2", name: "a"),
+            ]
+        )
+        let encoded = try JSONEncoder().encode(canonical)
+        guard var object = try JSONSerialization.jsonObject(with: encoded) as? [String: Any] else {
+            Issue.record("Gate module did not encode as a JSON object.")
+            return
+        }
+        object.removeValue(forKey: "portBindings")
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+        let module = try JSONDecoder().decode(GateModule.self, from: legacyData)
+
+        #expect(module.portBindings.isEmpty)
         let result = LogicDesignValidator().validate(
             GateDesign(topModuleName: "top", modules: [module])
         )
