@@ -8,6 +8,11 @@ This package provides the complete LogicDesign-owned native implementation for c
 
 The implementation is explicit about its validation and evidence boundary: unsupported language semantics return structured blocked results, while native parser success produces evidence for an independent qualification decision rather than owning that decision.
 
+`GateModule.portBindings` is the canonical top-level port-to-net relation. Parsed
+gate netlists populate it explicitly, validators require every port exactly once
+when the relation is present, and downstream transformations can expose an
+existing internal net at a new port without inventing a helper cell.
+
 ## Products
 
 | Product | Responsibility |

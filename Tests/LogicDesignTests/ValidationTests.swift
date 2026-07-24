@@ -27,6 +27,11 @@ struct ValidationTests {
         #expect(result.isValid)
         #expect(result.design?.modules.first?.cells.count == 2)
         #expect(result.design?.modules.first?.nets.contains { $0.name == "n1" } == true)
+        let module = result.design?.modules.first
+        #expect(module?.portBindings?.count == module?.ports.count)
+        #expect(module?.portBindings?.allSatisfy { binding in
+            module?.nets.contains { $0.id == binding.netID } == true
+        } == true)
     }
 
     @Test("gate validation rejects a stale net pin index")
@@ -38,5 +43,23 @@ struct ValidationTests {
         let result = LogicDesignValidator().validate(GateDesign(topModuleName: "top", modules: [module]))
         #expect(result.isValid == false)
         #expect(result.diagnostics.contains { $0.code == "GATE_NET_PIN_UNRESOLVED" })
+    }
+
+    @Test("gate validation rejects incomplete explicit port bindings")
+    func incompleteGatePortBindingsAreRejected() {
+        let port = RTLPort(id: "port-a", name: "a", direction: .input)
+        let net = GateNet(id: "net-a", name: "a")
+        let module = GateModule(
+            id: "module-1",
+            name: "top",
+            ports: [port],
+            portBindings: [],
+            nets: [net]
+        )
+        let result = LogicDesignValidator().validate(
+            GateDesign(topModuleName: "top", modules: [module])
+        )
+        #expect(result.isValid == false)
+        #expect(result.diagnostics.contains { $0.code == "GATE_PORT_BINDING_INCOMPLETE" })
     }
 }

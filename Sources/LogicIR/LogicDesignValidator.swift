@@ -161,6 +161,7 @@ public struct LogicDesignValidator: LogicDesignValidating {
         for module in design.modules {
             let netIDs = Set(module.nets.map(\.id))
             let cellIDs = Set(module.cells.map(\.id))
+            let portIDs = Set(module.ports.map(\.id))
             let netNames = module.nets.map(\.name)
             let instanceNames = module.cells.map(\.instanceName)
             if Set(netNames).count != netNames.count {
@@ -189,6 +190,32 @@ public struct LogicDesignValidator: LogicDesignValidating {
                     entity: module.name,
                     suggestedActions: ["regenerate_stable_ids", "name_all_nets"]
                 ))
+            }
+            if let portBindings = module.portBindings {
+                let boundPortIDs = portBindings.map(\.portID)
+                if portBindings.count != module.ports.count
+                    || Set(boundPortIDs) != portIDs
+                    || Set(boundPortIDs).count != boundPortIDs.count {
+                    diagnostics.append(LogicDiagnostic(
+                        severity: .error,
+                        code: "GATE_PORT_BINDING_INCOMPLETE",
+                        message: "Explicit gate port bindings must bind every port exactly once.",
+                        entity: module.name,
+                        suggestedActions: ["rebuild_gate_port_bindings"]
+                    ))
+                }
+                for binding in portBindings {
+                    if !portIDs.contains(binding.portID)
+                        || !netIDs.contains(binding.netID) {
+                        diagnostics.append(LogicDiagnostic(
+                            severity: .error,
+                            code: "GATE_PORT_BINDING_UNRESOLVED",
+                            message: "Gate port binding references an undefined port or net.",
+                            entity: module.name,
+                            suggestedActions: ["rebuild_gate_port_bindings"]
+                        ))
+                    }
+                }
             }
 
             var pinsByID: [String: GatePin] = [:]

@@ -169,10 +169,15 @@ public struct GateNetlistParser: GateNetlistParsing {
                 }
                 return cell
             }
+            let portBindings = ports.compactMap { port -> GatePortBinding? in
+                guard let index = netIndex[port.name] else { return nil }
+                return GatePortBinding(portID: port.id, netID: nets[index].id)
+            }
             return GateModule(
                 id: StableLogicID.make(kind: "gate-module", path: path, name: name),
                 name: name,
                 ports: ports,
+                portBindings: portBindings,
                 cells: resolvedCells,
                 nets: nets
             )
