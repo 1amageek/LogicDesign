@@ -123,4 +123,49 @@ struct ValidationTests {
         #expect(result.isValid == false)
         #expect(result.diagnostics.contains { $0.code == "GATE_PORT_BINDING_INCOMPLETE" })
     }
+
+    @Test("gate cell parameters round-trip and legacy cells migrate")
+    func gateCellParametersRoundTripAndMigrate() throws {
+        let cell = GateCell(
+            id: "cell-bist",
+            type: "BIST_CONTROLLER",
+            instanceName: "u_bist",
+            parameters: [
+                GateCellParameter(name: "pattern_count", value: .unsignedInteger(128)),
+                GateCellParameter(name: "prpg_taps", value: .integerList([1, 3])),
+                GateCellParameter(name: "expected_signature", value: .bitVector("1010")),
+            ]
+        )
+        let encoded = try JSONEncoder().encode(cell)
+        #expect(try JSONDecoder().decode(GateCell.self, from: encoded) == cell)
+
+        guard var object = try JSONSerialization.jsonObject(with: encoded) as? [String: Any] else {
+            Issue.record("Gate cell did not encode as a JSON object.")
+            return
+        }
+        object.removeValue(forKey: "parameters")
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+        #expect(try JSONDecoder().decode(GateCell.self, from: legacyData).parameters.isEmpty)
+    }
+
+    @Test("gate validation rejects malformed cell parameters")
+    func malformedGateCellParametersAreRejected() {
+        let cell = GateCell(
+            id: "cell-bist",
+            type: "BIST_CONTROLLER",
+            instanceName: "u_bist",
+            parameters: [
+                GateCellParameter(name: "signature", value: .bitVector("10X1")),
+                GateCellParameter(name: "signature", value: .string("duplicate")),
+            ]
+        )
+        let module = GateModule(id: "module-top", name: "top", cells: [cell])
+        let result = LogicDesignValidator().validate(
+            GateDesign(topModuleName: "top", modules: [module])
+        )
+
+        #expect(result.isValid == false)
+        #expect(result.diagnostics.contains { $0.code == "GATE_CELL_PARAMETER_INVALID" })
+        #expect(result.diagnostics.contains { $0.code == "GATE_CELL_PARAMETER_VALUE_INVALID" })
+    }
 }

@@ -16,6 +16,13 @@ remains invalid instead of inventing connectivity. New programmatic
 `GateModule` construction never infers bindings. Downstream transformations can
 expose an existing internal net at a new port without inventing a helper cell.
 
+`GateCell.parameters` is the generic canonical cell-configuration boundary.
+Values are strongly typed as booleans, signed or unsigned integers, strings,
+integer lists, and bit vectors. LogicIR validates parameter identity and value
+shape but does not own DFT, timing, or process semantics; those packages define
+and verify their parameter names. Empty parameter lists are omitted when
+encoding so legacy snapshot digests remain stable.
+
 ## Products
 
 | Product | Responsibility |

@@ -228,6 +228,44 @@ public struct LogicDesignValidator: LogicDesignValidating {
                         suggestedActions: ["regenerate_stable_ids", "provide_cell_type"]
                     ))
                 }
+                let parameterNames = cell.parameters.map(\.name)
+                if parameterNames.contains(where: {
+                    $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                }) || Set(parameterNames).count != parameterNames.count {
+                    diagnostics.append(LogicDiagnostic(
+                        severity: .error,
+                        code: "GATE_CELL_PARAMETER_INVALID",
+                        message: "Gate cell parameter names must be non-empty and unique.",
+                        entity: "\(module.name).\(cell.instanceName)",
+                        suggestedActions: ["repair_gate_cell_parameters"]
+                    ))
+                }
+                for parameter in cell.parameters {
+                    switch parameter.value {
+                    case .bitVector(let value):
+                        if value.isEmpty || !value.allSatisfy({ $0 == "0" || $0 == "1" }) {
+                            diagnostics.append(LogicDiagnostic(
+                                severity: .error,
+                                code: "GATE_CELL_PARAMETER_VALUE_INVALID",
+                                message: "Bit-vector gate cell parameters must contain binary digits.",
+                                entity: "\(module.name).\(cell.instanceName).\(parameter.name)",
+                                suggestedActions: ["repair_gate_cell_parameter_value"]
+                            ))
+                        }
+                    case .integerList(let value):
+                        if value.isEmpty {
+                            diagnostics.append(LogicDiagnostic(
+                                severity: .error,
+                                code: "GATE_CELL_PARAMETER_VALUE_INVALID",
+                                message: "Integer-list gate cell parameters must not be empty.",
+                                entity: "\(module.name).\(cell.instanceName).\(parameter.name)",
+                                suggestedActions: ["repair_gate_cell_parameter_value"]
+                            ))
+                        }
+                    case .boolean, .integer, .unsignedInteger, .string:
+                        break
+                    }
+                }
                 var pinNames = Set<String>()
                 for pin in cell.pins {
                     if let netID = pin.netID, !netIDs.contains(netID) {
