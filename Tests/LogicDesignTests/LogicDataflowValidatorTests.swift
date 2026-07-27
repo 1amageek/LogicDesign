@@ -106,4 +106,99 @@ struct LogicDataflowValidatorTests {
         #expect(!result.isValid)
         #expect(result.diagnostics.contains { $0.code == "DATAFLOW_NEXT_STATE_UNRESOLVED" })
     }
+
+    @Test("extended arithmetic and bit operations retain canonical type semantics")
+    func extendedOperationContracts() {
+        let design = LogicDataflowDesign(
+            packageName: "bit_operations",
+            topEntityName: "transform",
+            functions: [
+                LogicDataflowFunction(
+                    name: "transform",
+                    parameters: [
+                        LogicDataflowParameter(name: "input", type: .bits(width: 8)),
+                        LogicDataflowParameter(name: "mask", type: .bits(width: 8)),
+                        LogicDataflowParameter(name: "amount", type: .bits(width: 3)),
+                    ],
+                    returnType: .bits(width: 1),
+                    nodes: [
+                        LogicDataflowNode(
+                            name: "combined.1",
+                            type: .bits(width: 8),
+                            operation: LogicDataflowOperation(
+                                kind: .bitwiseNand,
+                                operands: ["input", "mask", "input"]
+                            )
+                        ),
+                        LogicDataflowNode(
+                            name: "shifted.2",
+                            type: .bits(width: 8),
+                            operation: LogicDataflowOperation(
+                                kind: .shiftLeftLogical,
+                                operands: ["combined.1", "amount"]
+                            )
+                        ),
+                        LogicDataflowNode(
+                            name: "reversed.3",
+                            type: .bits(width: 8),
+                            operation: LogicDataflowOperation(
+                                kind: .reverseBits,
+                                operands: ["shifted.2"]
+                            )
+                        ),
+                        LogicDataflowNode(
+                            name: "compared.4",
+                            type: .bits(width: 1),
+                            operation: LogicDataflowOperation(
+                                kind: .unsignedLessThan,
+                                operands: ["reversed.3", "input"]
+                            )
+                        ),
+                    ],
+                    returnValue: "compared.4"
+                ),
+            ]
+        )
+
+        let result = LogicDataflowValidator().validate(design)
+
+        #expect(result.isValid)
+        #expect(LogicDataflowOperationKind.subtract.rawValue == "subtract")
+        #expect(LogicDataflowOperationKind.unsignedLessThan.rawValue == "unsignedLessThan")
+    }
+
+    @Test("numeric comparisons reject aggregate operands")
+    func numericComparisonRejectsAggregateOperands() {
+        let tupleType = LogicDataflowType.tuple([.bits(width: 8)])
+        let design = LogicDataflowDesign(
+            packageName: "invalid_compare",
+            topEntityName: "compare",
+            functions: [
+                LogicDataflowFunction(
+                    name: "compare",
+                    parameters: [
+                        LogicDataflowParameter(name: "left", type: tupleType),
+                        LogicDataflowParameter(name: "right", type: tupleType),
+                    ],
+                    returnType: .bits(width: 1),
+                    nodes: [
+                        LogicDataflowNode(
+                            name: "result.1",
+                            type: .bits(width: 1),
+                            operation: LogicDataflowOperation(
+                                kind: .signedLessThan,
+                                operands: ["left", "right"]
+                            )
+                        ),
+                    ],
+                    returnValue: "result.1"
+                ),
+            ]
+        )
+
+        let result = LogicDataflowValidator().validate(design)
+
+        #expect(!result.isValid)
+        #expect(result.diagnostics.contains { $0.code == "DATAFLOW_OPERATION_CONTRACT_INVALID" })
+    }
 }

@@ -353,11 +353,142 @@ public struct LogicDataflowValidator: LogicDataflowValidating {
                 contract: "one operand matching the result type",
                 diagnostics: &diagnostics
             )
-        } else if [.add, .subtract, .bitwiseAnd, .bitwiseOr, .bitwiseXor].contains(kind) {
+        } else if [.bitwiseNot, .negate, .reverseBits].contains(kind) {
+            let resultIsBits: Bool
+            if case .bits = node.type {
+                resultIsBits = true
+            } else {
+                resultIsBits = false
+            }
             require(
-                operandTypes.count == 2 && operandTypes.allSatisfy { $0 == node.type },
+                resultIsBits
+                    && operandTypes.count == 1
+                    && operandTypes.first == node.type
+                    && node.operation.operands.count == 1,
                 entity: entity,
-                contract: "two operands matching the result type",
+                contract: "one bits operand matching the result type",
+                diagnostics: &diagnostics
+            )
+        } else if [
+            .bitwiseAnd,
+            .bitwiseNand,
+            .bitwiseOr,
+            .bitwiseNor,
+            .bitwiseXor,
+        ].contains(kind) {
+            let resultIsBits: Bool
+            if case .bits = node.type {
+                resultIsBits = true
+            } else {
+                resultIsBits = false
+            }
+            require(
+                resultIsBits
+                    && !operandTypes.isEmpty
+                    && operandTypes.count == node.operation.operands.count
+                    && operandTypes.allSatisfy { $0 == node.type },
+                entity: entity,
+                contract: "one or more identically typed bits operands matching the result type",
+                diagnostics: &diagnostics
+            )
+        } else if [.reduceAnd, .reduceOr, .reduceXor].contains(kind) {
+            let operandIsBits: Bool
+            if operandTypes.count == 1, case .bits = operandTypes[0] {
+                operandIsBits = true
+            } else {
+                operandIsBits = false
+            }
+            require(
+                operandIsBits
+                    && node.operation.operands.count == 1
+                    && node.type == .bits(width: 1),
+                entity: entity,
+                contract: "one bits operand and a one-bit result",
+                diagnostics: &diagnostics
+            )
+        } else if [.add, .subtract, .signedDivide, .unsignedDivide, .signedModulo, .unsignedModulo]
+                    .contains(kind) {
+            let resultIsBits: Bool
+            if case .bits = node.type {
+                resultIsBits = true
+            } else {
+                resultIsBits = false
+            }
+            require(
+                resultIsBits
+                    && operandTypes.count == 2
+                    && node.operation.operands.count == 2
+                    && operandTypes.allSatisfy { $0 == node.type },
+                entity: entity,
+                contract: "two bits operands matching the result type",
+                diagnostics: &diagnostics
+            )
+        } else if [.signedMultiply, .unsignedMultiply].contains(kind) {
+            let operandsAndResultAreBits: Bool
+            if operandTypes.count == 2,
+               case .bits = operandTypes[0],
+               case .bits = operandTypes[1],
+               case .bits = node.type {
+                operandsAndResultAreBits = true
+            } else {
+                operandsAndResultAreBits = false
+            }
+            require(
+                operandsAndResultAreBits && node.operation.operands.count == 2,
+                entity: entity,
+                contract: "two bits operands and a bits result",
+                diagnostics: &diagnostics
+            )
+        } else if [.equal, .notEqual].contains(kind) {
+            require(
+                operandTypes.count == 2
+                    && node.operation.operands.count == 2
+                    && operandTypes[0] == operandTypes[1]
+                    && node.type == .bits(width: 1),
+                entity: entity,
+                contract: "two identically typed operands and a one-bit result",
+                diagnostics: &diagnostics
+            )
+        } else if [
+            .signedGreaterThanOrEqual,
+            .signedGreaterThan,
+            .signedLessThanOrEqual,
+            .signedLessThan,
+            .unsignedGreaterThanOrEqual,
+            .unsignedGreaterThan,
+            .unsignedLessThanOrEqual,
+            .unsignedLessThan,
+        ].contains(kind) {
+            let matchingBitsOperands: Bool
+            if operandTypes.count == 2,
+               operandTypes[0] == operandTypes[1],
+               case .bits = operandTypes[0] {
+                matchingBitsOperands = true
+            } else {
+                matchingBitsOperands = false
+            }
+            require(
+                matchingBitsOperands
+                    && node.operation.operands.count == 2
+                    && node.type == .bits(width: 1),
+                entity: entity,
+                contract: "two identically typed bits operands and a one-bit result",
+                diagnostics: &diagnostics
+            )
+        } else if [.shiftLeftLogical, .shiftRightArithmetic, .shiftRightLogical].contains(kind) {
+            let shiftTypesMatch: Bool
+            if operandTypes.count == 2,
+               operandTypes[0] == node.type,
+               case .bits = operandTypes[0],
+               case .bits = operandTypes[1] {
+                shiftTypesMatch = true
+            } else {
+                shiftTypesMatch = false
+            }
+            require(
+                shiftTypesMatch && node.operation.operands.count == 2,
+                entity: entity,
+                contract: "a bits value, a bits shift amount, and a result matching the shifted value",
                 diagnostics: &diagnostics
             )
         } else if kind == .concatenate {

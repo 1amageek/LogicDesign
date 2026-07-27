@@ -59,7 +59,7 @@ flowchart LR
 ## Native capability
 
 - Stable RTL and gate identities, source locations and source-file SHA-256 provenance.
-- External-independent `LogicDataflowDesign` for SSA functions, stateful processes, channels, FIFO/flow-control policy, arbitrary-width bit values, tuples, arrays and tokens, with protocol-first validation.
+- External-independent `LogicDataflowDesign` for SSA functions, stateful processes, channels, FIFO/flow-control policy, arbitrary-width bit values, tuples, arrays and tokens, with protocol-first validation. Its canonical operation vocabulary includes variadic bitwise logic, reductions, arithmetic, signed/unsigned comparisons, shifts, concatenation and bit reversal without external opcode names in serialized state.
 - Canonical JSON snapshots with schema validation, deterministic digesting and tamper detection.
 - Transformation-aware `LogicDesignReference` lineage preserves the original canonical digest, immediate input digest, transformation ID, producer version and run ID across engine handoffs.
 - ANSI SystemVerilog modules, parameters, numeric/expression/function-like macros, constant expressions, vectors, memories, assignments, supported processes and hierarchy.
@@ -114,7 +114,7 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The LogicDesign contract suite passes with 68 package-local tests in 7 suites. The retained fixture corpus contains 20 native cases, and the separate reference manifest correlates all 17 SystemVerilog cases, including completed snapshot digests and typed negative diagnostics. This evidence is local reference correlation, not external-tool or process qualification. Parallel shared-workspace runs are not signoff evidence.
+The LogicDesign contract suite passes with 70 package-local tests in 7 suites. The retained fixture corpus contains 20 native cases, and the separate reference manifest correlates all 17 SystemVerilog cases, including completed snapshot digests and typed negative diagnostics. This evidence is local reference correlation, not external-tool or process qualification. Parallel shared-workspace runs are not signoff evidence.
 
 ## Evidence and qualification ownership
 
