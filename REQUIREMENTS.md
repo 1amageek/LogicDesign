@@ -12,6 +12,7 @@ Own the canonical digital design and power-intent state shared by every digital 
 | Preprocessing and elaboration | Resolve parameters, generate constructs, hierarchy and the selected top design. | P0 |
 | RTL IR | Represent processes, expressions, registers, memories, ports and connectivity. | P0 |
 | Gate-design IR | Represent mapped cells, pins, nets, hierarchy and stable identities. | P0 |
+| Dataflow/process IR | Represent typed SSA functions, process state transitions, channels, flow control and transport policy without external-tool types. | P0 |
 | Round-trip serialization | Persist canonical design snapshots without losing identity or source provenance. | P1 |
 | UPF and CPF parsing | Represent supply sets, voltage domains, isolation, level shifting and retention. | P1 |
 | Design validation | Reject unresolved references, illegal connectivity and unsupported semantics explicitly. | P0 |

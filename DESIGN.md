@@ -2,11 +2,15 @@
 
 ## Purpose
 
-Canonical digital design, SystemVerilog frontend and power-intent contracts.
+Canonical digital design, dataflow/process graph, SystemVerilog frontend and power-intent contracts.
 
 ## Responsibility boundary
 
 This package owns the schemas and engine protocols listed in its public products. It must remain usable without UI state and without the Xcircuite runtime.
+
+`LogicDataflowDesign` is external-independent. It owns typed SSA operations, values, process state, channel
+transport policy and validation, but no XLS syntax or runtime behavior. XLS spelling and textual parsing belong
+to `EDAInteroperability/XLSInteroperability`, whose dependency points toward this package.
 
 ## Non-responsibilities
 

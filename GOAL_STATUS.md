@@ -10,7 +10,7 @@
 | Public package products | Implemented | Package.swift |
 | Canonical engine and evidence contract | Implemented | Domain protocols refine `CircuiteFoundation.Engine`; results directly expose artifacts, diagnostics and evidence |
 | Contract build | Passed | swift build |
-| Contract test | Passed | timeout-bounded `xcodebuild test`; 63 tests in 6 suites |
+| Contract test | Passed | timeout-bounded `xcodebuild test`; 68 tests in 7 suites |
 | Domain implementation | Complete for native subset | LogicIR, SystemVerilogFrontend, PowerIntent and gate netlist parser |
 | CLI implementation | Complete | `logic-design` parse, validate, correlate, gate-parse, power-intent and schema-versioned capabilities with a typed validation/evidence boundary |
 | Fixture corpus | Complete for native corpus | `Fixtures/manifest.json` records 20 retained cases with SHA-256 and expected native status, including macro expansion, generate branching, indexed/inout hierarchy, parameterized memory, power directives, sensitivity events and typed blocked cases |
@@ -41,6 +41,7 @@ The detailed roadmap and exit criteria are maintained in `MILESTONES.md`.
 | Preprocessing and elaboration | Contract defined | Numeric, expression-valued and function-like macros, object-like conditional compilation, declaration-order parameters, relative include graphs, constant expressions, inclusive/descending generate-for, constant generate-if/else-if/else, symbolic ranges and connected hierarchy flattening | Positive preprocessing/include/hierarchy/generate/conditional fixtures plus typed include, recursive-hierarchy, unresolved-parameter and unterminated-conditional failures | Complete for native subset |
 | RTL IR | Contract defined | Processes, inferred sensitivities, expressions, typed case/latch statements, source-ordered clock/reset event metadata, registers, memories, ports and connectivity | Parser, hierarchy and snapshot tests | Complete for native subset |
 | Gate-design IR | Contract defined | Structural cell/pin/net parser, reverse connectivity and validator | Gate parser and negative connectivity tests | Smoke checked |
+| Dataflow/process IR | Contract defined | Typed functions, SSA nodes, arbitrary-width values, process state/next-state, channels, flow/FIFO policy and validation | Canonical success/failure tests plus XLS interoperability corpus | Complete for declared canonical operation subset |
 | Round-trip serialization | Contract defined | Canonical JSON snapshot codec with schema/digest verification | Round-trip and tamper tests | Smoke checked |
 | UPF and CPF parsing | Contract defined | Native policy subset with structured directive retention | UPF/CPF fixtures and design round-trip tests | Complete for native subset |
 | Design validation | Contract defined | Structured unresolved-reference/connectivity checks | Negative tests | Smoke checked |
