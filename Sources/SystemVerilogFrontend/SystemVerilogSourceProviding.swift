@@ -1,6 +1,7 @@
 import Foundation
 import CircuiteFoundation
+import LogicIR
 
 public protocol SystemVerilogSourceProviding: Sendable {
-    func load(_ reference: ArtifactLocator) throws -> SystemVerilogSourceUnit
+    func load(_ input: LogicArtifactInput) throws -> SystemVerilogSourceUnit
 }

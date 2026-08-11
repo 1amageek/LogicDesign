@@ -83,9 +83,8 @@ public struct SystemVerilogSourceResolver: SystemVerilogSourceResolving {
                     included = knownSource
                 } else {
                     do {
-                        included = try sourceProvider.load(ArtifactLocator(
-                            location: ArtifactLocation(workspaceRelativePath: includePath),
-                            role: .input,
+                        included = try sourceProvider.load(LogicArtifactInput(
+                            path: includePath,
                             kind: try ArtifactKind(rawValue: "rtl"),
                             format: .systemVerilog
                         ))

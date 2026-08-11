@@ -8,7 +8,7 @@ public struct LogicRequestContractValidator: LogicRequestContractValidating {
         schemaVersion: Int,
         expectedSchemaVersion: Int,
         runID: String,
-        inputs: [ArtifactLocator],
+        inputs: [LogicArtifactInput],
         topDesignName: String,
         inlineSourceCount: Int
     ) -> LogicValidationResult {
@@ -47,7 +47,7 @@ public struct LogicRequestContractValidator: LogicRequestContractValidating {
             ))
         }
         for input in inputs {
-            if input.location.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if input.path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 diagnostics.append(LogicDiagnostic(
                     severity: .error,
                     code: "LOGIC_REQUEST_INPUT_PATH_MISSING",

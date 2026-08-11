@@ -36,7 +36,7 @@ struct EngineTests {
     func elaborationRejectsMissingInputIntegrity() async throws {
         let request = LogicElaborationRequest(
             runID: "run-unverified",
-            inputs: [try ArtifactLocator(path: "top.sv", kind: .rtl, format: .systemVerilog)],
+            inputs: [try LogicArtifactInput(path: "top.sv", kind: .rtl, format: .systemVerilog)],
             topDesignName: "top"
         )
         let result = try await LogicElaboratingEngine(clock: { Date(timeIntervalSince1970: 0) }).execute(request)
@@ -416,13 +416,13 @@ struct EngineTests {
             format: .upf
         )
         let reference = LogicDesignReference(
-            artifact: ArtifactReference(
-                locator: try ArtifactLocator(path: "design.json", kind: .rtl, format: .json),
+            artifact: try ArtifactReference(
                 digest: try ContentDigest(
                     algorithm: .sha256,
                     hexadecimalValue: String(repeating: "3", count: 64)
                 ),
-                byteCount: 128
+                byteCount: 128,
+                descriptor: ArtifactDescriptor(role: .input, kind: .rtl, format: .json)
             ),
             topDesignName: "top",
             designDigest: "design-digest"

@@ -6,7 +6,7 @@ public protocol LogicRequestContractValidating: Sendable {
         schemaVersion: Int,
         expectedSchemaVersion: Int,
         runID: String,
-        inputs: [ArtifactLocator],
+        inputs: [LogicArtifactInput],
         topDesignName: String,
         inlineSourceCount: Int
     ) -> LogicValidationResult

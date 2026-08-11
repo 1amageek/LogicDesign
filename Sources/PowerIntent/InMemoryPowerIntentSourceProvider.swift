@@ -1,5 +1,6 @@
 import Foundation
 import CircuiteFoundation
+import LogicIR
 
 public struct InMemoryPowerIntentSourceProvider: PowerIntentSourceProviding {
     public var sources: [String: String]
@@ -8,8 +9,8 @@ public struct InMemoryPowerIntentSourceProvider: PowerIntentSourceProviding {
         self.sources = sources
     }
 
-    public func load(_ reference: ArtifactLocator, format: PowerIntentFormat) throws -> PowerIntentSourceUnit {
-        let path = reference.location.value
+    public func load(_ input: LogicArtifactInput, format: PowerIntentFormat) throws -> PowerIntentSourceUnit {
+        let path = input.path
         guard let source = sources[path] else {
             throw PowerIntentSourceProviderError.readFailed(
                 path: path,

@@ -1,5 +1,7 @@
 import Foundation
 import CircuiteFoundation
+import CircuiteFoundationCrypto
+import CircuiteFoundationFoundation
 
 public enum LogicDesignSnapshotCodec {
     public static func encode(_ snapshot: LogicDesignSnapshot) throws -> Data {

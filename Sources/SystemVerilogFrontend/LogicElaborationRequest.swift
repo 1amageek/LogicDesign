@@ -3,18 +3,18 @@ import CircuiteFoundation
 import LogicIR
 
 public struct LogicElaborationRequest: Sendable, Hashable, Codable {
-    public static let currentSchemaVersion = 1
+    public static let currentSchemaVersion = 2
 
     public var schemaVersion: Int
     public var runID: String
-    public var inputs: [ArtifactLocator]
+    public var inputs: [LogicArtifactInput]
 
     public var topDesignName: String
     public var sources: [SystemVerilogSourceUnit]
 
     public init(
         runID: String,
-        inputs: [ArtifactLocator],
+        inputs: [LogicArtifactInput],
         topDesignName: String,
         sources: [SystemVerilogSourceUnit] = []
     ) {

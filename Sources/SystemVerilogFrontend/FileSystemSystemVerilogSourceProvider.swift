@@ -1,5 +1,6 @@
 import Foundation
 import CircuiteFoundation
+import LogicIR
 
 public struct FileSystemSystemVerilogSourceProvider: SystemVerilogSourceProviding {
     public var root: URL
@@ -8,8 +9,8 @@ public struct FileSystemSystemVerilogSourceProvider: SystemVerilogSourceProvidin
         self.root = root
     }
 
-    public func load(_ reference: ArtifactLocator) throws -> SystemVerilogSourceUnit {
-        let path = reference.location.value
+    public func load(_ input: LogicArtifactInput) throws -> SystemVerilogSourceUnit {
+        let path = input.path
         let url = root.appending(path: path).standardizedFileURL
         guard url.path.hasPrefix(root.standardizedFileURL.path + "/") else {
             throw SystemVerilogSourceProviderError.invalidPath(path)

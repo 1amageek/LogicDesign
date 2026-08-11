@@ -1,6 +1,7 @@
 import Foundation
 import LogicIR
 import CircuiteFoundation
+import CircuiteFoundationFoundation
 
 public struct PowerIntentParsingEngine: PowerIntentParsing {
     private let parser: PowerIntentParser
@@ -30,7 +31,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                 schemaVersion: request.schemaVersion,
                 expectedSchemaVersion: PowerIntentParsingRequest.currentSchemaVersion,
                 runID: request.runID,
-                inputs: request.inputs.map(\.locator),
+                inputs: request.inputs,
                 topDesignName: request.design.topDesignName,
                 inlineSourceCount: request.sources.count
             )
@@ -121,8 +122,8 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
     private func resolveSources(_ request: PowerIntentParsingRequest) throws -> [PowerIntentSourceUnit] {
         if !request.sources.isEmpty { return request.sources }
         return try request.inputs
-            .filter { $0.locator.kind == .powerIntent }
-            .map { try sourceProvider.load($0.locator, format: request.format) }
+            .filter { $0.kind == .powerIntent }
+            .map { try sourceProvider.load($0, format: request.format) }
     }
 
     private func makeResult(
@@ -132,7 +133,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
         payload: PowerIntentParsingPayload,
         startedAt: Date
     ) throws -> PowerIntentParsingResult {
-        PowerIntentParsingResult(
+        try PowerIntentParsingResult(
             schemaVersion: PowerIntentParsingRequest.currentSchemaVersion,
             runID: request.runID,
             status: status,
@@ -144,7 +145,7 @@ public struct PowerIntentParsingEngine: PowerIntentParsing {
                     version: "1.0.0",
                     build: "native-upf-cpf-subset"
                 ),
-                inputs: request.inputs,
+                inputs: request.inputs.compactMap(\.reference),
                 invocation: ExecutionInvocation.inProcess(
                     entryPoint: "PowerIntentParsingEngine.execute"
                 ),

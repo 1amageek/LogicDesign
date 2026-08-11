@@ -1,5 +1,6 @@
 import Foundation
 import CircuiteFoundation
+import CircuiteFoundationCrypto
 import LogicIR
 
 /// Result of a SystemVerilog elaboration execution.
@@ -29,16 +30,17 @@ public struct LogicElaborationResult: Sendable, Hashable, Codable,
         logicDiagnostics: [LogicDiagnostic] = [],
         provenance: ExecutionProvenance,
         payload: LogicElaborationPayload
-    ) {
+    ) throws {
         self.schemaVersion = schemaVersion
         self.runID = runID
         self.status = status
         self.logicDiagnostics = logicDiagnostics
         self.provenance = provenance
         self.payload = payload
-        self.evidence = EvidenceManifest(
+        self.evidence = try EvidenceManifest.contentAddressed(
             provenance: provenance,
-            artifacts: payload.design.map { [$0.artifact] } ?? []
+            artifacts: payload.design.map { [$0.artifact] } ?? [],
+            digester: SHA256ContentDigester()
         )
     }
 }

@@ -2,6 +2,8 @@ import Foundation
 import LogicIR
 import SystemVerilogFrontend
 import CircuiteFoundation
+import CircuiteFoundationCrypto
+import CircuiteFoundationFoundation
 
 public enum LogicDesignOracleCorrelator {
     public static func validate(_ manifest: LogicDesignOracleManifest) throws {

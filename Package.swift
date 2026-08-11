@@ -33,27 +33,63 @@ let package = Package(
     targets: [
         .target(
             name: "LogicIR",
-            dependencies: [.product(name: "CircuiteFoundation", package: "CircuiteFoundation")]
+            dependencies: [
+                .product(name: "CircuiteFoundation", package: "CircuiteFoundation"),
+                .product(name: "CircuiteFoundationFoundation", package: "CircuiteFoundation"),
+                .product(name: "CircuiteFoundationCrypto", package: "CircuiteFoundation"),
+            ]
         ),
         .target(
             name: "SystemVerilogFrontend",
-            dependencies: [.product(name: "CircuiteFoundation", package: "CircuiteFoundation"), "LogicIR"]
+            dependencies: [
+                .product(name: "CircuiteFoundation", package: "CircuiteFoundation"),
+                .product(name: "CircuiteFoundationFoundation", package: "CircuiteFoundation"),
+                .product(name: "CircuiteFoundationCrypto", package: "CircuiteFoundation"),
+                "LogicIR",
+            ]
         ),
         .target(
             name: "PowerIntent",
-            dependencies: [.product(name: "CircuiteFoundation", package: "CircuiteFoundation"), "LogicIR"]
+            dependencies: [
+                .product(name: "CircuiteFoundation", package: "CircuiteFoundation"),
+                .product(name: "CircuiteFoundationFoundation", package: "CircuiteFoundation"),
+                .product(name: "CircuiteFoundationCrypto", package: "CircuiteFoundation"),
+                "LogicIR",
+            ]
         ),
         .target(
             name: "LogicDesign",
-            dependencies: ["LogicIR", "SystemVerilogFrontend", "PowerIntent"]
+            dependencies: [
+                "LogicIR",
+                "SystemVerilogFrontend",
+                "PowerIntent",
+                .product(name: "CircuiteFoundationFoundation", package: "CircuiteFoundation"),
+                .product(name: "CircuiteFoundationCrypto", package: "CircuiteFoundation"),
+            ]
         ),
         .executableTarget(
             name: "LogicDesignCLI",
-            dependencies: ["LogicIR", "SystemVerilogFrontend", "PowerIntent", "LogicDesign", .product(name: "CircuiteFoundation", package: "CircuiteFoundation")]
+            dependencies: [
+                "LogicIR",
+                "SystemVerilogFrontend",
+                "PowerIntent",
+                "LogicDesign",
+                .product(name: "CircuiteFoundation", package: "CircuiteFoundation"),
+                .product(name: "CircuiteFoundationFoundation", package: "CircuiteFoundation"),
+                .product(name: "CircuiteFoundationCrypto", package: "CircuiteFoundation"),
+            ]
         ),
         .testTarget(
             name: "LogicDesignTests",
-            dependencies: ["LogicIR", "SystemVerilogFrontend", "PowerIntent", "LogicDesign", "LogicDesignCLI", .product(name: "CircuiteFoundation", package: "CircuiteFoundation")],
+            dependencies: [
+                "LogicIR",
+                "SystemVerilogFrontend",
+                "PowerIntent",
+                "LogicDesign",
+                "LogicDesignCLI",
+                .product(name: "CircuiteFoundation", package: "CircuiteFoundation"),
+                .product(name: "CircuiteFoundationCrypto", package: "CircuiteFoundation"),
+            ],
             resources: [.copy("../../Fixtures")]
         ),
     ]

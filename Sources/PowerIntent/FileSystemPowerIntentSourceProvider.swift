@@ -1,5 +1,6 @@
 import Foundation
 import CircuiteFoundation
+import LogicIR
 
 public struct FileSystemPowerIntentSourceProvider: PowerIntentSourceProviding {
     public var root: URL
@@ -8,8 +9,8 @@ public struct FileSystemPowerIntentSourceProvider: PowerIntentSourceProviding {
         self.root = root
     }
 
-    public func load(_ reference: ArtifactLocator, format: PowerIntentFormat) throws -> PowerIntentSourceUnit {
-        let path = reference.location.value
+    public func load(_ input: LogicArtifactInput, format: PowerIntentFormat) throws -> PowerIntentSourceUnit {
+        let path = input.path
         let url = root.appending(path: path).standardizedFileURL
         guard url.path.hasPrefix(root.standardizedFileURL.path + "/") else {
             throw PowerIntentSourceProviderError.invalidPath(path)

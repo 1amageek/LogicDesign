@@ -1,6 +1,7 @@
 import Foundation
 import LogicIR
 import CircuiteFoundation
+import CircuiteFoundationFoundation
 
 public struct LogicElaboratingEngine: LogicElaborating {
     private let parser: SystemVerilogParsing
@@ -189,7 +190,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
         payload: LogicElaborationPayload,
         startedAt: Date
     ) throws -> LogicElaborationResult {
-        LogicElaborationResult(
+        try LogicElaborationResult(
             schemaVersion: LogicElaborationRequest.currentSchemaVersion,
             runID: request.runID,
             status: status,
@@ -201,6 +202,7 @@ public struct LogicElaboratingEngine: LogicElaborating {
                     version: "1.0.0",
                     build: "native-systemverilog-subset"
                 ),
+                inputs: request.inputs.compactMap(\.reference),
                 invocation: ExecutionInvocation.inProcess(
                     entryPoint: "LogicElaboratingEngine.execute"
                 ),

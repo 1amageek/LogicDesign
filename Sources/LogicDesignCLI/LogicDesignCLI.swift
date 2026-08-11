@@ -4,6 +4,8 @@ import LogicIR
 import PowerIntent
 import SystemVerilogFrontend
 import CircuiteFoundation
+import CircuiteFoundationCrypto
+import CircuiteFoundationFoundation
 
 public enum LogicDesignCLI {
     public static func run(arguments: [String]) async -> Int {
@@ -105,15 +107,14 @@ public enum LogicDesignCLI {
         let designDigest = try SHA256ContentDigester().digest(data: designData)
         let sourceUnit = PowerIntentSourceUnit(path: command.input, source: source, format: command.format)
         let designReference = LogicDesignReference(
-            artifact: ArtifactReference(
-                locator: ArtifactLocator(
-                    location: try ArtifactLocation(workspaceRelativePath: command.designPath),
+            artifact: try ArtifactReference(
+                digest: designDigest,
+                byteCount: UInt64(designData.count),
+                descriptor: ArtifactDescriptor(
                     role: .input,
                     kind: try ArtifactKind(rawValue: "rtl"),
                     format: .json
-                ),
-                digest: designDigest,
-                byteCount: UInt64(designData.count)
+                )
             ),
             topDesignName: command.topDesign,
             designDigest: designDigest.hexadecimalValue

@@ -7,10 +7,10 @@ import CircuiteFoundation
 
 @Suite("LogicDesign contract")
 struct ContractTests {
-    @Test("artifact locator rejects an invalid workspace-relative path")
-    func artifactLocatorRejectsInvalidPath() {
-        #expect(throws: ArtifactLocationError.self) {
-            try ArtifactLocator(path: "../top.sv", kind: .rtl, format: .systemVerilog)
+    @Test("artifact input rejects an invalid workspace-relative path")
+    func artifactInputRejectsInvalidPath() {
+        #expect(throws: ArtifactRelativePathError.self) {
+            try LogicArtifactInput(path: "../top.sv", kind: .rtl, format: .systemVerilog)
         }
     }
 
@@ -30,7 +30,7 @@ struct ContractTests {
     func requestRoundTrip() throws {
         let request = LogicElaborationRequest(
             runID: "run-round-trip",
-            inputs: [try ArtifactLocator(path: "top.sv", kind: .rtl, format: .systemVerilog)],
+            inputs: [try LogicArtifactInput(path: "top.sv", kind: .rtl, format: .systemVerilog)],
             topDesignName: "top",
             sources: [SystemVerilogSourceUnit(path: "top.sv", source: "module top; endmodule")]
         )
@@ -50,13 +50,13 @@ struct ContractTests {
             runID: "run-provenance"
         )
         let reference = LogicDesignReference(
-            artifact: ArtifactReference(
-                locator: try ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
+            artifact: try ArtifactReference(
                 digest: try ContentDigest(
                     algorithm: .sha256,
                     hexadecimalValue: String(repeating: "1", count: 64)
                 ),
-                byteCount: 128
+                byteCount: 128,
+                descriptor: ArtifactDescriptor(role: .input, kind: .netlist, format: .json)
             ),
             topDesignName: "top",
             designDigest: "output-design",
@@ -73,13 +73,13 @@ struct ContractTests {
     @Test("provenance validation rejects mismatched transformed input")
     func provenanceValidationRejectsMismatchedInput() throws {
         let reference = LogicDesignReference(
-            artifact: ArtifactReference(
-                locator: try ArtifactLocator(path: "design.json", kind: .netlist, format: .json),
+            artifact: try ArtifactReference(
                 digest: try ContentDigest(
                     algorithm: .sha256,
                     hexadecimalValue: String(repeating: "2", count: 64)
                 ),
-                byteCount: 128
+                byteCount: 128,
+                descriptor: ArtifactDescriptor(role: .input, kind: .netlist, format: .json)
             ),
             topDesignName: "top",
             designDigest: "current",

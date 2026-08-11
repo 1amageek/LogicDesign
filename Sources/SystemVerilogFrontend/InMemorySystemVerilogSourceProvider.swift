@@ -1,5 +1,6 @@
 import Foundation
 import CircuiteFoundation
+import LogicIR
 
 public struct InMemorySystemVerilogSourceProvider: SystemVerilogSourceProviding {
     public var sources: [String: String]
@@ -8,8 +9,8 @@ public struct InMemorySystemVerilogSourceProvider: SystemVerilogSourceProviding 
         self.sources = sources
     }
 
-    public func load(_ reference: ArtifactLocator) throws -> SystemVerilogSourceUnit {
-        let path = reference.location.value
+    public func load(_ input: LogicArtifactInput) throws -> SystemVerilogSourceUnit {
+        let path = input.path
         guard let source = sources[path] else {
             throw SystemVerilogSourceProviderError.readFailed(
                 path: path,

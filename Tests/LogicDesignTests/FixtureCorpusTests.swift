@@ -5,6 +5,7 @@ import LogicIR
 import PowerIntent
 import SystemVerilogFrontend
 import CircuiteFoundation
+import CircuiteFoundationCrypto
 
 @Suite("LogicDesign retained fixture corpus")
 struct FixtureCorpusTests {
@@ -35,17 +36,13 @@ struct FixtureCorpusTests {
                     runID: "fixture-" + entry.id,
                     inputs: [],
                     design: LogicDesignReference(
-                        artifact: ArtifactReference(
-                            locator: ArtifactLocator(
-                                path: "design.json",
-                                kind: .rtl,
-                                format: .json
-                            ),
+                        artifact: try ArtifactReference(
                             digest: try ContentDigest(
                                 algorithm: .sha256,
                                 hexadecimalValue: String(repeating: "1", count: 64)
                             ),
-                            byteCount: 128
+                            byteCount: 128,
+                            descriptor: ArtifactDescriptor(role: .input, kind: .rtl, format: .json)
                         ),
                         topDesignName: entry.topDesignName,
                         designDigest: String(repeating: "1", count: 64)
