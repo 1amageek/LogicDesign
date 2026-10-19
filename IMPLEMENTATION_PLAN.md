@@ -7,7 +7,7 @@
 3. Gate-netlist serialization
 4. UPF and CPF semantics
 
-## Delivered native implementation slice
+## Legacy host implementation slice
 
 - Stable RTL/gate identity, source spans, source SHA-256 provenance and canonical snapshot codec.
 - SystemVerilog lexer/parser for ANSI modules, parameters, numeric/expression/function-like macros, constant expressions, vectors, memories, assignments, procedural control, hierarchy and constant generate elaboration.
@@ -26,4 +26,12 @@
 
 ## Qualification boundary
 
-The declared native subset is complete and smoke-tested. Full-language coverage outside the canonical IR, external-oracle correlation and foundry/process qualification are explicit responsibility boundaries and are never inferred from parser success.
+Legacy host fixtures establish only their exercised draft-IR paths. They do not
+establish the new portable elaboration, width/sign/process semantics, actual-cell
+simulation or symbolic equivalence contracts. Portable source scanning, syntax,
+parameter binding/default evaluation and contextual instance parameters are
+implemented under [SystemVerilogFrontend](Sources/SystemVerilogFrontend/DESIGN.md).
+Selected hierarchy/generate scopes, procedural elaboration and complete S2 word/bit
+lowering remain in progress. S3 simulation/library functions, S4 symbolic proof
+and S5 state-preserving optimization must be verified independently; no full-language,
+foundry or tool qualification is inferred from these component tests.

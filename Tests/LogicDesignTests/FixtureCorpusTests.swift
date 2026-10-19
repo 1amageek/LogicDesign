@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import LogicDesign
 import LogicIR
+import LogicDesignSerialization
 import PowerIntent
 import SystemVerilogFrontend
 import CircuiteFoundation

@@ -1,5 +1,6 @@
 import Foundation
 import LogicIR
+import LogicDesignSerialization
 
 public struct PowerIntentParseResult: Sendable, Hashable, Codable {
     public var design: PowerIntentDesign?

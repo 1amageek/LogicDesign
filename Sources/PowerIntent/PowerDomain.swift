@@ -1,5 +1,6 @@
 import Foundation
 import LogicIR
+import LogicDesignSerialization
 
 public struct PowerDomain: Sendable, Hashable, Codable {
     public var id: String

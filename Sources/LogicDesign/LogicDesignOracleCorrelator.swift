@@ -1,6 +1,6 @@
 import Foundation
 import LogicIR
-import SystemVerilogFrontend
+import LogicDesignSerialization
 import CircuiteFoundation
 import CircuiteFoundationCrypto
 import CircuiteFoundationFoundation

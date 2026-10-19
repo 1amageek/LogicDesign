@@ -1,6 +1,7 @@
 import Foundation
 import CircuiteFoundation
 import LogicIR
+import LogicDesignSerialization
 
 public struct PowerIntentReference: Sendable, Hashable, Codable {
     /// Immutable identity of the materialized power-intent artifact.

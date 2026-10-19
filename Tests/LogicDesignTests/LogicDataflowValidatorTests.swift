@@ -1,4 +1,5 @@
 import LogicIR
+import LogicDesignSerialization
 import Testing
 
 @Suite("Canonical dataflow validation")

@@ -1,6 +1,7 @@
 import Foundation
 import CircuiteFoundation
 import LogicIR
+import LogicDesignSerialization
 
 public struct FileSystemPowerIntentSourceProvider: PowerIntentSourceProviding {
     public var root: URL

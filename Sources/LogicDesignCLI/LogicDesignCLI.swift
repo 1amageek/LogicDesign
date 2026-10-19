@@ -1,6 +1,7 @@
 import Foundation
 import LogicDesign
 import LogicIR
+import LogicDesignSerialization
 import PowerIntent
 import SystemVerilogFrontend
 import CircuiteFoundation

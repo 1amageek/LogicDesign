@@ -1,7 +1,9 @@
 import Foundation
 import Testing
 import LogicIR
+import LogicDesignSerialization
 import SystemVerilogFrontend
+import LogicDesign
 import PowerIntent
 import CircuiteFoundation
 

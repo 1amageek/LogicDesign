@@ -2,6 +2,7 @@ import Foundation
 import CircuiteFoundation
 import CircuiteFoundationCrypto
 import LogicIR
+import LogicDesignSerialization
 
 /// Result of a power-intent parsing execution.
 public struct PowerIntentParsingResult: Sendable, Hashable, Codable,

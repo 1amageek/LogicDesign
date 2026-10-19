@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 import LogicIR
+import LogicDesignSerialization
 
 @Suite("LogicDesign validation")
 struct ValidationTests {
@@ -64,7 +65,7 @@ struct ValidationTests {
         #expect(result.diagnostics.contains { $0.code == "GATE_PORT_BINDING_INCOMPLETE" })
     }
 
-    @Test("legacy gate modules migrate only unambiguous port bindings")
+    @Test("legacy gate modules require explicit port bindings")
     func legacyGatePortBindingsMigrateUnambiguousNames() throws {
         let port = RTLPort(id: "port-a", name: "a", direction: .input)
         let net = GateNet(id: "net-a", name: "a")
@@ -83,19 +84,12 @@ struct ValidationTests {
         object.removeValue(forKey: "portBindings")
         let legacyData = try JSONSerialization.data(withJSONObject: object)
 
-        let migrated = try JSONDecoder().decode(GateModule.self, from: legacyData)
-
-        #expect(migrated.portBindings == [
-            GatePortBinding(portID: port.id, netID: net.id)
-        ])
-        #expect(
-            LogicDesignValidator().validate(
-                GateDesign(topModuleName: "top", modules: [migrated])
-            ).isValid
-        )
+        #expect(throws: DecodingError.self) {
+            try JSONDecoder().decode(GateModule.self, from: legacyData)
+        }
     }
 
-    @Test("ambiguous legacy port names remain invalid")
+    @Test("legacy gate modules cannot infer ambiguous port bindings")
     func ambiguousLegacyGatePortBindingsRemainInvalid() throws {
         let port = RTLPort(id: "port-a", name: "a", direction: .input)
         let canonical = GateModule(
@@ -114,14 +108,9 @@ struct ValidationTests {
         }
         object.removeValue(forKey: "portBindings")
         let legacyData = try JSONSerialization.data(withJSONObject: object)
-        let module = try JSONDecoder().decode(GateModule.self, from: legacyData)
-
-        #expect(module.portBindings.isEmpty)
-        let result = LogicDesignValidator().validate(
-            GateDesign(topModuleName: "top", modules: [module])
-        )
-        #expect(result.isValid == false)
-        #expect(result.diagnostics.contains { $0.code == "GATE_PORT_BINDING_INCOMPLETE" })
+        #expect(throws: DecodingError.self) {
+            try JSONDecoder().decode(GateModule.self, from: legacyData)
+        }
     }
 
     @Test("gate cell parameters round-trip and legacy cells migrate")

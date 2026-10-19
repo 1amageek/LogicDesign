@@ -1,6 +1,7 @@
 import Foundation
 import CircuiteFoundation
 import LogicIR
+import LogicDesignSerialization
 
 public struct PowerIntentParsingRequest: Sendable, Hashable, Codable {
     public static let currentSchemaVersion = 3

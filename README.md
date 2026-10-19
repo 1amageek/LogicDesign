@@ -127,3 +127,9 @@ See `CAPABILITIES.md` for the validation/evidence boundary and explicit blocked 
 ## Current integration evidence
 
 The retained LogicDesign reference correlation is available to Xcircuite/Agent callers as structured JSON input evidence. Xcircuite's independent external-oracle execution contract is separately focused-tested, while real external-tool correlation, PDK/process qualification and release-profile eligibility remain explicit gates.
+
+## Public dependency floor candidate
+
+See [PUBLIC_FLOOR_MIGRATION.md](PUBLIC_FLOOR_MIGRATION.md) for the exact source boundary,
+public dependency, retained products, source migration and qualification limits.
+This isolated candidate is prepared for verification, not a whole-package qualification claim.

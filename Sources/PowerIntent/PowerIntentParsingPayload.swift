@@ -1,6 +1,7 @@
 import Foundation
 import CircuiteFoundation
 import LogicIR
+import LogicDesignSerialization
 
 public struct PowerIntentParsingPayload: Sendable, Hashable, Codable {
     public var reference: PowerIntentReference?

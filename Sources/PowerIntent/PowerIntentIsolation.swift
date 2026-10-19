@@ -1,5 +1,6 @@
 import Foundation
 import LogicIR
+import LogicDesignSerialization
 
 public struct PowerIntentIsolation: Sendable, Hashable, Codable {
     public var id: String

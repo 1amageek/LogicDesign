@@ -1,5 +1,6 @@
 import Foundation
 import LogicIR
+import LogicDesignSerialization
 
 public struct PowerIntentValidationResult: Sendable, Hashable, Codable {
     public var isValid: Bool

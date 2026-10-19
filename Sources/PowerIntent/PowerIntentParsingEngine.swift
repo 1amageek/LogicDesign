@@ -1,5 +1,6 @@
 import Foundation
 import LogicIR
+import LogicDesignSerialization
 import CircuiteFoundation
 import CircuiteFoundationFoundation
 

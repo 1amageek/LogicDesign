@@ -1,7 +1,9 @@
 import Foundation
 import Testing
 import LogicIR
+import LogicDesignSerialization
 import SystemVerilogFrontend
+import LogicDesign
 
 @Suite("SystemVerilog frontend")
 struct SystemVerilogFrontendTests {
@@ -326,7 +328,7 @@ struct SystemVerilogFrontendTests {
         #expect(result.design?.modules.first?.generateBlocks.map(\.limit) == [3, -1])
         #expect(result.design?.modules.first?.generateBlocks.map(\.step) == [1, -1])
         if let design = result.design {
-            #expect(RTLGenerateElaborator().elaborate(design).modules.first?.assignments.count == 6)
+            #expect(RTLGenerateElaborator(identityGenerator: StableLogicID()).elaborate(design).modules.first?.assignments.count == 6)
         }
     }
 
@@ -351,7 +353,7 @@ struct SystemVerilogFrontendTests {
         #expect(result.unsupportedSemantics == false)
         #expect(result.design?.modules.first?.generateBlocks.count == 2)
         if let design = result.design {
-            let elaborated = RTLGenerateElaborator().elaborate(design)
+            let elaborated = RTLGenerateElaborator(identityGenerator: StableLogicID()).elaborate(design)
             #expect(elaborated.modules.first?.generateBlocks.isEmpty == true)
             #expect(elaborated.modules.first?.assignments.count == 1)
         }
@@ -381,7 +383,7 @@ struct SystemVerilogFrontendTests {
         #expect(result.diagnostics.isEmpty)
         #expect(result.design?.modules.first?.generateBlocks.count == 3)
         if let module = result.design?.modules.first {
-            let elaborated = RTLGenerateElaborator().elaborate(module, parameterValues: ["SELECT": 1])
+            let elaborated = RTLGenerateElaborator(identityGenerator: StableLogicID()).elaborate(module, parameterValues: ["SELECT": 1])
             #expect(elaborated.assignments.count == 1)
             if case .integer(let value, _, _) = elaborated.assignments.first?.value {
                 #expect(value == 1)

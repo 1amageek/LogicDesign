@@ -1,6 +1,7 @@
 import Foundation
 import CircuiteFoundation
 import LogicIR
+import LogicDesignSerialization
 
 public struct InMemoryPowerIntentSourceProvider: PowerIntentSourceProviding {
     public var sources: [String: String]
