@@ -38,9 +38,17 @@ flowchart LR
 ## Contracts and Invariants
 
 The canonical topModuleID identifies the selected flattened module. Signals are
-primary inputs or persistent procedural variables. Initial vectors
-have exact width; unspecified variables initialize to X in simulation and admit
-all binary initial states when they become synthesis state. This model can retain
+primary inputs, variables or single-driver built-in nets. RTLResolvedSignal retains
+valueDomain (twoState/fourState) and storage (variable/net), independently of
+WordLogicType's width/sign contract. Built-in nets require a four-state domain and
+cannot carry a variable initializer. Initial vectors have exact width; two-state
+variable initializers must already be converted to binary. The defaultInitialBit
+is 0 for two-state variables, X for four-state variables and Z for nets. Defaults
+are semantic metadata, not explicit declaration initializers. Unspecified
+four-state synthesis state admits all binary initial states; two-state state
+starts at zero. Every write to a two-state destination converts each X/Z bit to
+zero after expression evaluation and sizing, including input updates and NBA.
+This conversion does not change the source expression or a four-state consumer. This model can retain
 four-state constants for simulation; the initial synthesis frontend/lowering
 profile separately rejects X/Z dependencies.
 
@@ -83,7 +91,8 @@ the decision; frontend composition does not duplicate profile/driver analysis.
 No input bit is assigned. Each variable bit has at most one process writer;
 repeated writes within that process retain their declared ordering. Input port
 bindings are unique and complete. Output ports observe retained signal values.
-Undriven procedural variables remain explicit X/initial storage, never zero.
+Undriven variables retain their declared default/initial value; undriven net bits remain Z.
+Procedural processes cannot write nets. Observed nonbinary storage must be refused by binary lowering.
 Initial synthesis admission must reject reachable unsupported storage before
 publishing a word circuit. Builder publication establishes these RTL invariants,
 not functional equivalence or successful synthesis admission.

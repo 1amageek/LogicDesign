@@ -74,8 +74,9 @@ The Node verification host separately provisions a 4 MiB execution stack; its
 default stack rejects 94 nested blocks even with the linear-memory stack enlarged.
 The profile must execute deep accepted syntax and reject a smaller nesting limit
 on each target. These linker settings do not propagate into library products.
-See [.verification/logic-program-elaboration](.verification/logic-program-elaboration)
-for raw failed/default-stack and explicitly provisioned runtime evidence.
+The historical `logic-program-elaboration` evidence is retained privately outside
+the distributed source tree; it records the failed/default-stack and explicitly
+provisioned runtime observations at their original source revision.
 
 ## Portable IR and Host Serialization Boundary
 
@@ -104,6 +105,10 @@ source processing. Legacy draft parsing and asynchronous execution move to the
 [interface contract](INTERFACES.md) remains a draft contract, not resolved RTL.
 PowerIntent retains its host dependency boundary.
 
+Resolved declaration semantics are owned by [ResolvedRTL](Sources/LogicIR/ResolvedRTL/DESIGN.md)
+and bound by [ProgramElaboration](Sources/SystemVerilogFrontend/ProgramElaboration/DESIGN.md).
+Expression width/sign alone does not describe variable/net initialization or writes.
+
 ## Verification and Change Impact
 
 LogicDesignTests own parser fixtures, legacy byte correlation and host codec
@@ -115,8 +120,61 @@ Host products that persist LogicIR values must explicitly depend on
 LogicDesignSerialization when adopting this package revision. That dependency
 must never be propagated to portable calculation targets.
 
-## Public dependency floor candidate
+### Foundation revision compatibility
 
-See [PUBLIC_FLOOR_MIGRATION.md](PUBLIC_FLOOR_MIGRATION.md) for the exact source boundary,
-public dependency, retained products, source migration and qualification limits.
-This isolated candidate is prepared for verification, not a whole-package qualification claim.
+The exact `c952ac5ebe3c21bf0cbd6d6ac239130efd732b3a` dependency preserves the
+consumed Core, Foundation conversion and Crypto source contracts from
+`ae88104c556f5802819713ed741f5b2fffffc2d9`; its platform-link addition applies
+only to Linux. LogicDesign does not consume the changed FileSystem product.
+The package's production and test sources remain unchanged from `8dac4be`.
+Existing portable-kernel and codec evidence retains its original scope.
+Native dependency adoption verifies snapshot digest preservation, typed rejection
+and missing-source diagnostics through the existing consuming APIs. Exact graph,
+source hashes and execution results belong to the
+privately retained historical compatibility evidence;
+this adoption does not establish process or release qualification.
+
+
+## Actual-cell Source Prerequisite Publication
+
+This publication selects complete implementation/test/resource bytes from
+`743bde6540e751b3861099d4bf327cfb3f47cd56`. Only new private verification logs
+absent from the existing public parent are excluded. No selected production or
+test body is changed. The existing public MIT license and historical migration
+record remain present; dependency and third-party licenses are unchanged.
+
+The required direct selector is canonical public CircuiteFoundation
+`5f132c58209123433e0e479e1ea61096e46061ba`. Its consumed Core, host conversion and
+Crypto source contracts match the originally selected CF revision; Linux-only
+filesystem differences are not a Native qualification claim. A fresh remote
+resolution owns the exact lock; mirrors, edited packages and local paths cannot
+substitute for public source availability.
+
+The existing [MappedGraph](Sources/LogicIR/MappedGraph/DESIGN.md),
+[TechnologyLibrary](Sources/LogicIR/TechnologyLibrary/DESIGN.md) and
+[host codecs](Sources/LogicDesignSerialization/Codec/DESIGN.md) own the added
+public source contracts. Construction validates real pin functions, exact library
+bindings, physical constant/startup policy and derived clock lineage. Codecs
+revalidate graph ownership and read actual standard-netlist connectivity. These
+contracts grant neither checked functional proof nor timing qualification.
+
+```text
+exact source/library facts + one caller-owned context
+  -> validated cell library / mapped graph -> actual-function clock lineage
+  -> checked host codec boundary -> LogicEngine / Physical consumers
+```
+
+The public-parent candidate retains all existing public files, including the
+historical migration record. Its public product names remain unchanged. Existing
+host-versus-portable import boundaries remain explicit; the new mapped values do
+not restore legacy metadata execution contracts in upper consumers.
+
+Native consuming qualification builds the original `LogicDesignTests` product
+on the public dependency graph, then runs `MappedGraphTests`,
+`TechnologyLibraryTests`, `MappedClockLineageTests`, `MappedGateVerilogNamingTests`
+and `StructuralVerilogSourceTests`. They check actual truth tables/physical
+connections, source/library identity, startup/tie refusal, derived clock roots,
+standard bytes/tampering and cumulative capacity/work/cancellation/refund.
+Qualification receipts are outside the source tree. Prior three-target evidence
+may be reused only with its exact source/toolchain/SDK joins; no Native result is
+relabeled as WASM/Embedded or general package readiness.

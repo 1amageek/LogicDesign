@@ -2,13 +2,20 @@
 
 ## Purpose and Scope
 
-Portable logical values and validated circuit representations. Parent: [LogicDesign](../../DESIGN.md). Children: [ResolvedRTL](ResolvedRTL/DESIGN.md), [SourceModel](SourceModel/DESIGN.md), [WordGraph](WordGraph/DESIGN.md), [GraphConnectivity](GraphConnectivity/DESIGN.md), [BitGraph](BitGraph/DESIGN.md), [LogicValues](LogicValues/DESIGN.md), [RTLModel](RTLModel/DESIGN.md), [GateModel](GateModel/DESIGN.md), [Dataflow](Dataflow/DESIGN.md), [DesignIdentity](DesignIdentity/DESIGN.md), [Validation](Validation/DESIGN.md).
+Portable logical values and validated circuit representations. Parent: [LogicDesign](../../DESIGN.md). Children: [ResolvedRTL](ResolvedRTL/DESIGN.md), [SourceModel](SourceModel/DESIGN.md), [WordGraph](WordGraph/DESIGN.md), [GraphConnectivity](GraphConnectivity/DESIGN.md), [BitGraph](BitGraph/DESIGN.md), [LogicValues](LogicValues/DESIGN.md), [CellFunctions](CellFunctions/DESIGN.md), [TechnologyLibrary](TechnologyLibrary/DESIGN.md), [MappedGraph](MappedGraph/DESIGN.md), [RTLModel](RTLModel/DESIGN.md), [GateModel](GateModel/DESIGN.md), [Dataflow](Dataflow/DESIGN.md), [DesignIdentity](DesignIdentity/DESIGN.md), [Validation](Validation/DESIGN.md).
 
 ## Responsibilities and Boundaries
 
 [CellFunctions](CellFunctions/DESIGN.md) owns immutable, validated dense Boolean
 functions for technology cells. Pin/state binding and execution remain consumer
 contracts; a valid function value alone is not a mapped design or proof.
+
+[TechnologyLibrary](TechnologyLibrary/DESIGN.md) binds those functions to explicit
+physical pins, a single state bit and exact library membership. Host compilation
+owns source identity verification and eligibility; consumers use dense references.
+
+[MappedGraph](MappedGraph/DESIGN.md) owns the independent actual-cell netlist and
+its connection-derived order, retaining the exact validated library definition.
 
 Own the responsibility identified in Purpose and Scope. Public assumptions and
 guarantees are defined once in Contracts and Invariants below.

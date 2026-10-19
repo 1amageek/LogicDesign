@@ -195,4 +195,47 @@ struct ProgramElaborationTests {
         do { _ = try SystemVerilogProgramCompiler.compile([tree], top: "p", capacity: capacity, maximumNesting: 100, context: &limited); Issue.record("Storage limit was ignored") }
         catch { guard case .resourceLimit(.managedStorageBytes, _, _) = error else { throw error } }
     }
+
+    @Test func declarationsRetainDomainStorageDefaultsAndNetInitializerProcess() throws {
+        guard #available(macOS 26.0, *) else { Issue.record("Requires macOS 26"); return }
+        var run = try context()
+        let rtl = try compile(["module p(input var bit a,input logic b,output bit y=1,output logic z,output wire w=b,output n);bit unused;int count;integer other;always_comb begin y=a;z=b;end endmodule"], context: &run)
+        try rtl.withProgram { signals, _, _, _, _, ports, processes throws in
+            let expected: [(RTLResolvedSignal.ValueDomain, RTLResolvedSignal.StorageKind, LogicBit)] = [
+                (.twoState,.variable,.zero),(.fourState,.net,.highImpedance),
+                (.twoState,.variable,.zero),(.fourState,.variable,.unknown),
+                (.fourState,.net,.highImpedance),(.fourState,.net,.highImpedance)]
+            for index in ports.indices {
+                let signal = signals[ports[index].signal.rawValue]
+                #expect(signal.valueDomain == expected[index].0)
+                #expect(signal.storage == expected[index].1)
+                #expect(signal.defaultInitialBit == expected[index].2)
+            }
+            #expect(try signals[ports[2].signal.rawValue].initialValue?.bit(at: 0) == .one)
+            #expect(signals[ports[4].signal.rawValue].initialValue == nil)
+            #expect(processes.count == 2)
+        }
+    }
+    @Test func hierarchyDoesNotAliasAcrossValueDomains() throws {
+        guard #available(macOS 26.0, *) else { Issue.record("Requires macOS 26"); return }
+        var run = try context()
+        let rtl = try compile(["module p(input logic a,output logic y);child u(a,y);endmodule",
+            "module child(input var bit a,output logic y);assign y=a;endmodule"], context: &run)
+        #expect(rtl.signalCount == 4)
+        rtl.withProgram { signals, _, _, _, _, _, _ in
+            var twoState = 0
+            for index in signals.indices where signals[index].valueDomain == .twoState { twoState += 1 }
+            #expect(twoState == 1)
+        }
+    }
+    @Test func builtInNetRejectsTwoStateDataAtSource() throws {
+        guard #available(macOS 26.0, *) else { Issue.record("Requires macOS 26"); return }
+        for text in ["module p(output wire bit y);endmodule", "module p;wire bit a;endmodule"] {
+            var run = try context()
+            do { _ = try compile([text], context: &run); Issue.record("Two-state built-in net was accepted") }
+            catch LogicKernelError.sourceFailure(let code, let source, _) {
+                #expect(code.rawValue == "SV_NET_DATA_TYPE"); #expect(!source.byteRange.isEmpty)
+            }
+        }
+    }
 }

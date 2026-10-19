@@ -48,7 +48,7 @@ let package = Package(
         .target(
             name: "LogicIR",
             dependencies: ["LogicKernelCore", .product(name: "CircuiteFoundation", package: "CircuiteFoundation")],
-            exclude: ["DESIGN.md", "RTLModel/DESIGN.md", "GateModel/DESIGN.md", "Dataflow/DESIGN.md", "DesignIdentity/DESIGN.md", "Validation/DESIGN.md", "LogicValues/DESIGN.md", "CellFunctions/DESIGN.md", "BitGraph/DESIGN.md", "WordGraph/DESIGN.md", "GraphConnectivity/DESIGN.md", "SourceModel/DESIGN.md", "ResolvedRTL/DESIGN.md"]
+            exclude: ["DESIGN.md", "RTLModel/DESIGN.md", "GateModel/DESIGN.md", "Dataflow/DESIGN.md", "DesignIdentity/DESIGN.md", "Validation/DESIGN.md", "LogicValues/DESIGN.md", "CellFunctions/DESIGN.md", "TechnologyLibrary/DESIGN.md", "MappedGraph/DESIGN.md", "BitGraph/DESIGN.md", "WordGraph/DESIGN.md", "GraphConnectivity/DESIGN.md", "SourceModel/DESIGN.md", "ResolvedRTL/DESIGN.md"]
         ),
         .target(
             name: "LogicDesignSerialization",

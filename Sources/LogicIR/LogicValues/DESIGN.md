@@ -71,6 +71,12 @@ also apply to identity/short-circuit paths. Every scan and result-word operation
 charges work. Published result payload remains charged for the invocation; this
 is not allocator/RSS/stack accounting or a measured zero-copy claim.
 
+`convertedToTwoState` preserves 0/1 and converts X/Z to 0 per bit after
+expression sizing. It borrows immutable packed planes, charges work and fresh
+payload before allocation, and retains the existing owner for already binary
+values. This explicit language conversion is separate from binary admission,
+which still rejects X/Z.
+
 ## State, Ownership, and Lifecycle
 
 A value retains immutable backing storage. The consuming constructor transfers

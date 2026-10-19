@@ -174,3 +174,15 @@ Its `root` is an exact input document; lexical ranges address the text owner, an
 `origin(for:)` projects them to exact artifacts. Expanded text has no ArtifactID
 claim. The legacy public lexer/literal requirements still accept exact documents.
 The authoritative contract is [SourceText](Sources/SystemVerilogFrontend/SourceText/DESIGN.md).
+
+## Actual-cell host interchange
+
+`MappedGateDesignCoding` schema v1 and `MappedGateVerilogCoding` require validated
+actual-cell owners and exact library sources. JSON decoding always uses the
+MappedGateBuilder validator; structural import reads physical connectivity from
+Verilog and accepts only the documented flat scalar profile. Identity sidecars
+retain canonical entity IDs. Specified abstract state initialization is refused
+at the standard Verilog boundary because current cells have no power-up guarantee;
+JSON preserves abstract initialization demands. Neither format conveys
+checked proof authority. [Codec](Sources/LogicDesignSerialization/Codec/DESIGN.md)
+owns admission and negative verification.

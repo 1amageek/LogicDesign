@@ -26,12 +26,11 @@
 
 ## Qualification boundary
 
-Legacy host fixtures establish only their exercised draft-IR paths. They do not
-establish the new portable elaboration, width/sign/process semantics, actual-cell
-simulation or symbolic equivalence contracts. Portable source scanning, syntax,
-parameter binding/default evaluation and contextual instance parameters are
-implemented under [SystemVerilogFrontend](Sources/SystemVerilogFrontend/DESIGN.md).
-Selected hierarchy/generate scopes, procedural elaboration and complete S2 word/bit
-lowering remain in progress. S3 simulation/library functions, S4 symbolic proof
-and S5 state-preserving optimization must be verified independently; no full-language,
-foundry or tool qualification is inferred from these component tests.
+Legacy host fixtures establish only their exercised draft-IR paths. Portable
+elaboration, width/sign/process semantics, actual-cell simulation, symbolic proof
+and state-preserving optimization each require evidence for their own contracts.
+The normative portable contracts belong to
+[SystemVerilogFrontend](Sources/SystemVerilogFrontend/DESIGN.md) and
+[LogicIR](Sources/LogicIR/DESIGN.md); current work and completion evidence belong
+only to [PROGRESS.md](../PROGRESS.md). Component tests do not imply full-language,
+foundry or tool qualification.

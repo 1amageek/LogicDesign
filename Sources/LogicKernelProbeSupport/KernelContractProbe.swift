@@ -89,6 +89,14 @@ public nonisolated func exerciseBitGraphContract() throws {
     precondition(empty.withTables { nodes, operands, ports, bits, states, order in
         nodes.isEmpty && operands.isEmpty && ports.isEmpty && bits.isEmpty && states.isEmpty && order.isEmpty
     })
+    do throws(LogicKernelError) {
+        try empty.withNodes { _ throws(LogicKernelError) -> Void in throw .cancelled }
+        throw .invalidModel("Bit node callback did not propagate its typed failure")
+    } catch { guard error == .cancelled else { throw error } }
+    do throws(LogicKernelError) {
+        try empty.withTables { _, _, _, _, _, _ throws(LogicKernelError) -> Void in throw .deadlineExceeded }
+        throw .invalidModel("Bit table callback did not propagate its typed failure")
+    } catch { guard error == .deadlineExceeded else { throw error } }
     var sequential = try BitLogicBuilder(capacity: BitGraphCapacity(nodes: 4, operands: 1,
         ports: 1, portBits: 1, states: 1), context: &context)
     let primary = try sequential.addNode(id: DesignEntityID(rawValue: 1), operation: .input, context: &context)

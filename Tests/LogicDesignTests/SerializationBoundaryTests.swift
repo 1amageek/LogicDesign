@@ -103,4 +103,22 @@ struct SerializationBoundaryTests {
         let bytes = try LogicDesignSnapshotCodec.encode(invalid)
         #expect(throws: LogicDesignSnapshotCodecError.self) { try LogicDesignSnapshotCodec.decode(bytes) }
     }
+    @Test func gateOnlyDraftValidatesItsPresentRepresentation() throws {
+        let gate = GateDesign(topModuleName: "top", modules: [GateModule(id: "top", name: "top")])
+        let draft = LogicDesignSnapshot(rtl: RTLDesign(topModuleName: "top"), gate: gate)
+        let decoded = try LogicDesignSnapshotCodec.decode(LogicDesignSnapshotCodec.encode(draft))
+        #expect(decoded.rtl.modules.isEmpty)
+        #expect(decoded.gate == gate)
+        var invalid = draft
+        invalid.gate?.topModuleName = "missing"
+        #expect(throws: LogicDesignSnapshotCodecError.self) {
+            try LogicDesignSnapshotCodec.decode(LogicDesignSnapshotCodec.encode(invalid))
+        }
+        invalid = draft
+        invalid.rtl.modules = [RTLModule(id: "other", name: "other")]
+        #expect(throws: LogicDesignSnapshotCodecError.self) {
+            try LogicDesignSnapshotCodec.decode(LogicDesignSnapshotCodec.encode(invalid))
+        }
+    }
+
 }

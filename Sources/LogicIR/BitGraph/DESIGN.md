@@ -53,6 +53,8 @@ Builders own mutable arrays; published tables reside in an immutable final class
 Borrowing retains concrete storage and local arrays for the entire callback. Span
 cannot escape or cross suspension. Borrow APIs require macOS 26 on Darwin; all
 supported WASM SDKs must compile, link and execute the same source.
+Borrow callbacks and their public entrypoints preserve the same generic typed
+failure, including Void-returning callbacks. No error erasure or conversion occurs.
 
 ## Failure, Concurrency, and Constraints
 

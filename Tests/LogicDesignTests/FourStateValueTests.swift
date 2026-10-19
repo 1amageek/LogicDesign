@@ -185,4 +185,24 @@ struct FourStateValueTests {
         _ = try one.selectingFourState(ifTrue: wide, ifFalse: wide, context: &run)
         #expect(run.usage[.allocationBytes] == before)
     }
+
+    @Test func twoStateConversionPreservesKnownBitsAndClearsUnknownLimbs() throws {
+        guard #available(macOS 26.0, *) else { Issue.record("Requires macOS 26"); return }
+        var run = try context()
+        for width in [1, 4, 65, 129] {
+            for offset in 0..<4 {
+                let input = (0..<width).map { UInt8(($0 + offset) % 4) }
+                let original = try value(input)
+                let converted = try original.convertedToTwoState(context: &run)
+                #expect(converted.isTwoState)
+                #expect(try bits(converted) == input.map { $0 == 1 ? 1 : 0 })
+                #expect(try bits(original) == input)
+            }
+        }
+        let unknown = try value([2,3])
+        var cancelled = try context(control: Cancelled())
+        #expect(throws: LogicKernelError.cancelled) { try unknown.convertedToTwoState(context: &cancelled) }
+        var small = try context(storage: 1)
+        #expect(throws: LogicKernelError.self) { try unknown.convertedToTwoState(context: &small) }
+    }
 }

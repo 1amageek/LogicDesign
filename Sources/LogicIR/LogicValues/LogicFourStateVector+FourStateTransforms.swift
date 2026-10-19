@@ -2,6 +2,17 @@ import LogicKernelCore
 
 @available(macOS 26.0, *)
 extension LogicFourStateVector {
+    public borrowing func convertedToTwoState(context: inout LogicKernelContext) throws(LogicKernelError) -> Self {
+        if try !containsUnknown(context: &context) { return copy self }
+        return try Self.makeFourState(width: width, context: &context) { values, _, run throws(LogicKernelError) in
+            try withPlanes { (source: borrowing Span<UInt64>, unknowns: borrowing Span<UInt64>) throws(LogicKernelError) in
+                for index in values.indices {
+                    try run.charge(.workUnits)
+                    values[index] = source[index] & ~unknowns[index]
+                }
+            }
+        }
+    }
     public borrowing func resizedFourState(to resultWidth: LogicBitWidth, signExtend: Bool,
                                           context: inout LogicKernelContext) throws(LogicKernelError) -> Self {
         try admitFourState(context: &context)

@@ -23,18 +23,18 @@ public struct BitLogicDesign: Sendable {
     public var stateCount: Int { storage.states.count }
 
     @available(macOS 26.0, *)
-    public borrowing func withNodes<Result>(_ body: (borrowing Span<BitLogicNode>) throws -> Result) rethrows -> Result {
+    public borrowing func withNodes<Result, Failure: Error>(_ body: (borrowing Span<BitLogicNode>) throws(Failure) -> Result) throws(Failure) -> Result {
         let owner = storage; let nodes = owner.nodes
         defer { withExtendedLifetime(owner) {} }
         return try body(nodes.isEmpty ? Span() : nodes.span)
     }
 
     @available(macOS 26.0, *)
-    public borrowing func withTables<Result>(
+    public borrowing func withTables<Result, Failure: Error>(
         _ body: (borrowing Span<BitLogicNode>, borrowing Span<BitNodeIndex>,
                  borrowing Span<BitLogicPort>, borrowing Span<BitNodeIndex>,
-                 borrowing Span<BitLogicState>, borrowing Span<BitNodeIndex>) throws -> Result
-    ) rethrows -> Result {
+                 borrowing Span<BitLogicState>, borrowing Span<BitNodeIndex>) throws(Failure) -> Result
+    ) throws(Failure) -> Result {
         let owner = storage
         let nodes = owner.nodes; let operands = owner.operands; let ports = owner.ports
         let bits = owner.portBits; let states = owner.states; let order = owner.order

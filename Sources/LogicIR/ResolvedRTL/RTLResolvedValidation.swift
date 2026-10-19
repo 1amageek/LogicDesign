@@ -44,8 +44,12 @@ internal enum RTLResolvedValidation {
         for index in t.signals.indices {
             try context.charge(.workUnits)
             let signal = t.signals[index]
+            guard signal.storage != .net || (signal.valueDomain == .fourState && signal.initialValue == nil) else {
+                throw .invalidModel("Built-in nets require four-state data and no variable initializer")
+            }
             if let initial = signal.initialValue {
-                guard !signal.isInput, initial.width == signal.type.width else { throw .invalidModel("Invalid resolved initial value") }
+                guard !signal.isInput, initial.width == signal.type.width,
+                      signal.valueDomain != .twoState || initial.isTwoState else { throw .invalidModel("Invalid resolved initial value") }
             }
         }
         var edges: [(Int, Int)] = []; edges.reserveCapacity(t.operands.count)
@@ -208,6 +212,12 @@ internal enum RTLResolvedValidation {
                 try context.charge(.workUnits)
                 switch t.statements[index].operation {
                 case .assignment(let target, let selection, _, _):
+                    if t.signals[target.rawValue].storage == .net {
+                        guard case .continuous = process.control else {
+                            throw located(.invalidModel("Procedural assignments require a variable"),
+                                code: .trusted("LOGIC_RTL_PROCEDURAL_NET_WRITE"), origin: t.statements[index].origin)
+                        }
+                    }
                     for bit in selection {
                         try context.charge(.workUnits)
                         let location = offsets[target.rawValue] + bit

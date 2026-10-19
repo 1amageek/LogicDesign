@@ -95,6 +95,12 @@ extension SystemVerilogProgramCompiler {
             let port = connection.port
             let child = try runtimeBinding(port.name, in: scope, context: &context)
             guard let child else { throw .invalidModel("Unbound elaborated port") }
+            if port.direction == .output, child.storage == .net, let initial = port.initial {
+                let rhs = try expression(initial, scope: scope, width: child.type.width.value, context: &context)
+                let assignment = try assign(child.signal, range: 0..<child.type.width.value, value: rhs.index,
+                    timing: .blocking, node: initial, scope: scope, context: &context)
+                try addProcess(.continuous, body: assignment, node: initial, scope: scope, context: &context)
+            }
             if parent == nil {
                 let name = try Self.spelling(port.name, syntax: syntax, context: &context)
                 try builder.addPort(RTLResolvedPort(id: id(), name: name,
@@ -104,7 +110,7 @@ extension SystemVerilogProgramCompiler {
             guard let parent else { throw .invalidModel("Missing instance parent") }
             if port.direction == .input {
                 if let actual = connection.actual {
-                    if try inputAlias(actual, in: parent, type: child.type, context: &context) == child.signal { continue }
+                    if try inputAlias(actual, in: parent, type: child.type, valueDomain: child.valueDomain, context: &context) == child.signal { continue }
                     let rhs = try expression(actual, scope: parent, width: child.type.width.value, context: &context)
                     let assignment = try assign(child.signal, range: 0..<child.type.width.value, value: rhs.index,
                         timing: .blocking, node: actual, scope: parent, context: &context)

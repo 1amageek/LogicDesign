@@ -88,14 +88,10 @@ extension SystemVerilogProgramCompiler {
             guard let binding else { throw .invalidModel("Assignment lost its signal") }
             switch try evaluator.syntax.node(at: binding.declaration).kind {
             case .port(.input, _, _, _): throw try Self.failure(node, scope: scope, "SV_INPUT_ASSIGNMENT", "An input port cannot be assigned by its module")
-            case .port(.output, _, let type, _) where procedural:
-                var variable = false
-                if let type, case .type(_, _, _, let storage, let explicit) = try evaluator.syntax.node(at: type).kind {
-                    variable = storage == .variable || (storage != .net && explicit)
-                }
-                guard variable else { throw try Self.failure(node, scope: scope, "SV_PROCEDURAL_NET_WRITE", "An output net cannot be assigned procedurally") }
-            case .declaration(.net, _, _, _) where procedural: throw try Self.failure(node, scope: scope, "SV_PROCEDURAL_NET_WRITE", "Procedural assignments require a variable")
             default: break
+            }
+            guard !procedural || binding.storage == .variable else {
+                throw try Self.failure(node, scope: scope, "SV_PROCEDURAL_NET_WRITE", "Procedural assignments require a variable")
             }
             let value = try converted(rhs, width: range.count, node: node, scope: scope, context: &context)
             var write = try assign(binding.signal, range: range, value: value.index, timing: timing, node: node, scope: scope, context: &context)

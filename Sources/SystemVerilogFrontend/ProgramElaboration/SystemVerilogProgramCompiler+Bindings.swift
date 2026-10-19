@@ -77,10 +77,12 @@ extension SystemVerilogProgramCompiler {
         return result
     }
     borrowing func inputAlias(_ node: Int, in scope: borrowing SystemVerilogSignalScope,
-        type: SystemVerilogConstantType, context: inout LogicKernelContext) throws(LogicKernelError) -> RTLSignalIndex? {
+        type: SystemVerilogConstantType, valueDomain: RTLResolvedSignal.ValueDomain,
+        context: inout LogicKernelContext) throws(LogicKernelError) -> RTLSignalIndex? {
         guard case .identifier(let name) = try scope.constants.defaults.bindings.syntax.node(at: node).kind else { return nil }
-        let resolved = try scope.resolve(name, reference: node, context: &context)
-        guard resolved.type.width == type.width, resolved.type.isSigned == type.isSigned else { return nil }
+        guard let resolved = try runtimeBinding(name, in: scope, context: &context),
+              resolved.type.width == type.width, resolved.type.isSigned == type.isSigned,
+              resolved.valueDomain == valueDomain else { return nil }
         return resolved.signal
     }
     mutating func bindScope(_ constants: SystemVerilogConstantScope, parent: SystemVerilogSignalScope?,
@@ -113,11 +115,13 @@ extension SystemVerilogProgramCompiler {
                     (evaluator, context) throws(LogicKernelError) in
                     try evaluator.declarationType(typeNode, inferred: nil, context: &context)
                 }
+                let semantics = try declarationSemantics(declaration, typeNode: typeNode, syntax: syntax)
                 try context.charge(.workUnits, amount: UInt64(connections.count))
                 if let port, port.direction == .input, let connectionScope,
                    let actual = connections.first(where: { $0.port.name == port.name })?.actual,
-                   let alias = try inputAlias(actual, in: connectionScope, type: type, context: &context) {
-                    bindings.append(SystemVerilogSignalBinding(declaration: declaration, type: type, signal: alias)); continue
+                   let alias = try inputAlias(actual, in: connectionScope, type: type, valueDomain: semantics.domain, context: &context) {
+                    bindings.append(SystemVerilogSignalBinding(declaration: declaration, type: type, signal: alias,
+                        valueDomain: semantics.domain, storage: semantics.storage)); continue
                 }
                 var reused: SystemVerilogSignalBinding?
                 for record in signals {
@@ -126,23 +130,28 @@ extension SystemVerilogProgramCompiler {
                 }
                 if let reused {
                     guard reused.type.width == type.width, reused.type.isSigned == type.isSigned,
-                          reused.type.dimensions == type.dimensions else {
+                          reused.type.dimensions == type.dimensions, reused.valueDomain == semantics.domain,
+                          reused.storage == semantics.storage else {
                         throw try SystemVerilogConstantScope.failure(declaration, in: syntax, "SV_PROCEDURAL_DECLARATION_TYPE", "A reused procedural declaration cannot change type during unrolling")
                     }
                     bindings.append(reused); continue
                 }
                 let value: LogicFourStateVector?
-                if let initial {
+                if let initial, semantics.storage == .variable {
                     try SystemVerilogConstantEvaluator.withExpressionWorkspace(constants.defaults, scope: constants, context: &context) {
                         (evaluator, context) throws(LogicKernelError) in try evaluator.requireConstantSyntax(initial, context: &context)
                     }
                     let expression = try SystemVerilogConstantExpression.prepare(node: initial, in: constants, context: &context)
-                    value = try expression.evaluate(width: type.width.value, context: &context)
+                    let evaluated = try expression.evaluate(width: type.width.value, context: &context)
+                        .resizedFourState(to: type.width, signExtend: expression.type.isSigned, context: &context)
+                    value = try semantics.domain == .twoState ? evaluated.convertedToTwoState(context: &context) : evaluated
                 } else { value = nil }
                 let signal = try builder.addSignal(RTLResolvedSignal(id: id(), type: WordLogicType(width: type.width, isSigned: type.isSigned),
                     isInput: top && port?.direction == .input, initialValue: value,
-                    origin: Self.origin(declaration, syntax: syntax)), context: &context)
-                let binding = SystemVerilogSignalBinding(declaration: declaration, type: type, signal: signal)
+                    origin: Self.origin(declaration, syntax: syntax), valueDomain: semantics.domain,
+                    storage: semantics.storage), context: &context)
+                let binding = SystemVerilogSignalBinding(declaration: declaration, type: type, signal: signal,
+                    valueDomain: semantics.domain, storage: semantics.storage)
                 guard signals.count < capacity.signals else { throw .invalidInput("Program signal cache capacity exhausted") }
                 signals.append(Signal(namespace: namespace, declaration: declaration, binding: binding)); bindings.append(binding)
             }

@@ -68,7 +68,16 @@ binary controls. FF sensitivity roles follow dominant reset conditions and edge
 polarity, independent of event order. One canonical direct scalar read represents
 each clock/reset signal. Ordinary level sensitivity and explicit comb/latch
 processes remain distinguishable. Unsupported initial processes fail at source;
-constant declaration initial values remain explicit signal state metadata.
+constant variable declaration initial values remain explicit signal state metadata.
+Resolved signals and lexical bindings retain the declaration value domain and
+storage under the [ResolvedRTL](../../LogicIR/ResolvedRTL/DESIGN.md) contract.
+`bit`/`int` variables are two-state; `logic`/`reg`/`integer` are four-state.
+Explicit wire storage and implicit-type output/input ports are nets; explicit
+var inputs and explicitly typed outputs are variables. Built-in nets with a
+two-state data type are refused at the declaration. A net declaration initializer
+(including an output net port initializer) becomes a continuous assignment,
+never initial state. Hierarchy input aliases require equal value domains as well
+as width/sign; otherwise a real typed assignment retains destination coercion.
 
 Static procedural loops must preserve initialization, body writes, steps and final
 externally visible control values. Runtime-dependent iteration counts are refused.

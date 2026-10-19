@@ -71,6 +71,10 @@ constant admission.
 Selected child scopes and sibling iterations have distinct immutable owners; a
 new iteration links to the lexical parent, never the preceding iteration.
 
+Runtime signal bindings retain value-domain and storage metadata supplied by
+[ProgramElaboration](../ProgramElaboration/DESIGN.md), alongside width/sign and
+dense signal identity. Expression sizing still uses its existing integral type.
+
 ## State, Ownership, and Lifecycle
 
 A noncopyable evaluator constructs each scope's local entry array, then consumes

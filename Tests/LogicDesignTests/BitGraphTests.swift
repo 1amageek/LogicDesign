@@ -5,6 +5,21 @@ import LogicKernelCore
 
 @Suite(.timeLimit(.minutes(1)))
 struct BitGraphTests {
+    @Test func voidBorrowCallbacksPreserveTheirExactTypedFailure() throws {
+        var run = try context()
+        let builder = try BitLogicBuilder(capacity: .init(nodes: 0, operands: 0, ports: 0, portBits: 0, states: 0), context: &run)
+        let design = try builder.finish(context: &run)
+        if #available(macOS 26.0, *) {
+            func nodeFailure() throws(LogicKernelError) {
+                try design.withNodes { _ throws(LogicKernelError) -> Void in throw .cancelled }
+            }
+            func tableFailure() throws(LogicKernelError) {
+                try design.withTables { _, _, _, _, _, _ throws(LogicKernelError) -> Void in throw .deadlineExceeded }
+            }
+            #expect(throws: LogicKernelError.cancelled) { try nodeFailure() }
+            #expect(throws: LogicKernelError.deadlineExceeded) { try tableFailure() }
+        } else { Issue.record("Span verification requires macOS 26") }
+    }
     private struct Control: LogicRunControlling {
         func checkpoint() throws(LogicKernelError) {}
     }

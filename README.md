@@ -4,7 +4,7 @@ Canonical digital design state, SystemVerilog frontend and power-intent contract
 
 ## Status
 
-This package provides the complete LogicDesign-owned native implementation for canonical RTL and power-intent state. It is designed for both human workflows and structured Agent workflows through typed Swift APIs, immutable artifacts and a deterministic JSON CLI.
+This finite source prerequisite publishes the existing LogicDesign implementation at `743bde6540e751b3861099d4bf327cfb3f47cd56` for actual-cell LogicEngine and Physical consumers. It supplies typed Swift APIs, immutable artifact contracts and a JSON CLI, without claiming full-language, process or platform release qualification.
 
 The implementation is explicit about its validation and evidence boundary: unsupported language semantics return structured blocked results, while native parser success produces evidence for an independent qualification decision rather than owning that decision.
 
@@ -27,7 +27,9 @@ encoding so legacy snapshot digests remain stable.
 
 | Product | Responsibility |
 |---|---|
-| `LogicIR` | Stable RTL/gate and dataflow/process/channel IR, source provenance, snapshots and validation |
+| `LogicKernelCore` | Caller-owned cumulative execution budgets and synchronous run control |
+| `LogicIR` | Portable RTL/bit/word graphs, validated actual-cell libraries and mapped netlists |
+| `LogicDesignSerialization` | Host codecs, source digests and standard structural-netlist I/O |
 | `SystemVerilogFrontend` | Lexing, parsing, parameter evaluation, relative include resolution and canonical RTL elaboration subset |
 | `PowerIntent` | UPF/CPF domain and low-power policy parsing/validation subset |
 | `LogicDesign` | Umbrella API |
@@ -114,7 +116,7 @@ swift build
 perl -e 'alarm 30; exec @ARGV' xcodebuild test -scheme LogicDesign-Package -destination 'platform=macOS'
 ```
 
-The LogicDesign contract suite passes with 70 package-local tests in 7 suites. The retained fixture corpus contains 20 native cases, and the separate reference manifest correlates all 17 SystemVerilog cases, including completed snapshot digests and typed negative diagnostics. This evidence is local reference correlation, not external-tool or process qualification. Parallel shared-workspace runs are not signoff evidence.
+The historical host contract suite recorded 70 package-local tests in 7 suites at its original revision; that count is not this prerequisite qualification. The retained fixture corpus contains 20 native cases, and the separate reference manifest correlates all 17 SystemVerilog cases, including completed snapshot digests and typed negative diagnostics. This evidence is local reference correlation, not external-tool or process qualification. Parallel shared-workspace runs are not signoff evidence.
 
 ## Evidence and qualification ownership
 
@@ -128,8 +130,24 @@ See `CAPABILITIES.md` for the validation/evidence boundary and explicit blocked 
 
 The retained LogicDesign reference correlation is available to Xcircuite/Agent callers as structured JSON input evidence. Xcircuite's independent external-oracle execution contract is separately focused-tested, while real external-tool correlation, PDK/process qualification and release-profile eligibility remain explicit gates.
 
-## Public dependency floor candidate
 
-See [PUBLIC_FLOOR_MIGRATION.md](PUBLIC_FLOOR_MIGRATION.md) for the exact source boundary,
-public dependency, retained products, source migration and qualification limits.
-This isolated candidate is prepared for verification, not a whole-package qualification claim.
+## Actual-cell public prerequisite
+
+The public dependency is exact CircuiteFoundation
+`5f132c58209123433e0e479e1ea61096e46061ba`, selected through canonical HTTPS.
+The current source adds the existing validated `LogicTechnologyLibrary`,
+`MappedGateDesign`, startup/constant realization checks, actual-function clock
+lineage and host JSON/Verilog codecs missing from the earlier public floor.
+These values preserve exact source/library/pin/state identities, caller-owned
+budgets and scoped borrows. They are not functional proof or timing authority.
+See the [package contract](DESIGN.md#actual-cell-source-prerequisite-publication).
+
+Host consumers explicitly import `LogicDesignSerialization` for codecs. The
+historical [public-floor migration](PUBLIC_FLOOR_MIGRATION.md) retains its earlier
+scope; its old test counts and candidate state do not describe this snapshot.
+Private verification logs are retained outside the distributed tree. Native
+prerequisite qualification runs the original mapped/library/realization/clock
+and codec suites. Prior portable evidence remains specific to its original
+source, toolchain, SDK and target; Native success does not establish WASM or
+Embedded execution. Owned source uses [MIT](LICENSE); external dependencies and
+third-party material retain their own terms.

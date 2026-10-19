@@ -32,7 +32,10 @@ public enum LogicDesignSnapshotCodec {
             }
         }
         let validator = LogicDesignValidator()
-        var diagnostics = validator.validate(snapshot.rtl).diagnostics
+        var diagnostics: [LogicDiagnostic] = []
+        if !snapshot.rtl.modules.isEmpty || snapshot.gate == nil {
+            diagnostics = validator.validate(snapshot.rtl).diagnostics
+        }
         if let gate = snapshot.gate { diagnostics += validator.validate(gate).diagnostics }
         guard !diagnostics.contains(where: { $0.severity == .error }) else {
             throw LogicDesignSnapshotCodecError.validationFailed(diagnostics)

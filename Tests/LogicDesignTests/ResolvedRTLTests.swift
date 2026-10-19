@@ -232,4 +232,21 @@ struct ResolvedRTLTests {
             } else { reject(builder, context: &context) }
         }
     }
+
+    @Test func declarationMetadataCannotBypassNetAndTwoStateInvariants() throws {
+        for mode in 0..<4 {
+            var run = try context(); var build = try builder(context: &run)
+            let initial = try LogicFourStateVector(repeating: .unknown, width: .init(1), context: &run)
+            let signal = try build.addSignal(.init(id: id(1), type: type(1), initialValue: mode == 1 || mode == 2 ? initial : nil,
+                valueDomain: mode == 0 || mode == 2 ? .twoState : .fourState,
+                storage: mode == 2 ? .variable : .net), context: &run)
+            if mode == 3 {
+                let rhs = try build.addExpression(id: id(1), type: type(1), operation: .constant(initial), context: &run)
+                let write = try build.addStatement(.init(id: id(1), operation: .assignment(target: signal, selection: 0..<1,
+                    value: rhs, timing: .blocking)), context: &run)
+                try build.addProcess(.init(id: id(1), control: .combinational, body: write), context: &run)
+            }
+            reject(build, context: &run)
+        }
+    }
 }
