@@ -40,3 +40,8 @@ Mutex storage and requirement on Native, WASM and Embedded.
 [Kernel tests](../../Tests/LogicKernelCoreTests) own bounds, failure atomicity and
 shared cancellation. The portable probe executes the same implementation on all
 three targets. Changes affect frontend and every LogicEngine kernel.
+
+The additive external accountant and explicit success/failure retention scopes are
+owned by [ExecutionControl](ExecutionControl/DESIGN.md#proposed-shared-accounting-and-controlled-retention).
+The legacy initializer remains local-only. Host causes remain outside the portable
+Equatable kernel error; host codec failure owners retain their exact payloads.

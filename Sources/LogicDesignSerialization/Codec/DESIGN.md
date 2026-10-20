@@ -194,3 +194,93 @@ remains a draft format until the schema-v2 runtime migration; it conveys no new
 functional proof authority.
 
 Legacy snapshot admission validates every represented stage. An empty RTL module table alongside a gate design means that only the legacy gate representation is present; it does not establish RTL semantics. The gate validator still runs. A populated RTL table, or an RTL-only snapshot, must pass the RTL validator. This compatibility rule grants no actual-cell proof authority.
+
+## Controlled Bit and Mapped JSON Codecs
+
+The additive controlled entrypoints are verified by focused Native byte-parity,
+state/library semantics, failure retention, resource and cancellation tests.
+Composed host reload and portable Foundation codec execution remain separate
+verification scopes. The entrypoints use the existing schema-v1 records and
+builders, one supplied LogicKernelContext and its shared accountant.
+Legacy entrypoints retain their current bytes, acceptance and failure behavior.
+RUP certificate coding belongs to LogicEngine and is not introduced here.
+
+`decodeControlled` and `encodeControlled` return `(value, retention)` where the
+second value is the explicit kernel retention anchor. Callers keep that anchor
+with the value and all escaped copies. A controlled operation opens one kernel
+retention scope and closes it exactly once on success or failure. Kernel and host
+codec work use the same cumulative accountant; no second budget or post-hoc usage
+charge is introduced. External cause ownership remains a host concern, following
+[ExecutionControl](../../LogicKernelCore/ExecutionControl/DESIGN.md).
+
+Before Foundation decoding, a schema-specific borrowed-byte pass counts actual
+record/array slots, decoded UTF-8 string bytes (including JSON escapes and surrogate
+pairs), nested enum payloads and all explicit DTO containers. It preadmits the
+resulting logical DTO storage before invoking JSONDecoder. Subsequent maps, builder
+inputs, library-identity lookup and validation buffers are separately admitted
+before construction with old/new coexistence. Within the explicit UTF-8/unique-key controlled profile below, the pass preserves
+schema-v1 value semantics and decoder-ignored unknown keys; it imposes no ASCII
+restriction on identifiers. No guessed multiple of input bytes is an allocation bound.
+
+Encoding admits each explicit record table before constructing it, then derives
+a schema-field-derived JSON output bound, including each scalar's literal/UTF-16
+escape widths and exact integer spellings, before Foundation encoding. Actual
+output length must not exceed that admitted bound. Exact bytes are preserved by
+the unchanged encoder and compared with the legacy path, rather than relying on
+a post-allocation equality test to prove allocation admission. Sorted-key formatting and existing slash policy remain exact.
+Codec-owned loops checkpoint before bounded work. Foundation calls have before/after
+checkpoints only; their private implementation workspace and allocator buckets are
+outside logical managed storage, not an interruptibility or hard-RSS guarantee.
+All explicit Data, String, array, dictionary and codec-visible intermediates remain
+inside the logical accounting contract.
+
+Tests must exercise original graph/library semantics and exact legacy bytes,
+escaped/non-ASCII identifiers, malformed and deeply nested input, capacity/work
+refusal before explicit payload creation, failure cleanup, same-context cumulative
+charges and last-copy retention. Native evidence does not establish portable
+Foundation codec execution.
+
+### Controlled encoding profile and lower conversion envelopes
+
+The new controlled JSON entrypoints accept UTF-8 (including its optional BOM) and
+unique decoded object keys. Non-UTF-8, duplicate keys and malformed syntax produce
+`LogicKernelError.invalidInput` before Foundation. These are explicit new-profile
+refusals, not claims of generic Foundation acceptance parity. Legacy entrypoints
+retain their full original encoding and duplicate-key behavior. Unknown legal
+fields remain ignored by the schema decoder. The byte scanner validates every
+nested unknown value and key without materializing an unknown DTO tree. It counts
+source string tokens to preadmit its bounded key records and decoding buffers.
+Every original token remains examined; work limits can refuse quadratic duplicate
+comparison before further work, rather than skipping keys.
+
+CF conversion envelopes are derived from exact public `5f132c...` sources:
+`FixedWidthHexadecimal.decode64` owns one UTF-8 byte array. For an ArtifactID hex
+field of H decoded UTF-8 bytes, canonical cursor bounds imply A+D <= H/2 for the
+algorithm and digest byte lengths. Its explicit transient arrays/strings consume
+H + H/2 + 6A + 5D + 60 bytes after separating the returned algorithm/digest backing;
+therefore H + 7*(H/2) + 60 is an admission envelope. The 60 bytes are two 22-byte
+domain arrays and the 16-byte hexadecimal digit table. Nine Array headers and
+three String headers are separately offered. The bound includes invalid UTF-8
+replacement at at most three output bytes per input algorithm byte before the
+lower constructor rejects it. Returned algorithm/digest backing A+2D is separately
+covered by at most H bytes and two String headers. These are source-field-derived
+finite envelopes, not an arbitrary input-size multiplier or process-RSS claim.
+Encoding offers the actual canonical length B, algorithm length A and digest
+length D for canonical old/new arrays, hexadecimal output, scalar byte arrays and
+String conversion before calling the existing Foundation encoder. Visible lower
+conversion work is charged before that atomic call. Opaque Foundation internals
+remain outside logical payload accounting.
+
+### Controlled source failure lifetime
+
+Every controlled codec preadmits the fields of `LogicGraphCodecSourceFailure`
+before parsing or record construction. Source/semantic failures preserve their
+actual cause with the scope's already admitted retention anchor. This includes
+Kernel invalidInput, invalidModel, unsupported and sourceFailure payloads, which
+may hold decoded text. Only provably scalar Kernel resourceLimit, cancelled,
+deadlineExceeded and externalAccountingFailure cases discard the scope and
+propagate unchanged. Runtime must retain this host wrapper or its anchor when
+unwrapping a cause; an extracted naked cause has no automatic accounting lifetime.
+Failure transfer makes no allocation-admission callback and cannot be cancelled.
+Conservatively retaining the complete failed phase is intentional and does not
+claim that a naked error or graph owns the anchor automatically.

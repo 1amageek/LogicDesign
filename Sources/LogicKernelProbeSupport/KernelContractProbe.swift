@@ -1,3 +1,4 @@
+import Synchronization
 import LogicKernelCore
 import LogicIR
 import CircuiteFoundation
@@ -5,6 +6,7 @@ import SystemVerilogFrontend
 
 @available(macOS 15.0, *)
 public nonisolated func exerciseKernelContract() throws(LogicKernelError) {
+    try exerciseExternalAccountingContract()
     let limits = try LogicKernelLimits(maximums: Dictionary(
         uniqueKeysWithValues: LogicResource.allCases.map { ($0, UInt64(100)) }
     ))
@@ -450,4 +452,111 @@ public nonisolated func exerciseParameterBindingContract() throws {
             precondition(actual.rawValue == code && range.artifactID == rejectedArtifact && range.byteRange == 22..<UInt64(end))
         }
     }
+}
+
+// The exact same owners and protocol requirements execute on Native and both WASM modes.
+@available(macOS 15.0, *)
+private final class ProbeKernelAccountant: LogicKernelAccounting {
+    struct State: Sendable { var live: UInt64 = 0; var allocations: UInt64 = 0; var work: UInt64 = 0; var refuse = false; var released: [UInt64] = [] }
+    let state = Mutex(State())
+    func observeBitWidth(_ width: UInt64) throws(LogicKernelError) {
+        if state.withLock({ $0.refuse }) { throw .externalAccountingFailure }
+    }
+    func charge(_ resource: LogicResource, amount: UInt64) throws(LogicKernelError) {
+        let refused = state.withLock { state in
+            if state.refuse { return true }
+            state.work += amount; return false
+        }
+        if refused { throw .externalAccountingFailure }
+    }
+    func reserveStorage(byteCount: UInt64) throws(LogicKernelError) -> any LogicKernelStorageRetaining {
+        let refused = state.withLock { state in
+            if state.refuse { return true }
+            state.live += byteCount; state.allocations += byteCount; return false
+        }
+        if refused { throw .externalAccountingFailure }
+        return Lease(owner: self, bytes: byteCount)
+    }
+    private final class Lease: LogicKernelStorageRetaining {
+        let owner: ProbeKernelAccountant; let bytes: UInt64
+        init(owner: ProbeKernelAccountant, bytes: UInt64) { self.owner = owner; self.bytes = bytes }
+        deinit { owner.state.withLock { $0.live -= bytes; $0.released.append(bytes) } }
+    }
+}
+@available(macOS 15.0, *)
+private nonisolated func exerciseExternalAccountingContract() throws(LogicKernelError) {
+    let limits = try LogicKernelLimits(maximums: Dictionary(uniqueKeysWithValues: LogicResource.allCases.map { ($0, UInt64(100_000)) }))
+    // These event assertions execute unchanged on Native, WASM and Embedded.
+    let registryOwner = ProbeKernelAccountant()
+    do {
+        var context = LogicKernelContext(limits: limits, control: LogicCancellationSource(), accounting: registryOwner)
+        _ = try context.reserveStorage(byteCount: 71)
+    }
+    precondition(registryOwner.state.withLock {
+        $0.live == 0 && $0.released.count == 3 && $0.released.first == 71
+    })
+    var registryContext = LogicKernelContext(limits: limits, control: LogicCancellationSource(), accounting: registryOwner)
+    for _ in 0..<8 {
+        let zero = try registryContext.reserveStorage(byteCount: 0)
+        let minimumBuckets = 2 * (MemoryLayout<(UInt64, UInt64)>.stride
+            + MemoryLayout<UInt64>.stride
+            + MemoryLayout<(UInt64, any LogicKernelStorageRetaining)>.stride)
+        precondition(registryOwner.state.withLock { $0.live >= UInt64(minimumBuckets) })
+        try registryContext.releaseStorage(zero)
+        precondition(registryOwner.state.withLock { $0.live == 0 })
+    }
+    let retainedScope = try registryContext.beginRetentionScope()
+    _ = try registryContext.reserveStorage(byteCount: 71)
+    var retained: LogicKernelRetention? = try registryContext.finishRetentionScope(retainedScope)
+    var retainedCopy = retained
+    retained = nil
+    let anchorBytes = UInt64(2 * MemoryLayout<UInt>.stride
+        + MemoryLayout<[UInt64: UInt64]>.stride
+        + MemoryLayout<(any LogicKernelStorageRetaining)?>.stride)
+    let tableBytes = registryOwner.state.withLock { $0.live } - 71 - anchorBytes
+    registryOwner.state.withLock { $0.released = [] }
+    withExtendedLifetime(retainedCopy) { precondition(registryOwner.state.withLock { $0.live > 0 }) }
+    retainedCopy = nil
+    precondition(registryOwner.state.withLock {
+        $0.live == 0 && $0.released.count == 3 && $0.released.last == tableBytes
+            && $0.released.dropLast().contains(71)
+    })
+    let a = LogicCancellationSource(); let owner = ProbeKernelAccountant()
+    var context = LogicKernelContext(limits: limits, control: a, accounting: owner)
+    try context.requireAccounting(expected: owner)
+    let failed = try context.beginRetentionScope()
+    _ = try context.reserveStorage(byteCount: 24)
+    let administrativeWork = context.usage[.workUnits]
+    try context.charge(.workUnits, amount: 3)
+    a.cancel()
+    try context.discardRetentionScope(failed)
+    precondition(owner.state.withLock { $0.live == 0 && $0.work == administrativeWork + 3 })
+    let fresh = LogicCancellationSource()
+    var resultContext = LogicKernelContext(limits: limits, control: fresh, accounting: owner)
+    let scope = try resultContext.beginRetentionScope()
+    _ = try resultContext.reserveStorage(byteCount: 48)
+    var first: LogicKernelRetention? = try resultContext.finishRetentionScope(scope)
+    var second = first
+    first = nil
+    withExtendedLifetime(second) { precondition(owner.state.withLock { $0.live > 0 }) }
+    second = nil
+    precondition(owner.state.withLock { $0.live == 0 })
+    let failureControl = LogicCancellationSource()
+    var failureContext = LogicKernelContext(limits: limits, control: failureControl, accounting: owner)
+    let failedScope = try failureContext.beginRetentionScope()
+    _ = try failureContext.reserveStorage(byteCount: 19)
+    owner.state.withLock { $0.refuse = true }
+    failureControl.cancel()
+    var failureRetention: LogicKernelRetention? = try failureContext.retainFailureScope(failedScope)
+    withExtendedLifetime(failureRetention) { precondition(owner.state.withLock { $0.live > 0 }) }
+    failureRetention = nil
+    precondition(owner.state.withLock { $0.live == 0 })
+    let beforeImportWork = failureContext.usage[.workUnits]
+    try failureContext.importAccountedPhase(peakStorageBytes: 4, allocationBytes: 8,
+        storageReservations: 1, workUnits: 2, expectedAccounting: owner)
+    precondition(failureContext.usage[.workUnits] == beforeImportWork + 2)
+    let before = resultContext.usage
+    do { try resultContext.charge(.nodes); preconditionFailure("Expected external refusal") }
+    catch { precondition(error == .externalAccountingFailure) }
+    precondition(resultContext.usage == before)
 }

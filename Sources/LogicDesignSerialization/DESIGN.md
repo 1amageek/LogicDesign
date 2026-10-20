@@ -31,3 +31,8 @@ Own JSON/Codable integration, digest computation and structural netlist I/O. Cor
 ## Verification and Change Impact
 
 [LogicDesignTests](../../Tests/LogicDesignTests) own round trips and malformed-input rejection. Changes affect host consumers that persist or decode LogicIR values; pure kernels do not depend on this target.
+
+The additive controlled Bit/Mapped schema-v1 profile, pre-action logical payload
+admission and explicit result/failure anchors are owned by
+[Codec](Codec/DESIGN.md#proposed-controlled-bit-and-mapped-json-codecs).
+RUP coding remains in LogicEngine; no upward dependency is introduced here.
