@@ -143,12 +143,11 @@ absent from the existing public parent are excluded. No selected production or
 test body is changed. The existing public MIT license and historical migration
 record remain present; dependency and third-party licenses are unchanged.
 
-The required direct selector is canonical public CircuiteFoundation
-`5f132c58209123433e0e479e1ea61096e46061ba`. Its consumed Core, host conversion and
-Crypto source contracts match the originally selected CF revision; Linux-only
-filesystem differences are not a Native qualification claim. A fresh remote
-resolution owns the exact lock; mirrors, edited packages and local paths cannot
-substitute for public source availability.
+The direct selector is canonical public CircuiteFoundation exact `26.1021.0`,
+released at `4d03b5a561c82a756aaf93860f657733371538dc`. A fresh remote resolution owns
+the exact lock; mirrors, edited packages and local paths cannot substitute for
+public source availability. Historical source-floor evidence remains bound to
+its original Foundation revision.
 
 The existing [MappedGraph](Sources/LogicIR/MappedGraph/DESIGN.md),
 [TechnologyLibrary](Sources/LogicIR/TechnologyLibrary/DESIGN.md) and
@@ -178,3 +177,19 @@ standard bytes/tampering and cumulative capacity/work/cancellation/refund.
 Qualification receipts are outside the source tree. Prior three-target evidence
 may be reused only with its exact source/toolchain/SDK joins; no Native result is
 relabeled as WASM/Embedded or general package readiness.
+
+## Stable dependency successor preparation
+
+The source baseline is public `5777ace9343ab25412d8553080d42f193d762899`,
+including its published controlled kernel accounting and graph codecs. This
+candidate changes no implementation, test, resource, license or file mode. The
+fresh canonical HTTPS lock resolves CF `26.1021.0` at
+`4d03b5a561c82a756aaf93860f657733371538dc`, with unchanged swift-crypto `4.5.1`
+and swift-asn1 `1.7.3`. Focused Native kernel/codec and existing three-target
+consumer checks pass on this stable graph: the two Native products execute
+52 declarations and 58 expanded cases in five suites, with zero skips. The
+unchanged Native, normal WASM debug and Embedded WASM debug/WMO probes each
+produce all 25 expected markers on fixed Swift 6.4.0 and matching SDKs. Their
+standalone binaries and exact command/source joins are retained separately. This
+finite consumer evidence grants neither general frontend completeness, process
+qualification nor a timing/LogicEngine result.

@@ -133,8 +133,14 @@ The retained LogicDesign reference correlation is available to Xcircuite/Agent c
 
 ## Actual-cell public prerequisite
 
-The public dependency is exact CircuiteFoundation
-`5f132c58209123433e0e479e1ea61096e46061ba`, selected through canonical HTTPS.
+The public dependency is CircuiteFoundation exact `26.1021.0`
+(`4d03b5a561c82a756aaf93860f657733371538dc`), selected through canonical HTTPS.
+This pin-only candidate retains public `5777ace9343ab25412d8553080d42f193d762899`
+source, including controlled kernel accounting and codecs. Its canonical fresh
+lock resolves the released stable floor. Focused Native kernel/graph-codec
+checks and the unchanged three-target probes pass within the finite scope below.
+See the
+[successor contract](DESIGN.md#stable-dependency-successor-preparation).
 The current source adds the existing validated `LogicTechnologyLibrary`,
 `MappedGateDesign`, startup/constant realization checks, actual-function clock
 lineage and host JSON/Verilog codecs missing from the earlier public floor.
