@@ -143,8 +143,8 @@ absent from the existing public parent are excluded. No selected production or
 test body is changed. The existing public MIT license and historical migration
 record remain present; dependency and third-party licenses are unchanged.
 
-The direct selector is canonical public CircuiteFoundation exact `26.1021.0`,
-released at `4d03b5a561c82a756aaf93860f657733371538dc`. A fresh remote resolution owns
+The direct selector is canonical public CircuiteFoundation exact `26.1021.1`,
+released at `7b5ab9cfcd89eccd04e98fb8355bd8ed4d5596c3`. A fresh remote resolution owns
 the exact lock; mirrors, edited packages and local paths cannot substitute for
 public source availability. Historical source-floor evidence remains bound to
 its original Foundation revision.
@@ -193,3 +193,23 @@ produce all 25 expected markers on fixed Swift 6.4.0 and matching SDKs. Their
 standalone binaries and exact command/source joins are retained separately. This
 finite consumer evidence grants neither general frontend completeness, process
 qualification nor a timing/LogicEngine result.
+
+## CF 26.1021.1 metadata successor
+
+This successor retains all implementation, test, resource, license and mode bytes
+from public `e788e555569862a9ed37d34ba3b686bd516cb5cd`. Only the canonical direct CF
+selector, fresh lock and pin documentation change. The manifest directly depends
+on CF alone; ToolQualification and SDK dependency edges are absent. Canonical
+HTTPS resolution selects CF exact `26.1021.1` at
+`7b5ab9cfcd89eccd04e98fb8355bd8ed4d5596c3`; swift-crypto `4.5.1` and swift-asn1
+`1.7.3` retain their previous revisions. Existing scratch checkouts may be reused,
+but mirrors, path dependencies and edited packages cannot replace the public graph.
+
+Verification composes fresh canonical resolution and exact graph checks, the
+public CF successor proof and unchanged consumed API semantics with the retained
+Native 52-declaration/58-case/zero-skip and three-target 25-marker implementation
+evidence above. These retained results keep their original source, graph,
+toolchain and SDK scope; they are not fresh runtime results on this new graph.
+The final Timing integration owns the composed consumer execution check. No full
+LogicDesign rebuild, new portable-runtime claim or release qualification follows
+from this metadata-only successor.
